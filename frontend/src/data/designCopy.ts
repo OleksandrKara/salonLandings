@@ -4,7 +4,7 @@
 
 import fourhandsImg from "@/assets/fourhands.jpg";
 import mani1Img from "@/assets/mani1.jpg";
-import mani2Img from "@/assets/mani2.jpg";
+import customer1Img from "@/assets/customer1.jpg";
 import nail2Img from "@/assets/nail2.jpg";
 import nail3Img from "@/assets/nail3.jpg";
 import nail4Img from "@/assets/nail4.jpg";
@@ -40,7 +40,7 @@ export interface CarouselSlide {
 
 export const CAROUSEL_SLIDES: CarouselSlide[] = [
   { id: "slMani1", src: mani1Img, badge: "Manicure", caption: "Russian hard-gel manicure", sub: "Flawless cuticles · high-gloss finish" },
-  { id: "slMani2", src: mani2Img, badge: "Manicure", caption: "Glossy hard-gel finish", sub: "Nail-safe, no acrylic" },
+  { id: "slMani2", src: customer1Img, badge: "Real Client", caption: "Glossy hard-gel finish", sub: "Nail-safe, no acrylic" },
   { id: "slNail3", src: nail3Img, badge: "Cuticle work", caption: "Clean Russian cuticle work", sub: "Precise dry technique" },
   { id: "slNail4", src: nail4Img, badge: "Natural nails", caption: "Natural nail-health focused", sub: "Strengthened, structured gel" },
   { id: "slNail2", src: nail2Img, badge: "Long wear", caption: "No chips for 3–4 weeks", sub: "Chip-resistant, high shine" },
