@@ -7,8 +7,9 @@ import { GoogleLogo } from "@/features/landing/GoogleLogo";
 import { formatPrice } from "@/lib/formatting";
 import { ErrorNotice } from "@/features/landing/ErrorNotice";
 import { Spinner } from "@/features/landing/Spinner";
+import type { LandingVariantContent } from "@/types/api";
 
-export function Hero() {
+export function Hero({ overrides }: { overrides?: LandingVariantContent }) {
   const { open } = useBookingModalContext();
   const { status, cartMenu, error, retry } = useCartMenu();
 
@@ -20,7 +21,7 @@ export function Hero() {
   return (
     <section style={styles.section}>
       <div style={styles.imageWrap}>
-        <img src={mani1} alt="Russian hard-gel manicure close-up" style={styles.image} />
+        <img src={overrides?.heroImageUrl ?? mani1} alt="Russian hard-gel manicure close-up" style={styles.image} />
         <div style={styles.imageGradient} />
         <div style={styles.ratingBadge}>
           <GoogleLogo size={20} />
@@ -32,8 +33,8 @@ export function Hero() {
 
       <div style={{ paddingTop: 20 }}>
         <div style={styles.eyebrow}>Downtown San Diego · First-Visit Offer</div>
-        <h1 style={styles.headline}>{HEADLINE}</h1>
-        <p style={styles.subhead}>{SUBHEAD}</p>
+        <h1 style={styles.headline}>{overrides?.heroHeadline ?? HEADLINE}</h1>
+        <p style={styles.subhead}>{overrides?.heroSubheadline ?? SUBHEAD}</p>
 
         <div style={styles.credStrip}>
           {CREDIBILITY_STATS.map((stat, i) => (
@@ -51,7 +52,7 @@ export function Hero() {
         ) : null}
 
         <button onClick={open} style={styles.primaryButton}>
-          Book Your Appointment
+          {overrides?.ctaText ?? "Book Your Appointment"}
         </button>
         <button onClick={scrollToResults} style={styles.secondaryButton}>
           See Nail Results

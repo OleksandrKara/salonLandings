@@ -94,6 +94,43 @@ export interface CustomerContact {
   marketing_opt_in: boolean;
 }
 
+export interface TrackingSnapshot {
+  visitor_id: string;
+  landing_path?: string | null;
+  referrer?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_term?: string | null;
+  utm_content?: string | null;
+  fbclid?: string | null;
+  gclid?: string | null;
+  landing_page_id?: string | null;
+  variant_id?: string | null;
+}
+
+export interface LandingVariantContent {
+  heroHeadline?: string;
+  heroSubheadline?: string;
+  ctaText?: string;
+  heroImageUrl?: string;
+}
+
+export interface LandingVariant {
+  id: string;
+  name: string;
+  weight: number;
+  content: LandingVariantContent;
+}
+
+export interface ExperimentResolution {
+  landing_page_id: string | null;
+  experiment_status: "active" | "paused" | "none";
+  variants: LandingVariant[];
+}
+
+export type TrackingEventType = "page_view" | "click" | "booking_started" | "booking_completed";
+
 export interface BookingSegmentSelection {
   service_slug: string;
   service_variation_id: string;
@@ -111,6 +148,7 @@ export interface BookingRequest {
   customer: CustomerContact;
   note?: string | null;
   sms_opt_in: boolean;
+  tracking?: TrackingSnapshot | null;
 }
 
 export interface BookingConfirmation {
@@ -133,6 +171,7 @@ export interface FourHandRequestSubmission {
   customer: CustomerContact;
   requested_services?: string | null;
   note?: string | null;
+  tracking?: TrackingSnapshot | null;
 }
 
 export interface FourHandRequestConfirmation {
