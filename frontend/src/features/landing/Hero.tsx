@@ -83,11 +83,13 @@ function PriceBlock({ priceOld, priceNew }: { priceOld: number; priceNew: number
 
   return (
     <div style={styles.priceBlock}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, minWidth: 0 }}>
+      {savingsPct > 0 ? <div style={styles.offerBadge}>{savingsPct}% OFF</div> : null}
+      <div style={styles.priceRow}>
         <span style={styles.priceOld}>{formatPrice(priceOld)}</span>
+        <span style={styles.arrow}>&rarr;</span>
         <span style={styles.priceNew}>{formatPrice(priceNew)}</span>
       </div>
-      {savingsPct > 0 ? <div style={styles.savingsBadge}>SAVE {savingsPct}%</div> : null}
+      <div style={styles.offerNote}>First visit</div>
     </div>
   );
 }
@@ -108,26 +110,40 @@ const styles: Record<string, CSSProperties> = {
   priceBlock: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
+    flexWrap: "nowrap",
+    gap: 10,
     marginTop: 22,
-    padding: "14px 10px 14px 18px",
+    padding: "14px 16px",
     background: "var(--color-accent-tint-2)",
     border: "1px solid var(--color-border)",
     borderRadius: 14,
+    overflow: "hidden",
   },
-  priceOld: { flex: "none", fontSize: 16, color: "var(--color-muted-3)", textDecoration: "line-through" },
-  priceNew: { flex: "none", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 32, lineHeight: 1, color: "var(--color-ink)" },
-  savingsBadge: {
+  offerBadge: {
     flex: "none",
     background: "var(--color-accent)",
-    color: "#fff",
-    fontSize: 13,
+    color: "#fff7f3",
+    fontSize: 12,
     fontWeight: 700,
     letterSpacing: 0.3,
-    padding: "8px 14px",
-    borderRadius: 20,
+    padding: "6px 10px",
+    borderRadius: 8,
     whiteSpace: "nowrap",
+  },
+  priceRow: { flex: "none", display: "flex", alignItems: "baseline", gap: 7 },
+  priceOld: { fontSize: 15, color: "var(--color-muted-3)", textDecoration: "line-through" },
+  arrow: { fontSize: 15, color: "#b9a89f" },
+  priceNew: { fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 28, lineHeight: 1, color: "var(--color-ink)" },
+  offerNote: {
+    flex: "1 1 auto",
+    minWidth: 0,
+    textAlign: "right",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    fontSize: 12,
+    fontWeight: 500,
+    color: "var(--color-ink-soft)",
   },
   primaryButton: { width: "100%", marginTop: 16, border: "none", background: "var(--color-accent)", color: "#fff7f3", fontSize: 16, fontWeight: 600, letterSpacing: 0.3, padding: 17, borderRadius: 12, cursor: "pointer", boxShadow: "0 8px 22px rgba(158,90,99,0.28)" },
   secondaryButton: { width: "100%", marginTop: 10, border: "1px solid #d9c7bd", background: "transparent", color: "var(--color-ink)", fontSize: 15, fontWeight: 500, padding: 15, borderRadius: 12, cursor: "pointer" },
