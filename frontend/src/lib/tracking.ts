@@ -1,16 +1,9 @@
 import { apiPost } from "@/api/client";
+import { getPersistedVariantAssignment } from "@/lib/experiments";
+import { getOrCreateVisitorId } from "@/lib/visitorId";
 import type { TrackingSnapshot } from "@/types/api";
 
-const VISITOR_ID_KEY = "mani_visitor_id";
 const SNAPSHOT_KEY = "mani_tracking_snapshot";
-
-function getOrCreateVisitorId(): string {
-  const existing = localStorage.getItem(VISITOR_ID_KEY);
-  if (existing) return existing;
-  const id = crypto.randomUUID();
-  localStorage.setItem(VISITOR_ID_KEY, id);
-  return id;
-}
 
 function captureSnapshotFromUrl(): TrackingSnapshot {
   const params = new URLSearchParams(window.location.search);
@@ -45,7 +38,7 @@ export function getTrackingSnapshot(): TrackingSnapshot {
     const stored = localStorage.getItem(SNAPSHOT_KEY);
     if (stored) {
       try {
-        return JSON.parse(stored) as TrackingSnapshot;
+        return withVariantAssignment(JSON.parse(stored) as TrackingSnapshot);
       } catch {
         // fall through and recapture if the stored value is corrupt
       }
@@ -54,7 +47,18 @@ export function getTrackingSnapshot(): TrackingSnapshot {
 
   const snapshot = captureSnapshotFromUrl();
   localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
-  return snapshot;
+  return withVariantAssignment(snapshot);
+}
+
+/**
+ * The variant assignment is merged in fresh on every call (not baked into the cached
+ * SNAPSHOT_KEY payload) so it always reflects the visitor's current experiment
+ * assignment, independent of whether the UTM-based snapshot above was a cache hit.
+ */
+function withVariantAssignment(snapshot: TrackingSnapshot): TrackingSnapshot {
+  const assignment = getPersistedVariantAssignment();
+  if (!assignment) return snapshot;
+  return { ...snapshot, landing_page_id: assignment.landingPageId, variant_id: assignment.variantId };
 }
 
 /** Fire-and-forget: a failed tracking call must never affect the visitor's experience. */

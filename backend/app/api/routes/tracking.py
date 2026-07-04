@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, Request
 
 from app.api.deps import get_tracking_service
-from app.domain.schemas import TrackingSnapshot, VisitRecordedResponse
+from app.domain.schemas import EventRecordedResponse, TrackingEvent, TrackingSnapshot, VisitRecordedResponse
 from app.services.request_context import derive_client_context
 from app.services.tracking_service import TrackingService
 
@@ -24,3 +24,12 @@ async def record_visit(
         # Analytics must never block or break the visitor's page load.
         logger.exception("Failed to record visit")
     return VisitRecordedResponse(visitor_id=snapshot.visitor_id)
+
+
+@router.post("/event", response_model=EventRecordedResponse, status_code=201)
+async def record_event(
+    event: TrackingEvent,
+    tracking_service: TrackingService = Depends(get_tracking_service),
+) -> EventRecordedResponse:
+    await tracking_service.record_event_safely(event)
+    return EventRecordedResponse(recorded=True)

@@ -3,6 +3,7 @@ import { createBooking, submitFourHandRequest } from "@/api/bookings";
 import { ApiError } from "@/api/client";
 import type { BookingConfirmation, CartMenu, SlotOption } from "@/types/api";
 import { BookingModalState, BookingStep, initialBookingModalState } from "@/features/booking/types";
+import { logExperimentEvent } from "@/lib/experiments";
 import { getTrackingSnapshot } from "@/lib/tracking";
 
 function formatPhone(value: string): string {
@@ -107,6 +108,7 @@ export function useBookingModal() {
 
     const familyName = "Client"; // design collects first name + phone/email only
     const tracking = getTrackingSnapshot();
+    logExperimentEvent("booking_started", tracking.landing_page_id ?? null, tracking.variant_id ?? null);
 
     try {
       if (current.fourHandSelected) {
@@ -154,6 +156,7 @@ export function useBookingModal() {
         sms_opt_in: current.smsOptIn,
         tracking,
       });
+      logExperimentEvent("booking_completed", tracking.landing_page_id ?? null, tracking.variant_id ?? null);
       setState((s) => ({ ...s, submitting: false, done: true, bookingConfirmation: confirmation }));
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "We couldn't confirm your appointment. Please try again.";

@@ -48,6 +48,10 @@ async def create_booking(
         customer_email=request.customer.email_address,
         customer_phone=request.customer.phone_number,
     )
+    await tracking_service.record_attribution_safely(
+        tracking=request.tracking,
+        booking_id=confirmation.booking_id,
+    )
     return confirmation
 
 

@@ -13,6 +13,7 @@ from app.services.artist_service import ArtistService
 from app.services.availability_service import AvailabilityService
 from app.services.booking_service import BookingService
 from app.services.catalog_service import CatalogService
+from app.services.experiment_service import ExperimentService
 from app.services.tracking_service import TrackingService
 
 
@@ -88,3 +89,8 @@ def get_marketing_repository() -> MarketingRepository:
 @lru_cache
 def get_tracking_service() -> TrackingService:
     return TrackingService(get_marketing_repository())
+
+
+@lru_cache
+def get_experiment_service() -> ExperimentService:
+    return ExperimentService(get_marketing_repository())

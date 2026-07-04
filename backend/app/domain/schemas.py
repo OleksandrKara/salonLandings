@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -154,10 +155,29 @@ class TrackingSnapshot(BaseModel):
     utm_content: str | None = Field(default=None, max_length=200)
     fbclid: str | None = Field(default=None, max_length=500)
     gclid: str | None = Field(default=None, max_length=500)
+    landing_page_id: str | None = Field(default=None, max_length=64)
+    variant_id: str | None = Field(default=None, max_length=64)
 
 
 class VisitRecordedResponse(BaseModel):
     visitor_id: str
+
+
+class TrackingEvent(BaseModel):
+    """A funnel event for the experimentation system — distinct from `TrackingSnapshot`,
+    which drives the general visits/submissions log. Always carries a session_id (the same
+    client-generated visitor_id) so events can be correlated per visitor.
+    """
+
+    session_id: str = Field(max_length=64)
+    landing_page_id: str | None = None
+    variant_id: str | None = None
+    event_type: Literal["page_view", "click", "booking_started", "booking_completed"]
+    metadata: dict = Field(default_factory=dict)
+
+
+class EventRecordedResponse(BaseModel):
+    recorded: bool
 
 
 class BookingRequest(BaseModel):

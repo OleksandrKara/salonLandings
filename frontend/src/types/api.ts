@@ -105,7 +105,31 @@ export interface TrackingSnapshot {
   utm_content?: string | null;
   fbclid?: string | null;
   gclid?: string | null;
+  landing_page_id?: string | null;
+  variant_id?: string | null;
 }
+
+export interface LandingVariantContent {
+  heroHeadline?: string;
+  heroSubheadline?: string;
+  ctaText?: string;
+  heroImageUrl?: string;
+}
+
+export interface LandingVariant {
+  id: string;
+  name: string;
+  weight: number;
+  content: LandingVariantContent;
+}
+
+export interface ExperimentResolution {
+  landing_page_id: string | null;
+  experiment_status: "active" | "paused" | "none";
+  variants: LandingVariant[];
+}
+
+export type TrackingEventType = "page_view" | "click" | "booking_started" | "booking_completed";
 
 export interface BookingSegmentSelection {
   service_slug: string;

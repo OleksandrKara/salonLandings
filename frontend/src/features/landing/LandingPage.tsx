@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { BookingModal } from "@/features/booking/BookingModal";
 import { BookingModalProvider } from "@/features/booking/BookingModalContext";
 import { BookingCtaBanner, FinalUrgencyCta } from "@/features/landing/CtaBanners";
@@ -12,11 +12,22 @@ import { ResultsCarousel } from "@/features/landing/ResultsCarousel";
 import { StickyBottomBar } from "@/features/landing/StickyBottomBar";
 import { TrustGrid } from "@/features/landing/TrustGrid";
 import { WhyClientsStay } from "@/features/landing/WhyClientsStay";
+import { resolveExperiment } from "@/lib/experiments";
 import { recordVisit } from "@/lib/tracking";
+import type { LandingVariantContent } from "@/types/api";
 
 export function LandingPage() {
+  const [overrides, setOverrides] = useState<LandingVariantContent>({});
+
   useEffect(() => {
     recordVisit();
+    // Not gated on first paint (protects LCP) — the hardcoded default copy renders
+    // immediately and briefly flashes to the assigned variant's copy once resolved.
+    resolveExperiment("mani")
+      .then(({ content }) => setOverrides(content))
+      .catch(() => {
+        // experiment resolution only — nothing to recover, nothing to surface to the visitor
+      });
   }, []);
 
   return (
@@ -24,7 +35,7 @@ export function LandingPage() {
       <BookingModalProvider>
         <div style={styles.page}>
           <Header />
-          <Hero />
+          <Hero overrides={overrides} />
           <TrustGrid />
           <ResultsCarousel />
           <WhyClientsStay />
