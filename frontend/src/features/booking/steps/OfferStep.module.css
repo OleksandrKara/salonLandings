@@ -1,0 +1,79 @@
+.screen {
+  min-height: 100vh;
+  padding-bottom: var(--space-8);
+}
+
+.hero {
+  padding: var(--space-8) var(--space-4) var(--space-6);
+  text-align: center;
+  background: linear-gradient(180deg, #f7e6df 0%, var(--color-bg) 100%);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-3);
+}
+
+.headline {
+  font-size: 34px;
+  margin-bottom: var(--space-3);
+}
+
+.tagline {
+  color: var(--color-ink-muted);
+  font-size: 15px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.offers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: calc(-1 * var(--space-6));
+}
+
+.cardHeader {
+  margin-bottom: var(--space-3);
+}
+
+.offerLabel {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #3a2c0f;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  margin-bottom: var(--space-2);
+}
+
+.offerName {
+  font-size: 22px;
+}
+
+.offerDescription {
+  color: var(--color-ink-muted);
+  font-size: 14px;
+  margin-bottom: var(--space-4);
+}
+
+.fromPrice {
+  font-size: 13px;
+  color: var(--color-ink-muted);
+  margin: var(--space-2) 0 var(--space-4);
+}
+
+.disclaimer {
+  font-size: 12px;
+  color: var(--color-ink-muted);
+  text-align: center;
+  margin-top: var(--space-6);
+  padding: 0 var(--space-2);
+}

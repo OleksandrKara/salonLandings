@@ -1,0 +1,39 @@
+/**
+ * Placeholder design tokens — a warm, salon-appropriate palette used until the
+ * exact Cloud Design (Russian Manicure Landing) tokens are synced in. Swap the
+ * values below; components consume these variables, not raw colors.
+ */
+:root {
+  --color-bg: #fff8f5;
+  --color-surface: #ffffff;
+  --color-ink: #2b2320;
+  --color-ink-muted: #6b5f59;
+  --color-primary: #b4675a;
+  --color-primary-dark: #8f4d42;
+  --color-accent: #d8a24a;
+  --color-border: #ecdfd8;
+  --color-success: #4f7a5b;
+  --color-danger: #b3413a;
+
+  --font-heading: "Georgia", "Iowan Old Style", serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --shadow-card: 0 8px 24px rgba(43, 35, 32, 0.08);
+  --shadow-elevated: 0 16px 40px rgba(43, 35, 32, 0.16);
+
+  --max-width: 480px;
+}

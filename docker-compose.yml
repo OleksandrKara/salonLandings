@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    container_name: mani-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    ports:
+      - "127.0.0.1:8001:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: mani-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:3001:3000"

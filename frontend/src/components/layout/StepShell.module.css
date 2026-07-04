@@ -1,0 +1,82 @@
+.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--space-8);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  position: sticky;
+  top: 0;
+  background: var(--color-bg);
+  z-index: 10;
+}
+
+.backButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.backSpacer {
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.progress {
+  display: flex;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.dot,
+.dotActive {
+  height: 4px;
+  border-radius: var(--radius-pill);
+  flex: 1;
+  background: var(--color-border);
+}
+
+.dotActive {
+  background: var(--color-primary);
+}
+
+.titleBlock {
+  padding: var(--space-2) 0 var(--space-5);
+}
+
+.title {
+  font-size: 26px;
+}
+
+.subtitle {
+  margin-top: var(--space-2);
+  color: var(--color-ink-muted);
+  font-size: 15px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(to top, var(--color-bg) 70%, transparent);
+  padding: var(--space-5) var(--space-4) var(--space-6);
+  margin-top: auto;
+}
