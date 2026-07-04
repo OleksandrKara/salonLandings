@@ -1,23 +1,15 @@
-import logging
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from app.api.deps import get_catalog_service
-from app.domain.schemas import ServiceOffer
-from app.services.catalog_service import CatalogService, ServiceNotFoundError
+from app.domain.schemas import CartMenu
+from app.services.catalog_service import CatalogService
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/services", tags=["services"])
 
 
-@router.get("", response_model=list[ServiceOffer])
-def list_services(catalog_service: CatalogService = Depends(get_catalog_service)) -> list[ServiceOffer]:
-    return catalog_service.list_service_offers()
-
-
-@router.get("/{slug}", response_model=ServiceOffer)
-def get_service(slug: str, catalog_service: CatalogService = Depends(get_catalog_service)) -> ServiceOffer:
-    try:
-        return catalog_service.get_service_offer(slug)
-    except ServiceNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+@router.get("", response_model=CartMenu)
+def get_cart_menu(catalog_service: CatalogService = Depends(get_catalog_service)) -> CartMenu:
+    """The primary service, combinable add-ons, and the 4-hand request info
+    that power the "Customize your visit" step.
+    """
+    return catalog_service.get_cart_menu()

@@ -1,0 +1,150 @@
+// Static marketing copy ported verbatim from the Cloud Design
+// ("Russian Manicure Landing.dc.html") — headline, trust points, reviews, etc.
+// Anything price-related is NOT here; that always comes live from the API.
+
+import fourhandsImg from "@/assets/fourhands.jpg";
+import mani1Img from "@/assets/mani1.jpg";
+import mani2Img from "@/assets/mani2.jpg";
+import nail2Img from "@/assets/nail2.jpg";
+import nail3Img from "@/assets/nail3.jpg";
+import nail4Img from "@/assets/nail4.jpg";
+import pedi1Img from "@/assets/pedi1.jpg";
+
+export const HEADLINE = "Russian Hard Gel Manicure in Downtown San Diego";
+export const SUBHEAD = "Long-lasting, chip-free nails up to 4 weeks — trusted by 534+ local clients.";
+
+export const CREDIBILITY_STATS = [
+  { value: "4.7★", label: "113 Google reviews" },
+  { value: "4 wks", label: "chip-free wear" },
+  { value: "100%", label: "acrylic-free" },
+];
+
+export const TRUST_POINTS = [
+  { no: "01", title: "No acrylics, ever", desc: "Hard gel & gel polish only — kinder to your natural nails." },
+  { no: "02", title: "Russian cuticle work", desc: "Precise dry-cuticle technique for a clean, flawless finish." },
+  {
+    no: "03",
+    title: "2-week guarantee",
+    desc: "Not happy? We fix it free within 14 days — your satisfaction is covered.",
+  },
+  { no: "04", title: "Clean & hygienic", desc: "Sanitized tools and careful standards every single visit." },
+];
+
+export interface CarouselSlide {
+  id: string;
+  src: string;
+  badge: string;
+  caption: string;
+  sub: string;
+}
+
+export const CAROUSEL_SLIDES: CarouselSlide[] = [
+  { id: "slMani1", src: mani1Img, badge: "Manicure", caption: "Russian hard-gel manicure", sub: "Flawless cuticles · high-gloss finish" },
+  { id: "slMani2", src: mani2Img, badge: "Manicure", caption: "Glossy hard-gel finish", sub: "Nail-safe, no acrylic" },
+  { id: "slNail3", src: nail3Img, badge: "Cuticle work", caption: "Clean Russian cuticle work", sub: "Precise dry technique" },
+  { id: "slNail4", src: nail4Img, badge: "Natural nails", caption: "Natural nail-health focused", sub: "Strengthened, structured gel" },
+  { id: "slNail2", src: nail2Img, badge: "Long wear", caption: "No chips for 3–4 weeks", sub: "Chip-resistant, high shine" },
+  { id: "slPedi", src: pedi1Img, badge: "Pedicure", caption: "Dry Russian pedicure", sub: "No water soak, hard gel finish" },
+  { id: "slFourHands", src: fourhandsImg, badge: "4-Hand Service", caption: "Two techs, twice as fast", sub: "Mani + pedi together, by request" },
+];
+
+export const WHY_CLIENTS_STAY = [
+  "Long-lasting wear — up to 4 full weeks",
+  "High-precision Russian manicure technique",
+  "Natural nail-health first, no damage",
+  "Clean, modern, calm salon experience",
+  "Trusted by 534+ recurring local clients",
+];
+
+export interface Review {
+  initial: string;
+  name: string;
+  date: string;
+  stars: string;
+  text: string;
+}
+
+export const REVIEWS: Review[] = [
+  {
+    initial: "J",
+    name: "Jessica M.",
+    date: "2 weeks ago",
+    stars: "★★★★★",
+    text: "Best Russian manicure I've had in San Diego. Cuticles were flawless and it's still perfect after 3 weeks — no chips at all.",
+  },
+  {
+    initial: "A",
+    name: "Alina R.",
+    date: "1 month ago",
+    stars: "★★★★★",
+    text: "So clean and precise. No acrylic, just healthy natural nails with a gorgeous glossy finish. Downtown location is easy too.",
+  },
+  {
+    initial: "D",
+    name: "Daniela K.",
+    date: "1 month ago",
+    stars: "★★★★★",
+    text: "Finally a place that does a true Russian manicure. Super hygienic, relaxing, and they even offered me tea. Booking again for sure.",
+  },
+];
+
+export const MORE_REVIEWS: Review[] = [
+  {
+    initial: "M",
+    name: "Marisol T.",
+    date: "2 months ago",
+    stars: "★★★★★",
+    text: "The attention to detail is unreal. My nails have never looked this clean. Worth every penny of the first-visit price.",
+  },
+  {
+    initial: "S",
+    name: "Sophia L.",
+    date: "2 months ago",
+    stars: "★★★★★",
+    text: "Booked from Instagram and it looked exactly like the photos. Lasted almost 4 weeks with zero lifting. Highly recommend.",
+  },
+  {
+    initial: "V",
+    name: "Valeria P.",
+    date: "3 months ago",
+    stars: "★★★★★",
+    text: "Beautiful studio, spotless tools, and the most precise cuticle work I've seen. My new go-to in Downtown SD.",
+  },
+];
+
+export const LOCATION = {
+  name: "AK.LUX.NAILS",
+  address: "1357 Seventh Ave, Ste C, San Diego, CA 92101",
+  note: "Street parking available on 7th Ave · Open 7 days a week by appointment",
+};
+
+export const CANCELLATION_POLICY_TEXT = `We ask that you please reschedule or cancel at least 24 hours before your appointment, or you may be charged a cancellation fee of $25.00.
+
+CANCELLATION & NO-SHOW
+• Missed appointments or cancellations made with less than 24 hours' notice will incur a $25 fee.
+• This policy helps us respect the time of our nail technicians and accommodate other clients waiting for an opening.
+
+We understand that emergencies happen, and we will always do our best to accommodate when possible. Thank you for respecting our time and the time of our masters.
+
+SERVICE SATISFACTION & NO REFUND
+At AK.LUX.NAILS, we take great pride in the quality of our work and stand behind every service we provide. Please note:
+• All services are non-refundable once completed.
+• By booking, you agree that results are subjective and may vary based on personal preference.
+• We strongly encourage clients to communicate their preferences during the appointment to ensure the desired result.
+
+If you are not fully satisfied:
+• You must notify us within 48 hours of your appointment.
+• We offer a complimentary fix within 14 days.
+
+Refunds will not be issued for dissatisfaction after the service has been completed.
+
+IMPORTANT
+Failure to contact us within the specified time frame or refusal of a correction appointment will void any service guarantee.
+
+By booking an appointment, you agree to our cancellation and no-refund policy.
+
+Warmly,
+AK.LUX.NAILS`;
+
+export const SMS_CONSENT_TEXT =
+  "By checking this box, I agree to receive recurring automated marketing & appointment text messages (offers, promotions & reminders) from AK.LUX.NAILS at the number I provided. Consent is not a condition of purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help.";

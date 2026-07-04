@@ -31,6 +31,32 @@ export function formatSlotDay(isoStart: string): string {
   return dayFormatter.format(new Date(isoStart));
 }
 
+// en-CA locale formats as YYYY-MM-DD, convenient as a calendar grouping key.
+const dateKeyFormatter = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  timeZone: SALON_TIME_ZONE,
+});
+
+export function toPacificDateKey(isoStart: string): string {
+  return dateKeyFormatter.format(new Date(isoStart));
+}
+
+export function groupSlotsByDateKey<T extends { start_at: string }>(slots: T[]): Map<string, T[]> {
+  const groups = new Map<string, T[]>();
+  for (const slot of slots) {
+    const key = toPacificDateKey(slot.start_at);
+    const existing = groups.get(key);
+    if (existing) {
+      existing.push(slot);
+    } else {
+      groups.set(key, [slot]);
+    }
+  }
+  return groups;
+}
+
 export function formatSlotTime(isoStart: string): string {
   return timeFormatter.format(new Date(isoStart));
 }

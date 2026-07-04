@@ -1,0 +1,221 @@
+import type { CSSProperties } from "react";
+import { SMS_CONSENT_TEXT } from "@/data/designCopy";
+import { BookingModalState } from "@/features/booking/types";
+import { formatPrice, formatSlotDay, formatSlotTime } from "@/lib/formatting";
+
+interface ConfirmStepProps {
+  state: BookingModalState;
+  stepLabel: string;
+  onToggleSms: () => void;
+  onToggleCancelAgree: () => void;
+  onOpenPolicy: () => void;
+  onSubmit: () => void;
+  onBack: () => void;
+}
+
+export function ConfirmStep({
+  state,
+  stepLabel,
+  onToggleSms,
+  onToggleCancelAgree,
+  onOpenPolicy,
+  onSubmit,
+  onBack,
+}: ConfirmStepProps) {
+  const slot = state.selectedSlot;
+  const isFourHand = state.fourHandSelected;
+  const smartMatch = !isFourHand && !!slot && slot.savings > 0;
+  const total = isFourHand ? null : slot?.price ?? 0;
+  const submitDisabled = !state.cancelAgree || state.submitting;
+
+  return (
+    <div>
+      <div style={styles.stepLabel}>{stepLabel}</div>
+      <h3 style={styles.title}>{isFourHand ? "Confirm your request" : "Confirm & hold your spot"}</h3>
+
+      {isFourHand ? (
+        <div style={styles.callNotice}>
+          <span style={{ flex: "none", fontSize: 18, lineHeight: 1.1 }}>📞</span>
+          <span style={{ fontSize: 13, lineHeight: 1.45, color: "var(--color-ink-soft)" }}>
+            <strong style={{ color: "var(--color-accent)" }}>We'll call you to schedule.</strong> A 4-hand visit
+            needs two techs, so we confirm the exact date, time &amp; pricing by phone — usually within a few hours.
+          </span>
+        </div>
+      ) : null}
+
+      {smartMatch && slot ? (
+        <div style={styles.smartMatchBanner}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 5 }}>
+            <span style={{ fontSize: 17 }}>✦</span>
+            <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: 0.2, color: "var(--color-warm-gold-text)" }}>
+              Smart Match discount applied
+            </span>
+          </div>
+          <div style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--color-warm-gold-text-2)" }}>
+            We found you an excellent available specialist and automatically passed on a better rate —{" "}
+            <strong style={{ color: "var(--color-warm-gold-text)" }}>you saved {formatPrice(slot.savings)}</strong>.
+            Same premium service, smarter price.
+          </div>
+        </div>
+      ) : null}
+
+      {!isFourHand && slot ? (
+        <div style={styles.breakdownBox}>
+          {slot.segments.map((seg) => (
+            <div key={seg.service_slug} style={styles.lineItem}>
+              <span>{seg.name}</span>
+              <span>{formatPrice(seg.compare_at_price ?? seg.price)}</span>
+            </div>
+          ))}
+          {slot.compare_at_price != null && slot.compare_at_price > slot.price ? (
+            <div style={styles.subtotalRow}>
+              <span>Subtotal</span>
+              <span>{formatPrice(slot.compare_at_price)}</span>
+            </div>
+          ) : null}
+          <div style={styles.discountRow}>
+            <span>First-visit &amp; Smart Match savings</span>
+            <span>−{formatPrice(Math.max((slot.compare_at_price ?? slot.price) - slot.price, 0))}</span>
+          </div>
+          <div style={styles.totalRow}>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--color-ink)" }}>Total today</span>
+            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 24, color: "var(--color-accent)" }}>
+              {formatPrice(total ?? 0)}
+            </span>
+          </div>
+          <div style={styles.appointmentRow}>
+            <span>Appointment</span>
+            <span style={{ color: "var(--color-ink)", fontWeight: 500, textAlign: "right", maxWidth: "60%" }}>
+              {formatSlotDay(slot.start_at)} · {formatSlotTime(slot.start_at)}
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      <label
+        onClick={onToggleSms}
+        style={{
+          ...styles.smsCard,
+          borderColor: state.smsOptIn ? "var(--color-accent)" : "#e0a89f",
+          background: state.smsOptIn ? "#f6e8e4" : "#fdf2ef",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Checkbox checked={state.smsOptIn} border="#c9926f" />
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", fontWeight: 600, fontSize: 14.5, color: "var(--color-ink)" }}>
+              Text me reminders &amp; exclusive offers
+            </span>
+            <span style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--color-accent)", marginTop: 2 }}>
+              {state.smsOptIn ? "You're in — enjoy VIP offers & booking updates." : "Never miss your slot + first dibs on last-minute openings"}
+            </span>
+          </span>
+          <span
+            style={{
+              flex: "none",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: 0.5,
+              textTransform: "uppercase",
+              color: state.smsOptIn ? "#fff" : "var(--color-accent)",
+              background: state.smsOptIn ? "var(--color-accent)" : "var(--color-accent-tint)",
+              padding: "4px 8px",
+              borderRadius: 20,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {state.smsOptIn ? "On" : "Recommended"}
+          </span>
+        </div>
+        <span style={{ display: "block", fontSize: 10.5, lineHeight: 1.45, color: "var(--color-muted-3)", marginTop: 10 }}>
+          {SMS_CONSENT_TEXT}
+        </span>
+      </label>
+
+      <label
+        onClick={onToggleCancelAgree}
+        style={{
+          ...styles.cancelCard,
+          borderColor: state.cancelAgree ? "var(--color-accent)" : "var(--color-border-3)",
+        }}
+      >
+        <Checkbox checked={state.cancelAgree} border="#c9b3aa" topAlign />
+        <span style={{ fontSize: 12.5, lineHeight: 1.45, color: "var(--color-muted)" }}>
+          I agree to the{" "}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenPolicy();
+            }}
+            style={{ color: "var(--color-accent)", textDecoration: "underline", fontWeight: 600 }}
+          >
+            Cancellation Policy
+          </a>{" "}
+          — reschedule or cancel at least 24 hours ahead, or a <strong style={{ color: "var(--color-accent)" }}>$25 fee</strong> may apply.
+        </span>
+      </label>
+
+      {state.submitError ? <div style={styles.errorBox}>{state.submitError}</div> : null}
+
+      <button
+        onClick={onSubmit}
+        disabled={submitDisabled}
+        style={{ ...styles.submitButton, background: submitDisabled ? "#d8bfb8" : "var(--color-accent)" }}
+      >
+        {state.submitting ? "Submitting…" : isFourHand ? "Send My Request" : "Confirm Booking"}
+      </button>
+      <button onClick={onBack} style={styles.backButton}>
+        Back
+      </button>
+      <div style={styles.footnote}>
+        {isFourHand
+          ? "No payment now — we call to finalize everything."
+          : "No payment required now — we'll confirm your appointment shortly."}
+      </div>
+    </div>
+  );
+}
+
+function Checkbox({ checked, border, topAlign = false }: { checked: boolean; border: string; topAlign?: boolean }) {
+  return (
+    <span
+      style={{
+        flex: "none",
+        width: 22,
+        height: 22,
+        borderRadius: 6,
+        border: `2px solid ${checked ? "var(--color-accent)" : border}`,
+        background: checked ? "var(--color-accent)" : "#fff",
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 14,
+        marginTop: topAlign ? 1 : 0,
+      }}
+    >
+      {checked ? "✓" : ""}
+    </span>
+  );
+}
+
+const styles: Record<string, CSSProperties> = {
+  stepLabel: { fontSize: 11, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--color-accent)", fontWeight: 600, marginTop: 6 },
+  title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 26, margin: "6px 0 14px" },
+  callNotice: { display: "flex", alignItems: "flex-start", gap: 11, padding: "14px 15px", border: "1.5px solid #e0b8b0", borderRadius: 12, background: "#f9efe9", marginBottom: 16 },
+  smartMatchBanner: { position: "relative", overflow: "hidden", padding: "15px 16px", border: "1.5px solid var(--color-warm-gold-border)", borderRadius: 14, background: "var(--color-warm-gold-bg)", marginBottom: 16 },
+  breakdownBox: { padding: 16, border: "1px solid var(--color-border-2)", borderRadius: 12, background: "#faf3ef", marginBottom: 16 },
+  lineItem: { display: "flex", justifyContent: "space-between", fontSize: 13.5, padding: "3px 0", color: "var(--color-ink-soft)" },
+  subtotalRow: { display: "flex", justifyContent: "space-between", fontSize: 12.5, padding: "5px 0 3px", marginTop: 5, borderTop: "1px dashed #e3d3ca", color: "var(--color-muted-2)" },
+  discountRow: { display: "flex", justifyContent: "space-between", fontSize: 13, padding: "3px 0", color: "var(--color-accent)", fontWeight: 600 },
+  totalRow: { borderTop: "1px solid var(--color-border-3)", marginTop: 8, paddingTop: 9, display: "flex", justifyContent: "space-between", alignItems: "baseline" },
+  appointmentRow: { marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-muted)" },
+  smsCard: { display: "block", padding: "15px 16px", border: "2px solid", borderRadius: 14, cursor: "pointer", marginBottom: 16 },
+  cancelCard: { display: "flex", alignItems: "flex-start", gap: 11, padding: "13px 14px", border: "1px solid", borderRadius: 12, cursor: "pointer", background: "#fbf7f4" },
+  errorBox: { marginTop: 12, padding: 12, borderRadius: 10, background: "#fbeceb", color: "var(--color-danger)", fontSize: 13 },
+  submitButton: { width: "100%", marginTop: 16, border: "none", color: "#fff7f3", fontSize: 16, fontWeight: 600, padding: 16, borderRadius: 12, cursor: "pointer" },
+  backButton: { width: "100%", marginTop: 9, border: "none", background: "none", color: "var(--color-muted-2)", fontSize: 14, padding: 8, cursor: "pointer" },
+  footnote: { fontSize: 10.5, color: "var(--color-muted-3)", textAlign: "center", marginTop: 10 },
+};

@@ -43,6 +43,39 @@ class ServiceOffer(BaseModel):
         return top.compare_at_price
 
 
+class FlatAddon(BaseModel):
+    """A single-price add-on layered onto a tiered service (e.g. nail art design)."""
+
+    slug: str
+    name: str
+    description: str | None = None
+    price: float
+    duration_minutes: int
+    variation_id: str
+    variation_version: int
+    team_member_ids: list[str]
+    requires_slug: str
+
+
+class FourHandRequestInfo(BaseModel):
+    slug: str
+    name: str
+    description: str
+    price_description: str | None = None
+
+
+class CartMenu(BaseModel):
+    """Everything the "Customize your visit" step needs: the primary service,
+    the services that can be added alongside it, flat add-ons, and the
+    lead-capture-only 4-hand path.
+    """
+
+    manicure: ServiceOffer
+    pedicure: ServiceOffer
+    design_addon: FlatAddon
+    four_hand_request: FourHandRequestInfo
+
+
 class Artist(BaseModel):
     id: str
     display_name: str
@@ -51,12 +84,22 @@ class Artist(BaseModel):
     photo_url: str | None = None
 
 
+class SegmentOption(BaseModel):
+    """One service within a (possibly multi-service) appointment slot."""
+
+    service_slug: str
+    name: str
+    variation_id: str
+    variation_version: int
+    price: float
+    compare_at_price: float | None = None
+    duration_minutes: int
+
+
 class SlotOption(BaseModel):
     start_at: str
     end_at: str
     duration_minutes: int
-    service_variation_id: str
-    service_variation_version: int
     team_member_id: str
     artist_name: str | None = None
     tier: ArtistTier
@@ -65,10 +108,11 @@ class SlotOption(BaseModel):
     advertised_price: float
     savings: float = Field(description="advertised_price - price, floored at 0")
     is_best_price: bool = False
+    segments: list[SegmentOption]
 
 
 class AvailabilityResponse(BaseModel):
-    service_slug: str
+    services: list[str]
     artist_selection: str  # "any" or a team_member_id
     slots: list[SlotOption]
 
@@ -81,29 +125,49 @@ class CustomerContact(BaseModel):
     marketing_opt_in: bool = False
 
 
-class BookingSlotSelection(BaseModel):
+class BookingSegmentSelection(BaseModel):
     service_slug: str
-    start_at: str
     service_variation_id: str
     service_variation_version: int
+
+
+class BookingSlotSelection(BaseModel):
+    start_at: str
     team_member_id: str
+    segments: list[BookingSegmentSelection]
 
 
 class BookingRequest(BaseModel):
     slot: BookingSlotSelection
     customer: CustomerContact
     note: str | None = Field(default=None, max_length=500)
+    sms_opt_in: bool = False
 
 
 class BookingConfirmation(BaseModel):
     booking_id: str
     status: str
     start_at: str
+    duration_minutes: int
     service_name: str
     tier: ArtistTier
     artist_name: str | None
     price: float
+    compare_at_price: float | None
     location_name: str
     location_address: str
     location_phone: str | None
     cancellation_policy_text: str | None
+
+
+class FourHandRequestSubmission(BaseModel):
+    customer: CustomerContact
+    requested_services: str | None = Field(default=None, max_length=200)
+    note: str | None = Field(default=None, max_length=500)
+
+
+class FourHandRequestConfirmation(BaseModel):
+    booking_id: str
+    status: str
+    service_name: str
+    message: str

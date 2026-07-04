@@ -1,122 +1,136 @@
-import { FormEvent, useState } from "react";
-import { createBooking } from "@/api/bookings";
-import { ApiError } from "@/api/client";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { ErrorNotice } from "@/components/ui/ErrorNotice";
-import { formatPrice, formatSlotDay, formatSlotTime } from "@/lib/formatting";
-import type { BookingConfirmation, CustomerContact, ServiceOffer, SlotOption } from "@/types/api";
-import styles from "./ContactStep.module.css";
+import type { CSSProperties } from "react";
+import { formatPrice } from "@/lib/formatting";
+import type { ServiceOffer } from "@/types/api";
 
 interface ContactStepProps {
-  offer: ServiceOffer;
-  slot: SlotOption;
-  onBookingConfirmed: (confirmation: BookingConfirmation) => void;
+  manicure: ServiceOffer;
+  stepLabel: string;
+  givenName: string;
+  phone: string;
+  email: string;
+  onGivenNameChange: (v: string) => void;
+  onPhoneChange: (v: string) => void;
+  onEmailChange: (v: string) => void;
+  onContinue: () => void;
+  canContinue: boolean;
 }
 
-export function ContactStep({ offer, slot, onBookingConfirmed }: ContactStepProps) {
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-
-    const formData = new FormData(event.currentTarget);
-    const customer: CustomerContact = {
-      given_name: String(formData.get("given_name") ?? "").trim(),
-      family_name: String(formData.get("family_name") ?? "").trim(),
-      email_address: String(formData.get("email_address") ?? "").trim(),
-      phone_number: String(formData.get("phone_number") ?? "").trim(),
-      marketing_opt_in: formData.get("marketing_opt_in") === "on",
-    };
-    const note = String(formData.get("note") ?? "").trim();
-
-    setSubmitting(true);
-    try {
-      const confirmation = await createBooking({
-        slot: {
-          service_slug: offer.slug,
-          start_at: slot.start_at,
-          service_variation_id: slot.service_variation_id,
-          service_variation_version: slot.service_variation_version,
-          team_member_id: slot.team_member_id,
-        },
-        customer,
-        note: note || undefined,
-      });
-      onBookingConfirmed(confirmation);
-    } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "We couldn't confirm your appointment. Please try again.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
+export function ContactStep({
+  manicure,
+  stepLabel,
+  givenName,
+  phone,
+  email,
+  onGivenNameChange,
+  onPhoneChange,
+  onEmailChange,
+  onContinue,
+  canContinue,
+}: ContactStepProps) {
+  const top = manicure.pricing.find((p) => p.tier === "top") ?? manicure.pricing[0];
 
   return (
-    <div className={styles.wrapper}>
-      <Card>
-        <p className={styles.summaryService}>{offer.name}</p>
-        <p className={styles.summaryDetail}>
-          {formatSlotDay(slot.start_at)} at {formatSlotTime(slot.start_at)}
-          {slot.artist_name ? ` · ${slot.artist_name}` : ""}
-        </p>
-        <p className={styles.summaryPrice}>{formatPrice(slot.price)}</p>
-      </Card>
+    <div>
+      <div style={styles.stepLabel}>{stepLabel}</div>
+      <h3 style={styles.title}>Let's reserve your spot</h3>
+      <p style={styles.subtitle}>
+        First-visit price locked:{" "}
+        <span style={styles.strike}>{formatPrice(top.compare_at_price ?? top.price)}</span>{" "}
+        <strong style={{ color: "var(--color-accent)" }}>{formatPrice(top.price)}</strong>{" "}
+        <span style={styles.offerBadge}>{manicure.offer_label}</span>
+      </p>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.row}>
-          <Field label="First name" name="given_name" autoComplete="given-name" required />
-          <Field label="Last name" name="family_name" autoComplete="family-name" required />
-        </div>
-        <Field label="Email" name="email_address" type="email" autoComplete="email" required />
-        <Field label="Phone" name="phone_number" type="tel" autoComplete="tel" required />
-        <label className={styles.checkboxRow}>
-          <input type="checkbox" name="marketing_opt_in" />
-          <span>Send me exclusive offers and appointment reminders</span>
-        </label>
-        <label className={styles.field}>
-          <span className={styles.label}>Anything we should know? (optional)</span>
-          <textarea name="note" rows={2} maxLength={500} className={styles.textarea} />
-        </label>
+      <label style={styles.label}>First name</label>
+      <input
+        value={givenName}
+        onChange={(e) => onGivenNameChange(e.target.value)}
+        name="fname"
+        autoComplete="given-name"
+        autoCapitalize="words"
+        placeholder="Your name"
+        style={styles.input}
+      />
+      <label style={styles.label}>Mobile number</label>
+      <input
+        value={phone}
+        onChange={(e) => onPhoneChange(e.target.value)}
+        type="tel"
+        name="phone"
+        autoComplete="tel"
+        inputMode="numeric"
+        maxLength={14}
+        placeholder="(619) 000-0000"
+        style={styles.input}
+      />
+      <label style={styles.label}>Email</label>
+      <input
+        value={email}
+        onChange={(e) => onEmailChange(e.target.value)}
+        type="email"
+        name="email"
+        autoComplete="email"
+        inputMode="email"
+        autoCapitalize="off"
+        placeholder="you@email.com"
+        style={{ ...styles.input, marginBottom: 4 }}
+      />
+      <div style={styles.hint}>We'll only use these to confirm your appointment.</div>
 
-        {error ? <ErrorNotice message={error} /> : null}
-
-        <Button type="submit" fullWidth loading={submitting}>
-          Confirm Appointment
-        </Button>
-      </form>
+      <button
+        onClick={onContinue}
+        disabled={!canContinue}
+        style={{ ...styles.continueButton, background: canContinue ? "var(--color-accent)" : "#d8bfb8" }}
+      >
+        Continue
+      </button>
     </div>
   );
 }
 
-function Field({
-  label,
-  name,
-  type = "text",
-  autoComplete,
-  required,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  autoComplete?: string;
-  required?: boolean;
-}) {
-  return (
-    <label className={styles.field}>
-      <span className={styles.label}>{label}</span>
-      <input
-        className={styles.input}
-        name={name}
-        type={type}
-        autoComplete={autoComplete}
-        required={required}
-      />
-    </label>
-  );
-}
+const styles: Record<string, CSSProperties> = {
+  stepLabel: {
+    fontSize: 11,
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
+    color: "var(--color-accent)",
+    fontWeight: 600,
+    marginTop: 10,
+  },
+  title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 26, margin: "6px 0 4px" },
+  subtitle: { fontSize: 13.5, color: "var(--color-muted-2)", margin: "0 0 18px" },
+  strike: { color: "var(--color-muted-3)", textDecoration: "line-through" },
+  offerBadge: {
+    display: "inline-block",
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    color: "var(--color-accent)",
+    background: "var(--color-accent-tint)",
+    padding: "2px 8px",
+    borderRadius: 20,
+    verticalAlign: "middle",
+  },
+  label: { fontSize: 13, fontWeight: 500, color: "var(--color-ink-soft)" },
+  input: {
+    width: "100%",
+    minWidth: 0,
+    margin: "6px 0 14px",
+    padding: 14,
+    fontSize: 16,
+    border: "1px solid #e0cfc6",
+    borderRadius: 11,
+    background: "#fff",
+  },
+  hint: { fontSize: 11.5, color: "var(--color-muted-3)", marginBottom: 16 },
+  continueButton: {
+    width: "100%",
+    border: "none",
+    color: "#fff7f3",
+    fontSize: 16,
+    fontWeight: 600,
+    padding: 16,
+    borderRadius: 12,
+    cursor: "pointer",
+  },
+};

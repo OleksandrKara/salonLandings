@@ -23,14 +23,25 @@ class SquareAvailabilityGateway:
     def search(
         self,
         *,
-        service_variation_id: str,
+        service_variation_ids: list[str],
         start_at: str,
         end_at: str,
-        team_member_id: str | None = None,
+        team_member_ids: list[str] | None = None,
     ) -> list[Availability]:
-        segment_filter: dict = {"service_variation_id": service_variation_id}
-        if team_member_id:
-            segment_filter["team_member_id_filter"] = {"any": [team_member_id]}
+        """Search availability for one or more services performed back-to-back
+        in a single appointment (e.g. manicure + pedicure). Square schedules
+        multi-segment appointments with the same team member across all
+        segments automatically.
+
+        `team_member_ids`, when given, restricts results to that specific set
+        (e.g. artists who can perform every selected segment).
+        """
+        segment_filters = []
+        for variation_id in service_variation_ids:
+            segment_filter: dict = {"service_variation_id": variation_id}
+            if team_member_ids:
+                segment_filter["team_member_id_filter"] = {"any": team_member_ids}
+            segment_filters.append(segment_filter)
 
         try:
             response = self._client.bookings.search_availability(
@@ -38,13 +49,13 @@ class SquareAvailabilityGateway:
                     "filter": {
                         "start_at_range": {"start_at": start_at, "end_at": end_at},
                         "location_id": self._location_id,
-                        "segment_filters": [segment_filter],
+                        "segment_filters": segment_filters,
                     }
                 }
             )
         except ApiError as exc:
             logger.error(
-                "Square availability search failed for variation %s: %s", service_variation_id, exc.body
+                "Square availability search failed for variations %s: %s", service_variation_ids, exc.body
             )
             raise SquareIntegrationError("Unable to load available appointment times from Square", detail=exc.body) from exc
 

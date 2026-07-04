@@ -13,6 +13,13 @@ logger = logging.getLogger(__name__)
 _CONFLICT_ERROR_CODES = {"CONFLICTING_APPOINTMENT", "BOOKING_TIME_NOT_AVAILABLE"}
 
 
+class BookingSegment:
+    def __init__(self, *, service_variation_id: str, service_variation_version: int, duration_minutes: int):
+        self.service_variation_id = service_variation_id
+        self.service_variation_version = service_variation_version
+        self.duration_minutes = duration_minutes
+
+
 class SquareBookingGateway:
     def __init__(self, client: Square, location_id: str):
         self._client = client
@@ -24,10 +31,8 @@ class SquareBookingGateway:
         idempotency_key: str,
         customer_id: str,
         start_at: str,
-        service_variation_id: str,
-        service_variation_version: int,
         team_member_id: str,
-        duration_minutes: int,
+        segments: list[BookingSegment],
         customer_note: str | None = None,
     ) -> Booking:
         try:
@@ -40,11 +45,12 @@ class SquareBookingGateway:
                     "customer_note": customer_note,
                     "appointment_segments": [
                         {
-                            "duration_minutes": duration_minutes,
-                            "service_variation_id": service_variation_id,
-                            "service_variation_version": service_variation_version,
+                            "duration_minutes": segment.duration_minutes,
+                            "service_variation_id": segment.service_variation_id,
+                            "service_variation_version": segment.service_variation_version,
                             "team_member_id": team_member_id,
                         }
+                        for segment in segments
                     ],
                 },
             )

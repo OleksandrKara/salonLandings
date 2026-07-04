@@ -74,4 +74,5 @@ def get_booking_service() -> BookingService:
         get_catalog_service(),
         get_artist_service(),
         get_business_repository(),
+        get_availability_gateway(),
     )

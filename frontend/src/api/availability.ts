@@ -2,12 +2,12 @@ import { apiGet } from "@/api/client";
 import type { AvailabilityResponse } from "@/types/api";
 
 export function fetchAvailability(params: {
-  service: string;
+  services: string[];
   artist: string;
   days?: number;
 }): Promise<AvailabilityResponse> {
   const search = new URLSearchParams({
-    service: params.service,
+    services: params.services.join(","),
     artist: params.artist,
     ...(params.days ? { days: String(params.days) } : {}),
   });

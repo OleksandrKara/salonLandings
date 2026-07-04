@@ -13,4 +13,5 @@ def list_artists(
     artist_service: ArtistService = Depends(get_artist_service),
     catalog_service: CatalogService = Depends(get_catalog_service),
 ) -> list[Artist]:
-    return artist_service.list_artists(catalog_service.list_service_offers())
+    cart_menu = catalog_service.get_cart_menu()
+    return artist_service.list_artists([cart_menu.manicure, cart_menu.pedicure])
