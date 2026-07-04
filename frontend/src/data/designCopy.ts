@@ -2,13 +2,13 @@
 // ("Russian Manicure Landing.dc.html") — headline, trust points, reviews, etc.
 // Anything price-related is NOT here; that always comes live from the API.
 
-import fourhandsImg from "@/assets/fourhands.jpg";
 import mani1Img from "@/assets/mani1.jpg";
 import customer1Img from "@/assets/customer1.jpg";
-import nail2Img from "@/assets/nail2.jpg";
+import milkyNailsImg from "@/assets/milkynails.jpg";
 import nail3Img from "@/assets/nail3.jpg";
 import nail4Img from "@/assets/nail4.jpg";
-import pedi1Img from "@/assets/pedi1.jpg";
+import nailart1Img from "@/assets/nailart1.jpg";
+import nudemani1Img from "@/assets/nudemani1.jpg";
 
 export const HEADLINE = "Russian Hard Gel Manicure in Downtown San Diego";
 export const SUBHEAD = "Long-lasting, chip-free nails up to 4 weeks — trusted by 534+ local clients.";
@@ -43,9 +43,9 @@ export const CAROUSEL_SLIDES: CarouselSlide[] = [
   { id: "slMani2", src: customer1Img, badge: "Real Client", caption: "Glossy hard-gel finish", sub: "Nail-safe, no acrylic" },
   { id: "slNail3", src: nail3Img, badge: "Cuticle work", caption: "Clean Russian cuticle work", sub: "Precise dry technique" },
   { id: "slNail4", src: nail4Img, badge: "Natural nails", caption: "Natural nail-health focused", sub: "Strengthened, structured gel" },
-  { id: "slNail2", src: nail2Img, badge: "Long wear", caption: "No chips for 3–4 weeks", sub: "Chip-resistant, high shine" },
-  { id: "slPedi", src: pedi1Img, badge: "Pedicure", caption: "Dry Russian pedicure", sub: "No water soak, hard gel finish" },
-  { id: "slFourHands", src: fourhandsImg, badge: "4-Hand Service", caption: "Two techs, twice as fast", sub: "Mani + pedi together, by request" },
+  { id: "slMilky", src: milkyNailsImg, badge: "Design", caption: "Milky white manicure", sub: "Soft, elegant, on-trend finish" },
+  { id: "slNailArt", src: nailart1Img, badge: "Nail Art", caption: "Custom nail art design", sub: "Hand-painted details, your choice" },
+  { id: "slNudeMani", src: nudemani1Img, badge: "Manicure", caption: "Natural nude finish", sub: "Subtle, elegant, everyday-ready" },
 ];
 
 export const WHY_CLIENTS_STAY = [
