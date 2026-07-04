@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useEffect, type CSSProperties } from "react";
 import { BookingModal } from "@/features/booking/BookingModal";
 import { BookingModalProvider } from "@/features/booking/BookingModalContext";
 import { BookingCtaBanner, FinalUrgencyCta } from "@/features/landing/CtaBanners";
@@ -12,8 +12,13 @@ import { ResultsCarousel } from "@/features/landing/ResultsCarousel";
 import { StickyBottomBar } from "@/features/landing/StickyBottomBar";
 import { TrustGrid } from "@/features/landing/TrustGrid";
 import { WhyClientsStay } from "@/features/landing/WhyClientsStay";
+import { recordVisit } from "@/lib/tracking";
 
 export function LandingPage() {
+  useEffect(() => {
+    recordVisit();
+  }, []);
+
   return (
     <CartMenuProvider>
       <BookingModalProvider>

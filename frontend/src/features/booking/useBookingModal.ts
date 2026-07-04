@@ -3,6 +3,7 @@ import { createBooking, submitFourHandRequest } from "@/api/bookings";
 import { ApiError } from "@/api/client";
 import type { BookingConfirmation, CartMenu, SlotOption } from "@/types/api";
 import { BookingModalState, BookingStep, initialBookingModalState } from "@/features/booking/types";
+import { getTrackingSnapshot } from "@/lib/tracking";
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "").replace(/^1(?=\d{10})/, "").slice(0, 10);
@@ -105,6 +106,7 @@ export function useBookingModal() {
     setState((s) => ({ ...s, submitting: true, submitError: null }));
 
     const familyName = "Client"; // design collects first name + phone/email only
+    const tracking = getTrackingSnapshot();
 
     try {
       if (current.fourHandSelected) {
@@ -120,6 +122,7 @@ export function useBookingModal() {
             marketing_opt_in: current.smsOptIn,
           },
           requested_services: requested || "4-hand service",
+          tracking,
         });
         setState((s) => ({ ...s, submitting: false, done: true, fourHandConfirmation: confirmation }));
         return;
@@ -149,6 +152,7 @@ export function useBookingModal() {
           marketing_opt_in: current.smsOptIn,
         },
         sms_opt_in: current.smsOptIn,
+        tracking,
       });
       setState((s) => ({ ...s, submitting: false, done: true, bookingConfirmation: confirmation }));
     } catch (err) {

@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     mailchimp_api_key: str | None = None
     mailchimp_audience_id: str | None = None
 
+    # Marketing tracking DB (shared Postgres instance, dedicated "marketing" schema)
+    marketing_db_host: str = "postgres"
+    marketing_db_port: int = 5432
+    marketing_db_name: str = "salonreview"
+    marketing_db_user: str = "salon"
+    marketing_db_password: str = ""
+
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
