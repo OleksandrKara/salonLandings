@@ -57,8 +57,17 @@ export function DateTimeStep({ serviceSlugs, stepLabel, onSelectSlot, onBack }: 
       setViewMonth(viewMonth + 1);
     }
   }
+  const hasMoreAvailable = selectedDateKey
+    ? sortedAvailableDates.some((key) => key > selectedDateKey)
+    : sortedAvailableDates.some((key) => key >= todayKey);
+
   function findNextAvailable() {
-    const next = sortedAvailableDates.find((key) => key >= todayKey);
+    // Relative to the current selection so repeated clicks page forward
+    // through availability, rather than always jumping back to the very
+    // first open date.
+    const next = selectedDateKey
+      ? sortedAvailableDates.find((key) => key > selectedDateKey)
+      : sortedAvailableDates.find((key) => key >= todayKey);
     if (!next) return;
     const [y, m] = next.split("-").map(Number);
     setViewYear(y);
@@ -127,8 +136,12 @@ export function DateTimeStep({ serviceSlugs, stepLabel, onSelectSlot, onBack }: 
         })}
       </div>
 
-      <button onClick={findNextAvailable} style={styles.findNextButton}>
-        Find next available
+      <button
+        onClick={findNextAvailable}
+        disabled={!hasMoreAvailable}
+        style={{ ...styles.findNextButton, opacity: hasMoreAvailable ? 1 : 0.5, cursor: hasMoreAvailable ? "pointer" : "default" }}
+      >
+        {hasMoreAvailable ? (selectedDateKey ? "Find next available day" : "Find next available") : "No more availability in range"}
       </button>
 
       {!selectedDateKey ? (
