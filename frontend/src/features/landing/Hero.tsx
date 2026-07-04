@@ -81,11 +81,13 @@ function priceOf(cartMenu: ReturnType<typeof useCartMenu>["cartMenu"], compareAt
 function PriceBlock({ priceOld, priceNew, offerLabel }: { priceOld: number; priceNew: number; offerLabel: string | null }) {
   return (
     <div style={styles.priceBlock}>
-      <div style={styles.offerBadge}>{offerLabel}</div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 9 }}>
-        <span style={styles.priceOld}>{formatPrice(priceOld)}</span>
-        <span style={{ fontSize: 18, color: "#b9a89f" }}>&rarr;</span>
-        <span style={styles.priceNew}>{formatPrice(priceNew)}</span>
+      <div style={styles.priceBlockTopRow}>
+        <div style={styles.offerBadge}>{offerLabel}</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 9 }}>
+          <span style={styles.priceOld}>{formatPrice(priceOld)}</span>
+          <span style={{ fontSize: 18, color: "#b9a89f" }}>&rarr;</span>
+          <span style={styles.priceNew}>{formatPrice(priceNew)}</span>
+        </div>
       </div>
       <div style={styles.offerNote}>First visit · 15% off</div>
     </div>
@@ -105,11 +107,12 @@ const styles: Record<string, CSSProperties> = {
   credItem: { flex: 1, padding: "12px 6px", textAlign: "center" },
   credValue: { fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 19, color: "var(--color-ink)" },
   credLabel: { fontSize: 10.5, color: "var(--color-muted-2)", marginTop: 2, letterSpacing: 0.2 },
-  priceBlock: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: "12px 14px", marginTop: 22, padding: "16px 18px", background: "var(--color-accent-tint-2)", border: "1px solid var(--color-border)", borderRadius: 14 },
+  priceBlock: { display: "flex", flexDirection: "column", gap: 10, marginTop: 22, padding: "16px 18px", background: "var(--color-accent-tint-2)", border: "1px solid var(--color-border)", borderRadius: 14 },
+  priceBlockTopRow: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: "10px 14px" },
   offerBadge: { background: "var(--color-accent)", color: "#fff7f3", fontSize: 13, fontWeight: 600, letterSpacing: 0.4, padding: "6px 11px", borderRadius: 8, whiteSpace: "nowrap" },
   priceOld: { fontSize: 18, color: "var(--color-muted-3)", textDecoration: "line-through" },
   priceNew: { fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 34, lineHeight: 1, color: "var(--color-ink)" },
-  offerNote: { marginLeft: "auto", fontSize: 11, lineHeight: 1.3, color: "var(--color-muted-2)", whiteSpace: "nowrap" },
+  offerNote: { fontSize: 11, lineHeight: 1.3, color: "var(--color-muted-2)" },
   primaryButton: { width: "100%", marginTop: 16, border: "none", background: "var(--color-accent)", color: "#fff7f3", fontSize: 16, fontWeight: 600, letterSpacing: 0.3, padding: 17, borderRadius: 12, cursor: "pointer", boxShadow: "0 8px 22px rgba(158,90,99,0.28)" },
   secondaryButton: { width: "100%", marginTop: 10, border: "1px solid #d9c7bd", background: "transparent", color: "var(--color-ink)", fontSize: 15, fontWeight: 500, padding: 15, borderRadius: 12, cursor: "pointer" },
   guaranteeBanner: { display: "flex", alignItems: "center", gap: 11, marginTop: 14, padding: "13px 15px", border: "1.5px solid #cfe4d6", borderRadius: 12, background: "var(--color-success-bg)" },
