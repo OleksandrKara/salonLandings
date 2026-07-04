@@ -47,7 +47,7 @@ export function Hero() {
         {status === "loading" ? <Spinner label="Loading offer…" /> : null}
         {status === "error" ? <ErrorNotice message={error ?? "Something went wrong."} onRetry={retry} /> : null}
         {status === "success" && cartMenu ? (
-          <PriceBlock priceOld={priceOf(cartMenu, true)} priceNew={priceOf(cartMenu, false)} offerLabel={cartMenu.manicure.offer_label} />
+          <PriceBlock priceOld={priceOf(cartMenu, true)} priceNew={priceOf(cartMenu, false)} />
         ) : null}
 
         <button onClick={open} style={styles.primaryButton}>
@@ -78,18 +78,16 @@ function priceOf(cartMenu: ReturnType<typeof useCartMenu>["cartMenu"], compareAt
   return compareAt ? top.compare_at_price ?? top.price : top.price;
 }
 
-function PriceBlock({ priceOld, priceNew, offerLabel }: { priceOld: number; priceNew: number; offerLabel: string | null }) {
+function PriceBlock({ priceOld, priceNew }: { priceOld: number; priceNew: number }) {
+  const savingsPct = priceOld > priceNew ? Math.round((1 - priceNew / priceOld) * 100) : 0;
+
   return (
     <div style={styles.priceBlock}>
-      <div style={styles.priceBlockTopRow}>
-        <div style={styles.offerBadge}>{offerLabel}</div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 9 }}>
-          <span style={styles.priceOld}>{formatPrice(priceOld)}</span>
-          <span style={{ fontSize: 18, color: "#b9a89f" }}>&rarr;</span>
-          <span style={styles.priceNew}>{formatPrice(priceNew)}</span>
-        </div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, minWidth: 0 }}>
+        <span style={styles.priceOld}>{formatPrice(priceOld)}</span>
+        <span style={styles.priceNew}>{formatPrice(priceNew)}</span>
       </div>
-      <div style={styles.offerNote}>First visit · 15% off</div>
+      {savingsPct > 0 ? <div style={styles.savingsBadge}>SAVE {savingsPct}%</div> : null}
     </div>
   );
 }
@@ -107,12 +105,30 @@ const styles: Record<string, CSSProperties> = {
   credItem: { flex: 1, padding: "12px 6px", textAlign: "center" },
   credValue: { fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 19, color: "var(--color-ink)" },
   credLabel: { fontSize: 10.5, color: "var(--color-muted-2)", marginTop: 2, letterSpacing: 0.2 },
-  priceBlock: { display: "flex", flexDirection: "column", gap: 10, marginTop: 22, padding: "16px 18px", background: "var(--color-accent-tint-2)", border: "1px solid var(--color-border)", borderRadius: 14 },
-  priceBlockTopRow: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: "10px 14px" },
-  offerBadge: { background: "var(--color-accent)", color: "#fff7f3", fontSize: 13, fontWeight: 600, letterSpacing: 0.4, padding: "6px 11px", borderRadius: 8, whiteSpace: "nowrap" },
-  priceOld: { fontSize: 18, color: "var(--color-muted-3)", textDecoration: "line-through" },
-  priceNew: { fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 34, lineHeight: 1, color: "var(--color-ink)" },
-  offerNote: { fontSize: 11, lineHeight: 1.3, color: "var(--color-muted-2)" },
+  priceBlock: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginTop: 22,
+    padding: "14px 10px 14px 18px",
+    background: "var(--color-accent-tint-2)",
+    border: "1px solid var(--color-border)",
+    borderRadius: 14,
+  },
+  priceOld: { flex: "none", fontSize: 16, color: "var(--color-muted-3)", textDecoration: "line-through" },
+  priceNew: { flex: "none", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 32, lineHeight: 1, color: "var(--color-ink)" },
+  savingsBadge: {
+    flex: "none",
+    background: "var(--color-accent)",
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: 700,
+    letterSpacing: 0.3,
+    padding: "8px 14px",
+    borderRadius: 20,
+    whiteSpace: "nowrap",
+  },
   primaryButton: { width: "100%", marginTop: 16, border: "none", background: "var(--color-accent)", color: "#fff7f3", fontSize: 16, fontWeight: 600, letterSpacing: 0.3, padding: 17, borderRadius: 12, cursor: "pointer", boxShadow: "0 8px 22px rgba(158,90,99,0.28)" },
   secondaryButton: { width: "100%", marginTop: 10, border: "1px solid #d9c7bd", background: "transparent", color: "var(--color-ink)", fontSize: 15, fontWeight: 500, padding: 15, borderRadius: 12, cursor: "pointer" },
   guaranteeBanner: { display: "flex", alignItems: "center", gap: 11, marginTop: 14, padding: "13px 15px", border: "1.5px solid #cfe4d6", borderRadius: 12, background: "var(--color-success-bg)" },
