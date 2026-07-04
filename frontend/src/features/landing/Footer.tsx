@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import logo from "@/assets/logo.webp";
+import logo from "@/assets/logo.png";
 import { LOCATION } from "@/data/designCopy";
 
 export function Footer() {

@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import logo from "@/assets/logo.webp";
+import logo from "@/assets/logo.png";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 
 export function Header() {
