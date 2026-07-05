@@ -82,6 +82,12 @@ CREATE TABLE IF NOT EXISTS marketing.landing_pages (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Optional cutoff: dashboard stats (page views/bookings/conversion) only count activity from
+-- this point forward, across all variants on the page — lets an owner exclude their own
+-- pre-launch test traffic from the numbers they use to evaluate real ad campaigns, without
+-- deleting or altering the underlying event history.
+ALTER TABLE marketing.landing_pages ADD COLUMN IF NOT EXISTS stats_since TIMESTAMPTZ;
+
 CREATE TABLE IF NOT EXISTS marketing.landing_variants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     landing_page_id UUID NOT NULL REFERENCES marketing.landing_pages (id),
