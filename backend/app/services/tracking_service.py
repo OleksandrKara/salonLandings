@@ -1,5 +1,6 @@
 import logging
 
+from app.domain.consent import SMS_CONSENT_TEXT, SMS_CONSENT_VERSION
 from app.domain.schemas import TrackingEvent, TrackingSnapshot
 from app.integrations.marketing_db.repository import MarketingRepository
 
@@ -86,3 +87,35 @@ class TrackingService:
             await self.record_attribution(**kwargs)
         except Exception:
             logger.exception("Failed to record attribution (booking itself was unaffected)")
+
+    async def record_sms_consent(
+        self,
+        *,
+        phone_number: str,
+        consented: bool,
+        source: str,
+        visitor_id: str | None,
+        ip_address: str | None,
+    ) -> None:
+        """Square has no API for SMS marketing consent, so this DB is the sole source of
+        truth — logged as an append-only event (not an upsert) so a later opt-out doesn't
+        erase the record that consent was given in the first place.
+        """
+        await self._repository.insert_sms_consent(
+            phone_number=phone_number,
+            consented=consented,
+            consent_text=SMS_CONSENT_TEXT,
+            consent_version=SMS_CONSENT_VERSION,
+            source=source,
+            visitor_id=visitor_id,
+            ip_address=ip_address,
+        )
+
+    async def record_sms_consent_safely(self, **kwargs) -> None:
+        """SMS consent logging must never break a real booking — same guarantee as
+        record_submission_safely.
+        """
+        try:
+            await self.record_sms_consent(**kwargs)
+        except Exception:
+            logger.exception("Failed to record SMS consent (booking itself was unaffected)")

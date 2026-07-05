@@ -38,10 +38,11 @@ async def create_booking(
         logger.error("Booking failed: %s", exc.detail)
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
+    client_context = derive_client_context(http_request)
     await tracking_service.record_submission_safely(
         submission_type="booking",
         tracking=request.tracking,
-        client_context=derive_client_context(http_request),
+        client_context=client_context,
         square_booking_id=confirmation.booking_id,
         service_name=confirmation.service_name,
         price=confirmation.price,
@@ -51,6 +52,13 @@ async def create_booking(
     await tracking_service.record_attribution_safely(
         tracking=request.tracking,
         booking_id=confirmation.booking_id,
+    )
+    await tracking_service.record_sms_consent_safely(
+        phone_number=request.customer.phone_number,
+        consented=request.customer.marketing_opt_in,
+        source="booking",
+        visitor_id=request.tracking.visitor_id if request.tracking else None,
+        ip_address=client_context["ip_address"],
     )
     return confirmation
 
@@ -70,14 +78,22 @@ async def submit_four_hand_request(
         logger.error("4-hand request failed: %s", exc.detail)
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
+    client_context = derive_client_context(http_request)
     await tracking_service.record_submission_safely(
         submission_type="four_hand_request",
         tracking=submission.tracking,
-        client_context=derive_client_context(http_request),
+        client_context=client_context,
         square_booking_id=confirmation.booking_id,
         service_name=confirmation.service_name,
         price=None,
         customer_email=submission.customer.email_address,
         customer_phone=submission.customer.phone_number,
+    )
+    await tracking_service.record_sms_consent_safely(
+        phone_number=submission.customer.phone_number,
+        consented=submission.customer.marketing_opt_in,
+        source="four_hand_request",
+        visitor_id=submission.tracking.visitor_id if submission.tracking else None,
+        ip_address=client_context["ip_address"],
     )
     return confirmation

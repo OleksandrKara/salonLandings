@@ -161,3 +161,30 @@ class MarketingRepository:
             fields.get("browser_version"),
             fields.get("ip_address"),
         )
+
+    async def insert_sms_consent(
+        self,
+        *,
+        phone_number: str,
+        consented: bool,
+        consent_text: str,
+        consent_version: str,
+        source: str,
+        visitor_id: str | None,
+        ip_address: str | None,
+    ) -> None:
+        pool = get_pool()
+        await pool.execute(
+            """
+            INSERT INTO marketing.sms_consent
+                (phone_number, consented, consent_text, consent_version, source, visitor_id, ip_address)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            """,
+            phone_number,
+            consented,
+            consent_text,
+            consent_version,
+            source,
+            visitor_id,
+            ip_address,
+        )
