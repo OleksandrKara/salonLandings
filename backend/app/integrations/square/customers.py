@@ -31,25 +31,35 @@ class SquareCustomerGateway:
 
     def find_existing(self, *, phone_number: str | None, email_address: str | None) -> str | None:
         """Read-only lookup for a lead that hasn't booked (yet) — never creates a customer.
-        Tries phone first (always present at Step 1; a more stable identifier than email for
-        this business), then falls back to email if phone didn't match — "smart" in the sense
-        that it uses whichever signal actually finds the person, since either one might be the
-        only thing that matches an existing Square profile. Never raises: a Square outage here
-        must not affect lead capture, so any failure is logged and treated as "not found".
+        Never raises: a Square outage here must not affect lead capture, so any failure is
+        logged and treated as "not found".
         """
         try:
-            if phone_number:
-                e164 = normalize_phone_e164(phone_number)
-                if e164:
-                    match = self._search(field="phone_number", value=e164)
-                    if match:
-                        return match
-            if email_address:
-                match = self._search(field="email_address", value=email_address)
-                if match:
-                    return match
+            return self._search_by_phone_then_email(phone_number=phone_number, email_address=email_address)
         except ApiError as exc:
             logger.warning("Square customer lookup failed, treating as not found: %s", exc.body)
+            return None
+
+    def _search_by_phone_then_email(self, *, phone_number: str | None, email_address: str | None) -> str | None:
+        """Tries phone first (always present at Step 1; a more stable identifier than email for
+        this business), then falls back to email if phone didn't match — "smart" in the sense
+        that it uses whichever signal actually finds the person, since either one might be the
+        only thing that matches an existing Square profile. Shared by find_existing (Step 1
+        lookup) and find_or_create (real booking) so both agree on the same existing customer —
+        find_or_create used to only check email, which could create a duplicate Square customer
+        for someone find_existing had already matched by phone, silently overwriting the
+        contact's correct square_customer_id with the new duplicate's id.
+        """
+        if phone_number:
+            e164 = normalize_phone_e164(phone_number)
+            if e164:
+                match = self._search(field="phone_number", value=e164)
+                if match:
+                    return match
+        if email_address:
+            match = self._search(field="email_address", value=email_address)
+            if match:
+                return match
         return None
 
     def _search(self, *, field: str, value: str) -> str | None:
@@ -65,7 +75,11 @@ class SquareCustomerGateway:
         email_address: str,
         phone_number: str,
     ) -> str:
-        existing_id = self._find_by_email(email_address)
+        try:
+            existing_id = self._search_by_phone_then_email(phone_number=phone_number, email_address=email_address)
+        except ApiError as exc:
+            logger.error("Square customer search failed: %s", exc.body)
+            raise SquareIntegrationError("Unable to look up customer record in Square", detail=exc.body) from exc
         if existing_id:
             return existing_id
 
@@ -82,10 +96,3 @@ class SquareCustomerGateway:
             raise SquareIntegrationError("Unable to create customer record in Square", detail=exc.body) from exc
 
         return response.customer.id
-
-    def _find_by_email(self, email_address: str) -> str | None:
-        try:
-            return self._search(field="email_address", value=email_address)
-        except ApiError as exc:
-            logger.error("Square customer search failed: %s", exc.body)
-            raise SquareIntegrationError("Unable to look up customer record in Square", detail=exc.body) from exc
