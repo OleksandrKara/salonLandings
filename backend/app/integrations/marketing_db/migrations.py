@@ -106,6 +106,11 @@ ALTER TABLE marketing.landing_variants ADD COLUMN IF NOT EXISTS key TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_marketing_landing_variants_page_key
     ON marketing.landing_variants (landing_page_id, key) WHERE key IS NOT NULL;
 
+-- Free-text note on what this variant is testing and why (e.g. "urgency-focused headline +
+-- green accent vs. control's neutral tone") — for a human skimming the list today, and later
+-- an input an LLM agent can read/write when it proposes new variants for A/B testing.
+ALTER TABLE marketing.landing_variants ADD COLUMN IF NOT EXISTS description TEXT;
+
 CREATE TABLE IF NOT EXISTS marketing.experiments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     landing_page_id UUID NOT NULL REFERENCES marketing.landing_pages (id),

@@ -72,7 +72,7 @@ async def cmd_list(args: argparse.Namespace) -> None:
         print(f"No landing page with slug '{args.slug}'.", file=sys.stderr)
         return
     rows = await pool.fetch(
-        "SELECT id, key, name, weight, active, content FROM marketing.landing_variants "
+        "SELECT id, key, name, weight, active, content, description FROM marketing.landing_variants "
         "WHERE landing_page_id = $1 ORDER BY created_at ASC",
         page["id"],
     )
@@ -84,6 +84,8 @@ async def cmd_list(args: argparse.Namespace) -> None:
         content = json.loads(row["content"]) if isinstance(row["content"], str) else row["content"]
         if content:
             print(f"             content={json.dumps(content)}")
+        if row["description"]:
+            print(f"             description: {row['description']}")
 
 
 def _build_content(args: argparse.Namespace) -> dict:
@@ -118,8 +120,8 @@ async def cmd_add(args: argparse.Namespace) -> None:
     try:
         row = await pool.fetchrow(
             """
-            INSERT INTO marketing.landing_variants (landing_page_id, name, weight, content, active, key)
-            VALUES ($1, $2, $3, $4::jsonb, true, $5)
+            INSERT INTO marketing.landing_variants (landing_page_id, name, weight, content, active, key, description)
+            VALUES ($1, $2, $3, $4::jsonb, true, $5, $6)
             RETURNING id
             """,
             page["id"],
@@ -127,6 +129,7 @@ async def cmd_add(args: argparse.Namespace) -> None:
             args.weight,
             json.dumps(content),
             key,
+            args.description,
         )
     except asyncpg.exceptions.UniqueViolationError:
         print(f"Key '{key}' is already used by another variant on '{args.slug}'. Pass --key to choose a different one.", file=sys.stderr)
@@ -136,6 +139,8 @@ async def cmd_add(args: argparse.Namespace) -> None:
     pool_note = "also eligible for the random A/B pool" if args.weight > 0 else "campaign-only (weight 0)"
     print(f"Created variant '{args.name}' ({row['id']}) — {reach}, {pool_note}")
     print(f"Content: {json.dumps(content, indent=2)}")
+    if args.description:
+        print(f"Description: {args.description}")
 
 
 async def cmd_set_active(args: argparse.Namespace, active: bool) -> None:
@@ -201,6 +206,25 @@ async def cmd_set_key(args: argparse.Namespace) -> None:
     print(f"{result} — variant '{args.name}' on '{args.slug}' now reachable via ?v={args.key}")
 
 
+async def cmd_set_description(args: argparse.Namespace) -> None:
+    """Sets (or clears, with --description "") the free-text note on what a variant is
+    testing and why — the main way to backfill this on variants that already exist, or for
+    an agent proposing new variants to record its own reasoning independently of `add`.
+    """
+    pool = get_pool()
+    page = await pool.fetchrow("SELECT id FROM marketing.landing_pages WHERE slug = $1", args.slug)
+    if page is None:
+        print(f"No landing page with slug '{args.slug}'.", file=sys.stderr)
+        return
+    result = await pool.execute(
+        "UPDATE marketing.landing_variants SET description = $1 WHERE landing_page_id = $2 AND name = $3",
+        args.description or None,
+        page["id"],
+        args.name,
+    )
+    print(f"{result} — description set for variant '{args.name}' on '{args.slug}'")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Manage marketing landing pages/variants")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -227,6 +251,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_add.add_argument("--cta", default=None, help="Primary button text")
     p_add.add_argument("--hero-image-url", default=None)
     p_add.add_argument("--accent-color", default=None, help="Hex brand color, e.g. '#B8860B' — full palette derived automatically")
+    p_add.add_argument("--description", default=None, help="What this variant is testing and why, e.g. 'Urgency-focused headline + green accent vs. control'")
     p_add.set_defaults(func=cmd_add)
 
     p_deactivate = sub.add_parser("deactivate", help="Deactivate a variant by key")
@@ -249,6 +274,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_set_key.add_argument("--name", required=True, help="Exact existing variant name, e.g. 'Control'")
     p_set_key.add_argument("--key", required=True, help="New deep-link key, e.g. 'control'")
     p_set_key.set_defaults(func=cmd_set_key)
+
+    p_set_description = sub.add_parser("set-description", help="Set (or clear) what a variant is testing and why, looked up by name")
+    p_set_description.add_argument("--slug", default="mani")
+    p_set_description.add_argument("--name", required=True, help="Exact existing variant name, e.g. 'Control'")
+    p_set_description.add_argument("--description", default="", help="New description; omit or pass '' to clear")
+    p_set_description.set_defaults(func=cmd_set_description)
 
     return parser
 
