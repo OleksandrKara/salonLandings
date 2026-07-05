@@ -139,10 +139,31 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_marketing_attribution_booking_id ON marketi
 CREATE INDEX IF NOT EXISTS idx_marketing_attribution_variant ON marketing.attribution (variant_id);
 """
 
+# SMS marketing consent — Square has no API for this at all (confirmed: Customer.preferences
+# only has a read-only email_unsubscribed flag, nothing for SMS), so this is the sole source of
+# truth. Append-only: a later opt-out is a new row, never an UPDATE, so the full consent/
+# revocation history for a phone number is always reconstructable if consent is ever challenged.
+_DDL_SMS_CONSENT = """
+CREATE TABLE IF NOT EXISTS marketing.sms_consent (
+    id BIGSERIAL PRIMARY KEY,
+    phone_number TEXT NOT NULL,
+    consented BOOLEAN NOT NULL,
+    consent_text TEXT NOT NULL,
+    consent_version TEXT NOT NULL,
+    source TEXT NOT NULL,
+    visitor_id UUID,
+    ip_address TEXT,
+    occurred_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_marketing_sms_consent_phone ON marketing.sms_consent (phone_number);
+CREATE INDEX IF NOT EXISTS idx_marketing_sms_consent_occurred_at ON marketing.sms_consent (occurred_at);
+"""
+
 
 async def run_migrations() -> None:
     pool = get_pool()
     async with pool.acquire() as conn:
         await conn.execute(_DDL)
         await conn.execute(_DDL_EXPERIMENTS)
+        await conn.execute(_DDL_SMS_CONSENT)
     logger.info("Marketing schema migrations applied")

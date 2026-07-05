@@ -39,6 +39,11 @@ _DEFINITIONS = [
         "name": "Original Traffic Source",
         "description": "The first traffic source ever detected for this customer. Set once and never overwritten by later visits — unlike Marketing Traffic Source, which reflects the most recent booking. 'na' means no source could be detected the first time this was recorded.",
     },
+    {
+        "key": "sms_marketing_consent",
+        "name": "SMS Marketing Consent",
+        "description": "Whether this customer opted in to SMS marketing on their most recent booking. Convenience mirror only — the authoritative, timestamped consent/revocation record lives in the marketing database (Square has no API for SMS consent).",
+    },
 ]
 
 
@@ -116,6 +121,25 @@ class SquareCustomerAttributesGateway:
         except ApiError as exc:
             logger.error(
                 "Failed to set Square customer custom attribute 'original_organic_source' for customer %s: %s",
+                customer_id,
+                exc.body,
+            )
+
+    def attach_sms_consent(self, customer_id: str, consented: bool) -> None:
+        """Mirrors the current SMS marketing consent choice for staff visibility on the
+        Square Dashboard. Overwritten on every booking to reflect the latest choice —
+        unlike original_organic_source, this is deliberately NOT write-once, since a
+        returning customer's consent can change. The marketing DB's sms_consent table
+        stays the authoritative, append-only record regardless of what this shows.
+        """
+        value = "Opted In" if consented else "Opted Out"
+        try:
+            self._client.customers.custom_attributes.upsert(
+                customer_id, "sms_marketing_consent", custom_attribute={"value": value}
+            )
+        except ApiError as exc:
+            logger.error(
+                "Failed to set Square customer custom attribute 'sms_marketing_consent' for customer %s: %s",
                 customer_id,
                 exc.body,
             )
