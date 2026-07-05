@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     mailchimp_api_key: str | None = None
     mailchimp_audience_id: str | None = None
 
+    # Cloudflare Turnstile (invisible bot check on booking submission) — optional: verification
+    # is skipped (with a warning log) until this is set, so abuse-guard deploys don't have to
+    # wait on a Cloudflare account being created first.
+    turnstile_secret_key: str | None = None
+
     # Marketing tracking DB (shared Postgres instance, dedicated "marketing" schema)
     marketing_db_host: str = "postgres"
     marketing_db_port: int = 5432

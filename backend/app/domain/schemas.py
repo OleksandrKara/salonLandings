@@ -186,6 +186,12 @@ class BookingRequest(BaseModel):
     note: str | None = Field(default=None, max_length=500)
     sms_opt_in: bool = False
     tracking: TrackingSnapshot | None = None
+    # Abuse-guard fields — see app.services.abuse_guard. All optional so older/cached frontend
+    # bundles without them still submit successfully; a missing honeypot/timestamp just skips
+    # that specific check rather than failing the request.
+    website: str | None = None  # honeypot — real users never see or fill this field
+    form_rendered_at: str | None = None  # ISO timestamp, set client-side when the form appeared
+    turnstile_token: str | None = None
 
 
 class BookingConfirmation(BaseModel):
@@ -212,6 +218,10 @@ class FourHandRequestSubmission(BaseModel):
     requested_services: str | None = Field(default=None, max_length=200)
     note: str | None = Field(default=None, max_length=500)
     tracking: TrackingSnapshot | None = None
+    # Abuse-guard fields — see BookingRequest for why these are all optional.
+    website: str | None = None
+    form_rendered_at: str | None = None
+    turnstile_token: str | None = None
 
 
 class FourHandRequestConfirmation(BaseModel):

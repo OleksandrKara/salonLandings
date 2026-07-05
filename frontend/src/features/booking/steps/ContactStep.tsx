@@ -8,9 +8,11 @@ interface ContactStepProps {
   givenName: string;
   phone: string;
   email: string;
+  website: string;
   onGivenNameChange: (v: string) => void;
   onPhoneChange: (v: string) => void;
   onEmailChange: (v: string) => void;
+  onWebsiteChange: (v: string) => void;
   onContinue: () => void;
   canContinue: boolean;
 }
@@ -21,9 +23,11 @@ export function ContactStep({
   givenName,
   phone,
   email,
+  website,
   onGivenNameChange,
   onPhoneChange,
   onEmailChange,
+  onWebsiteChange,
   onContinue,
   canContinue,
 }: ContactStepProps) {
@@ -76,6 +80,19 @@ export function ContactStep({
       />
       <div style={styles.hint}>We'll only use these to confirm your appointment.</div>
 
+      {/* Honeypot — invisible to real visitors (off-screen, not display:none, since some bots
+          skip display:none fields), left unfilled by humans but often auto-filled by bots that
+          blindly complete every input on the page. */}
+      <input
+        value={website}
+        onChange={(e) => onWebsiteChange(e.target.value)}
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={styles.honeypot}
+      />
+
       <button
         onClick={onContinue}
         disabled={!canContinue}
@@ -123,6 +140,14 @@ const styles: Record<string, CSSProperties> = {
     background: "#fff",
   },
   hint: { fontSize: 11.5, color: "var(--color-muted-3)", marginBottom: 16 },
+  honeypot: {
+    position: "absolute",
+    left: "-9999px",
+    width: 1,
+    height: 1,
+    opacity: 0,
+    pointerEvents: "none",
+  },
   continueButton: {
     width: "100%",
     border: "none",

@@ -7,12 +7,32 @@ import { ContactStep } from "@/features/booking/steps/ContactStep";
 import { DateTimeStep } from "@/features/booking/steps/DateTimeStep";
 import { DoneStep } from "@/features/booking/steps/DoneStep";
 import { ServicesStep } from "@/features/booking/steps/ServicesStep";
+import { TurnstileWidget } from "@/features/booking/TurnstileWidget";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
 import { isStep1Ready } from "@/features/booking/useBookingModal";
 
 export function BookingModal() {
-  const { state, close, stop, setGivenName, setPhone, setEmail, toggleMani, togglePedicure, toggleDesign, toggleFourHand, next1, next2, selectSlot, back, toggleSms, toggleCancelAgree, submit } =
-    useBookingModalContext();
+  const {
+    state,
+    close,
+    stop,
+    setGivenName,
+    setPhone,
+    setEmail,
+    setWebsite,
+    setTurnstileToken,
+    toggleMani,
+    togglePedicure,
+    toggleDesign,
+    toggleFourHand,
+    next1,
+    next2,
+    selectSlot,
+    back,
+    toggleSms,
+    toggleCancelAgree,
+    submit,
+  } = useBookingModalContext();
   const { cartMenu } = useCartMenu();
   const [policyOpen, setPolicyOpen] = useState(false);
 
@@ -53,9 +73,11 @@ export function BookingModal() {
             givenName={state.givenName}
             phone={state.phone}
             email={state.email}
+            website={state.website}
             onGivenNameChange={setGivenName}
             onPhoneChange={setPhone}
             onEmailChange={setEmail}
+            onWebsiteChange={setWebsite}
             onContinue={next1}
             canContinue={isStep1Ready(state)}
           />
@@ -79,15 +101,18 @@ export function BookingModal() {
             onBack={back}
           />
         ) : (
-          <ConfirmStep
-            state={state}
-            stepLabel={stepLabel}
-            onToggleSms={toggleSms}
-            onToggleCancelAgree={toggleCancelAgree}
-            onOpenPolicy={() => setPolicyOpen(true)}
-            onSubmit={() => submit(state)}
-            onBack={back}
-          />
+          <>
+            <TurnstileWidget onToken={setTurnstileToken} />
+            <ConfirmStep
+              state={state}
+              stepLabel={stepLabel}
+              onToggleSms={toggleSms}
+              onToggleCancelAgree={toggleCancelAgree}
+              onOpenPolicy={() => setPolicyOpen(true)}
+              onSubmit={() => submit(state)}
+              onBack={back}
+            />
+          </>
         )}
       </div>
       {policyOpen ? <CancellationPolicyModal onClose={() => setPolicyOpen(false)} /> : null}
