@@ -68,3 +68,14 @@ export function recordVisit(): void {
     // analytics only — nothing to recover, nothing to surface to the visitor
   });
 }
+
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void;
+  }
+}
+
+/** Meta's standard event for appointment bookings; fired once a booking or 4-hand request is confirmed. */
+export function recordMetaBookingConversion(): void {
+  window.fbq?.("track", "Schedule");
+}
