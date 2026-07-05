@@ -10,6 +10,7 @@ from app.integrations.square.client import get_square_client
 from app.integrations.square.customer_attributes import SquareCustomerAttributesGateway
 from app.integrations.square.customers import SquareCustomerGateway
 from app.integrations.square.team import SquareTeamRepository
+from app.services.abuse_guard import AbuseGuard
 from app.services.artist_service import ArtistService
 from app.services.availability_service import AvailabilityService
 from app.services.booking_service import BookingService
@@ -101,3 +102,8 @@ def get_tracking_service() -> TrackingService:
 @lru_cache
 def get_experiment_service() -> ExperimentService:
     return ExperimentService(get_marketing_repository())
+
+
+@lru_cache
+def get_abuse_guard() -> AbuseGuard:
+    return AbuseGuard(get_marketing_repository())

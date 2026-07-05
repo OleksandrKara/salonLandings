@@ -420,3 +420,52 @@ class MarketingRepository:
             booking_price,
             booking_artist_name,
         )
+
+    async def insert_abuse_block(
+        self, *, endpoint: str, reason: str, phone_number: str | None, ip_address: str | None
+    ) -> None:
+        pool = get_pool()
+        await pool.execute(
+            """
+            INSERT INTO marketing.abuse_blocks (endpoint, reason, phone_number, ip_address)
+            VALUES ($1, $2, $3, $4)
+            """,
+            endpoint,
+            reason,
+            phone_number,
+            ip_address,
+        )
+
+    async def count_recent_submissions_by_phone(
+        self, *, phone_number: str, submission_types: list[str], since: dt.datetime
+    ) -> int:
+        """How many of the given submission_types this phone number has made since the cutoff —
+        the basis for rate-limiting real booking attempts per person.
+        """
+        pool = get_pool()
+        return await pool.fetchval(
+            """
+            SELECT COUNT(*) FROM marketing.submissions
+            WHERE customer_phone = $1 AND submission_type = ANY($2::text[]) AND occurred_at >= $3
+            """,
+            phone_number,
+            submission_types,
+            since,
+        )
+
+    async def count_recent_submissions_by_ip(
+        self, *, ip_address: str, submission_types: list[str], since: dt.datetime
+    ) -> int:
+        """Same as count_recent_submissions_by_phone, but per IP address — a looser cap than the
+        per-phone one, since a shared IP (e.g. a family or office) isn't a 1:1 proxy for one person.
+        """
+        pool = get_pool()
+        return await pool.fetchval(
+            """
+            SELECT COUNT(*) FROM marketing.submissions
+            WHERE ip_address = $1 AND submission_type = ANY($2::text[]) AND occurred_at >= $3
+            """,
+            ip_address,
+            submission_types,
+            since,
+        )

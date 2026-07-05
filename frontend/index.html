@@ -29,6 +29,9 @@
       fbq('track', 'PageView');
     </script>
     <!-- End Meta Pixel Code -->
+    <!-- Cloudflare Turnstile (invisible bot check on booking submission) — harmless no-op until
+         VITE_TURNSTILE_SITE_KEY is configured; see TurnstileWidget.tsx -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   </head>
   <body>
     <noscript><img height="1" width="1" style="display:none"

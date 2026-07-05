@@ -38,7 +38,10 @@ export function estimatedTotal(state: BookingModalState, cartMenu: CartMenu): nu
 export function useBookingModal() {
   const [state, setState] = useState<BookingModalState>(initialBookingModalState);
 
-  const open = useCallback(() => setState({ ...initialBookingModalState, isOpen: true }), []);
+  const open = useCallback(
+    () => setState({ ...initialBookingModalState, isOpen: true, formOpenedAt: new Date().toISOString() }),
+    [],
+  );
   const close = useCallback(() => {
     exitThankYouUrl();
     setState((s) => ({ ...s, isOpen: false }));
@@ -48,6 +51,8 @@ export function useBookingModal() {
   const setGivenName = useCallback((v: string) => setState((s) => ({ ...s, givenName: v })), []);
   const setEmail = useCallback((v: string) => setState((s) => ({ ...s, email: v })), []);
   const setPhone = useCallback((v: string) => setState((s) => ({ ...s, phone: formatPhone(v) })), []);
+  const setWebsite = useCallback((v: string) => setState((s) => ({ ...s, website: v })), []);
+  const setTurnstileToken = useCallback((token: string | null) => setState((s) => ({ ...s, turnstileToken: token })), []);
 
   const toggleMani = useCallback(() => {
     setState((s) => {
@@ -141,6 +146,9 @@ export function useBookingModal() {
           },
           requested_services: requested || "4-hand service",
           tracking,
+          website: current.website,
+          form_rendered_at: current.formOpenedAt,
+          turnstile_token: current.turnstileToken,
         });
         enterThankYouUrl();
         recordMetaBookingConversion();
@@ -173,6 +181,9 @@ export function useBookingModal() {
         },
         sms_opt_in: current.smsOptIn,
         tracking,
+        website: current.website,
+        form_rendered_at: current.formOpenedAt,
+        turnstile_token: current.turnstileToken,
       });
       logExperimentEvent("booking_completed", tracking.landing_page_id ?? null, tracking.variant_id ?? null);
       enterThankYouUrl();
@@ -192,6 +203,8 @@ export function useBookingModal() {
     setGivenName,
     setEmail,
     setPhone,
+    setWebsite,
+    setTurnstileToken,
     toggleMani,
     togglePedicure,
     toggleDesign,

@@ -152,6 +152,10 @@ export interface BookingRequest {
   note?: string | null;
   sms_opt_in: boolean;
   tracking?: TrackingSnapshot | null;
+  // Abuse-guard fields — see the booking modal's honeypot field / form-open timestamp / Turnstile widget.
+  website?: string | null;
+  form_rendered_at?: string | null;
+  turnstile_token?: string | null;
 }
 
 export interface BookingConfirmation {
@@ -175,6 +179,10 @@ export interface FourHandRequestSubmission {
   requested_services?: string | null;
   note?: string | null;
   tracking?: TrackingSnapshot | null;
+  // Abuse-guard fields — see BookingRequest.
+  website?: string | null;
+  form_rendered_at?: string | null;
+  turnstile_token?: string | null;
 }
 
 export interface FourHandRequestConfirmation {

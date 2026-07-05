@@ -12,6 +12,11 @@ export interface BookingModalState {
   phone: string;
   email: string;
 
+  // Abuse guard — see TurnstileWidget.tsx / useBookingModal's open()/submit()
+  website: string; // honeypot, real visitors never see or fill this
+  formOpenedAt: string; // ISO timestamp, set when the modal opens
+  turnstileToken: string | null;
+
   // Step 2 — services cart
   maniSelected: boolean;
   pedicureSelected: boolean;
@@ -39,6 +44,9 @@ export const initialBookingModalState: BookingModalState = {
   givenName: "",
   phone: "",
   email: "",
+  website: "",
+  formOpenedAt: "",
+  turnstileToken: null,
   maniSelected: true,
   pedicureSelected: false,
   designSelected: false,

@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.concurrency import run_in_threadpool
 
-from app.api.deps import get_booking_service, get_tracking_service
+from app.api.deps import get_abuse_guard, get_booking_service, get_tracking_service
 from app.domain.schemas import (
     BookingConfirmation,
     BookingRequest,
@@ -11,6 +11,7 @@ from app.domain.schemas import (
     FourHandRequestSubmission,
 )
 from app.integrations.square.exceptions import SlotNoLongerAvailableError, SquareIntegrationError
+from app.services.abuse_guard import AbuseGuard, AbuseGuardError
 from app.services.artist_service import ArtistNotFoundError
 from app.services.booking_service import BookingService, InvalidSlotError
 from app.services.catalog_service import ServiceNotFoundError
@@ -20,6 +21,10 @@ from app.services.tracking_service import TrackingService
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 
+# Deliberately generic — never reveals which specific check failed, so an attacker can't use
+# the response to debug their way past the guard.
+ABUSE_BLOCKED_MESSAGE = "We couldn't verify your submission. Please try again."
+
 
 @router.post("", response_model=BookingConfirmation, status_code=201)
 async def create_booking(
@@ -27,7 +32,21 @@ async def create_booking(
     http_request: Request,
     booking_service: BookingService = Depends(get_booking_service),
     tracking_service: TrackingService = Depends(get_tracking_service),
+    abuse_guard: AbuseGuard = Depends(get_abuse_guard),
 ) -> BookingConfirmation:
+    client_context = derive_client_context(http_request)
+    try:
+        await abuse_guard.check(
+            endpoint="booking",
+            phone_number=request.customer.phone_number,
+            ip_address=client_context["ip_address"],
+            honeypot_value=request.website,
+            form_rendered_at=request.form_rendered_at,
+            turnstile_token=request.turnstile_token,
+        )
+    except AbuseGuardError as exc:
+        raise HTTPException(status_code=400, detail=ABUSE_BLOCKED_MESSAGE) from exc
+
     try:
         confirmation = await run_in_threadpool(booking_service.create_booking, request)
     except (ServiceNotFoundError, ArtistNotFoundError, InvalidSlotError) as exc:
@@ -38,7 +57,6 @@ async def create_booking(
         logger.error("Booking failed: %s", exc.detail)
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
-    client_context = derive_client_context(http_request)
     await tracking_service.record_submission_safely(
         submission_type="booking",
         tracking=request.tracking,
@@ -91,7 +109,21 @@ async def submit_four_hand_request(
     http_request: Request,
     booking_service: BookingService = Depends(get_booking_service),
     tracking_service: TrackingService = Depends(get_tracking_service),
+    abuse_guard: AbuseGuard = Depends(get_abuse_guard),
 ) -> FourHandRequestConfirmation:
+    client_context = derive_client_context(http_request)
+    try:
+        await abuse_guard.check(
+            endpoint="four_hand_request",
+            phone_number=submission.customer.phone_number,
+            ip_address=client_context["ip_address"],
+            honeypot_value=submission.website,
+            form_rendered_at=submission.form_rendered_at,
+            turnstile_token=submission.turnstile_token,
+        )
+    except AbuseGuardError as exc:
+        raise HTTPException(status_code=400, detail=ABUSE_BLOCKED_MESSAGE) from exc
+
     try:
         confirmation = await run_in_threadpool(booking_service.submit_four_hand_request, submission)
     except ServiceNotFoundError as exc:
@@ -100,7 +132,6 @@ async def submit_four_hand_request(
         logger.error("4-hand request failed: %s", exc.detail)
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
-    client_context = derive_client_context(http_request)
     await tracking_service.record_submission_safely(
         submission_type="four_hand_request",
         tracking=submission.tracking,

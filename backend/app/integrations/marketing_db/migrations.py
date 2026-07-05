@@ -256,6 +256,22 @@ _DDL_SUBMISSIONS_TRAFFIC_SOURCE = """
 ALTER TABLE marketing.submissions ADD COLUMN IF NOT EXISTS traffic_source TEXT;
 """
 
+# Every request rejected by the booking abuse guard (rate limit, honeypot, timing, failed
+# Turnstile check) — a dedicated table rather than reusing marketing.events, since this is
+# operational/security visibility for the owner, not funnel analytics, and has no
+# landing_page_id/variant_id to attach to. Read by the owner portal's "blocked attempts" panel.
+_DDL_ABUSE_BLOCKS = """
+CREATE TABLE IF NOT EXISTS marketing.abuse_blocks (
+    id BIGSERIAL PRIMARY KEY,
+    occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    endpoint TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    phone_number TEXT,
+    ip_address TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_marketing_abuse_blocks_occurred_at ON marketing.abuse_blocks (occurred_at);
+"""
+
 
 async def run_migrations() -> None:
     pool = get_pool()
@@ -268,4 +284,5 @@ async def run_migrations() -> None:
         await conn.execute(_DDL_CONTACTS_CAPTURE_CONTEXT)
         await conn.execute(_DDL_SUBMISSIONS_LANDING_CONTEXT)
         await conn.execute(_DDL_SUBMISSIONS_TRAFFIC_SOURCE)
+        await conn.execute(_DDL_ABUSE_BLOCKS)
     logger.info("Marketing schema migrations applied")
