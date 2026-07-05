@@ -8,6 +8,7 @@ from app.domain.consent import (
 )
 from app.domain.schemas import TrackingEvent, TrackingSnapshot
 from app.integrations.marketing_db.repository import MarketingRepository
+from app.services.traffic_source import classify_traffic_source
 
 logger = logging.getLogger(__name__)
 
@@ -155,3 +156,82 @@ class TrackingService:
             await self.record_email_consent(**kwargs)
         except Exception:
             logger.exception("Failed to record email consent (booking itself was unaffected)")
+
+    async def record_step1_contact(
+        self,
+        *,
+        given_name: str,
+        phone_number: str,
+        email_address: str | None,
+        tracking: TrackingSnapshot | None,
+    ) -> None:
+        """Captures a lead as soon as Step 1 (name + phone) is submitted — before a real Square
+        booking (and thus a Square customer) exists. No Square call happens here; that only
+        happens later, automatically, if/when this contact completes a real booking.
+        """
+        await self._repository.upsert_contact_step1(
+            phone_number=phone_number,
+            given_name=given_name,
+            email_address=email_address,
+            traffic_source=classify_traffic_source(tracking),
+            utm_source=tracking.utm_source if tracking else None,
+            utm_medium=tracking.utm_medium if tracking else None,
+            utm_campaign=tracking.utm_campaign if tracking else None,
+            referrer=tracking.referrer if tracking else None,
+        )
+
+    async def record_step1_contact_safely(self, **kwargs) -> None:
+        """Contact capture is a lead-tracking convenience — must never block Step 1."""
+        try:
+            await self.record_step1_contact(**kwargs)
+        except Exception:
+            logger.exception("Failed to record Step 1 contact")
+
+    async def link_contact_to_booking(
+        self,
+        *,
+        given_name: str,
+        phone_number: str,
+        email_address: str | None,
+        tracking: TrackingSnapshot | None,
+        sms_consent: bool,
+        email_consent: bool,
+        square_customer_id: str,
+        square_booking_id: str,
+        booking_status: str,
+        booking_start_at: str | None,
+        booking_service_name: str,
+        booking_price: float | None,
+        booking_artist_name: str | None,
+    ) -> None:
+        """Links the contact captured at Step 1 to the real Square booking/customer that
+        eventually resulted from it — the local "did this lead actually book?" view Square
+        itself has no equivalent of. Falls back to creating the contact now if Step 1's
+        capture never landed (e.g. a dropped request) rather than silently losing the booking.
+        """
+        await self._repository.update_contact_after_booking(
+            phone_number=phone_number,
+            given_name=given_name,
+            email_address=email_address,
+            traffic_source=classify_traffic_source(tracking),
+            utm_source=tracking.utm_source if tracking else None,
+            utm_medium=tracking.utm_medium if tracking else None,
+            utm_campaign=tracking.utm_campaign if tracking else None,
+            referrer=tracking.referrer if tracking else None,
+            sms_consent=sms_consent,
+            email_consent=email_consent,
+            square_customer_id=square_customer_id,
+            square_booking_id=square_booking_id,
+            booking_status=booking_status,
+            booking_start_at=booking_start_at,
+            booking_service_name=booking_service_name,
+            booking_price=booking_price,
+            booking_artist_name=booking_artist_name,
+        )
+
+    async def link_contact_to_booking_safely(self, **kwargs) -> None:
+        """Must never break a real booking — same guarantee as record_submission_safely."""
+        try:
+            await self.link_contact_to_booking(**kwargs)
+        except Exception:
+            logger.exception("Failed to link contact to booking (booking itself was unaffected)")

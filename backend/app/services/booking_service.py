@@ -113,6 +113,7 @@ class BookingService:
                 if profile and profile.business_appointment_settings
                 else None
             ),
+            square_customer_id=customer_id,
         )
 
         run_post_booking_hooks(confirmation, request.customer)
@@ -162,6 +163,7 @@ class BookingService:
             status=booking.status,
             service_name=FOUR_HAND_REQUEST.name,
             message="We've received your request and will call you shortly to schedule the date, time & final pricing.",
+            square_customer_id=customer_id,
         )
 
     def _find_next_available_start_at(self, variation_id: str, team_member_id: str) -> str:

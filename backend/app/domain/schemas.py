@@ -202,6 +202,9 @@ class BookingConfirmation(BaseModel):
     location_address: str
     location_phone: str | None
     cancellation_policy_text: str | None
+    # Internal-only (excluded from the API response): lets the route layer link this booking
+    # to the local contacts record without exposing Square's internal id to the frontend.
+    square_customer_id: str = Field(exclude=True)
 
 
 class FourHandRequestSubmission(BaseModel):
@@ -216,3 +219,20 @@ class FourHandRequestConfirmation(BaseModel):
     status: str
     service_name: str
     message: str
+    # Internal-only, see BookingConfirmation.square_customer_id.
+    square_customer_id: str = Field(exclude=True)
+
+
+class ContactCaptureRequest(BaseModel):
+    """Fired when Step 1 (name + phone, email optional) is submitted — before a real Square
+    booking (and thus a Square customer) exists.
+    """
+
+    given_name: str = Field(min_length=1, max_length=100)
+    phone_number: str = Field(min_length=7, max_length=20)
+    email_address: EmailStr | None = None
+    tracking: TrackingSnapshot | None = None
+
+
+class ContactCaptureResponse(BaseModel):
+    recorded: bool
