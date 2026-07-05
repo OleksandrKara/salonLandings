@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { SMS_CONSENT_TEXT } from "@/data/designCopy";
 import { BookingModalState } from "@/features/booking/types";
 import { formatPrice, formatSlotDay, formatSlotTime } from "@/lib/formatting";
@@ -43,21 +43,7 @@ export function ConfirmStep({
         </div>
       ) : null}
 
-      {smartMatch && slot ? (
-        <div style={styles.smartMatchBanner}>
-          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 5 }}>
-            <span style={{ fontSize: 17 }}>✦</span>
-            <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: 0.2, color: "var(--color-warm-gold-text)" }}>
-              Smart Match discount applied
-            </span>
-          </div>
-          <div style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--color-warm-gold-text-2)" }}>
-            We found you an excellent available specialist and automatically passed on a better rate —{" "}
-            <strong style={{ color: "var(--color-warm-gold-text)" }}>you saved {formatPrice(slot.savings)}</strong>.
-            Same premium service, smarter price.
-          </div>
-        </div>
-      ) : null}
+      {smartMatch && slot ? <SmartMatchNote savings={slot.savings} /> : null}
 
       {!isFourHand && slot ? (
         <div style={styles.breakdownBox}>
@@ -178,6 +164,33 @@ export function ConfirmStep({
   );
 }
 
+/** Compact by design: the win itself (✦ + "you saved $X") should land in one glance — no
+ * click required to feel it. "Details" is just there for the rare customer who wants the
+ * why; most people will never tap it, and that's the point.
+ */
+function SmartMatchNote({ savings }: { savings: number }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div style={styles.smartMatchPill}>
+      <div style={styles.smartMatchRow}>
+        <span style={styles.smartMatchStar}>✦</span>
+        <span style={styles.smartMatchLabel}>
+          Smart Match applied — you saved <strong>{formatPrice(savings)}</strong>
+        </span>
+        <button type="button" onClick={() => setExpanded((e) => !e)} style={styles.smartMatchToggle}>
+          {expanded ? "Less" : "Details"}
+        </button>
+      </div>
+      {expanded ? (
+        <div style={styles.smartMatchDetail}>
+          We found you an excellent available specialist and automatically passed on a better rate. Same premium
+          service, smarter price.
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function Checkbox({ checked, border, topAlign = false }: { checked: boolean; border: string; topAlign?: boolean }) {
   return (
     <span
@@ -205,7 +218,12 @@ const styles: Record<string, CSSProperties> = {
   stepLabel: { fontSize: 11, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--color-accent)", fontWeight: 600, marginTop: 6 },
   title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 26, margin: "6px 0 14px" },
   callNotice: { display: "flex", alignItems: "flex-start", gap: 11, padding: "14px 15px", border: "1.5px solid #e0b8b0", borderRadius: 12, background: "#f9efe9", marginBottom: 16 },
-  smartMatchBanner: { position: "relative", overflow: "hidden", padding: "15px 16px", border: "1.5px solid var(--color-warm-gold-border)", borderRadius: 14, background: "var(--color-warm-gold-bg)", marginBottom: 16 },
+  smartMatchPill: { padding: "9px 12px", border: "1px solid var(--color-warm-gold-border)", borderRadius: 10, background: "var(--color-warm-gold-bg)", marginBottom: 16 },
+  smartMatchRow: { display: "flex", alignItems: "center", gap: 7 },
+  smartMatchStar: { flex: "none", fontSize: 13, color: "var(--color-warm-gold-text)" },
+  smartMatchLabel: { flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 600, lineHeight: 1.3, color: "var(--color-warm-gold-text)" },
+  smartMatchToggle: { flex: "none", border: "none", background: "none", padding: 0, fontSize: 11, fontWeight: 600, color: "var(--color-warm-gold-text-2)", textDecoration: "underline", cursor: "pointer" },
+  smartMatchDetail: { marginTop: 6, fontSize: 11.5, lineHeight: 1.5, color: "var(--color-warm-gold-text-2)" },
   breakdownBox: { padding: 16, border: "1px solid var(--color-border-2)", borderRadius: 12, background: "#faf3ef", marginBottom: 16 },
   lineItem: { display: "flex", justifyContent: "space-between", fontSize: 13.5, padding: "3px 0", color: "var(--color-ink-soft)" },
   subtotalRow: { display: "flex", justifyContent: "space-between", fontSize: 12.5, padding: "5px 0 3px", marginTop: 5, borderTop: "1px dashed #e3d3ca", color: "var(--color-muted-2)" },
