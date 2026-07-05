@@ -58,6 +58,10 @@ class TrackingService:
         fields["price"] = price
         fields["customer_email"] = customer_email
         fields["customer_phone"] = customer_phone
+        fields["landing_page_slug"], fields["variant_name"] = await self._repository.resolve_landing_context(
+            landing_page_id=tracking.landing_page_id if tracking else None,
+            variant_id=tracking.variant_id if tracking else None,
+        )
 
         await self._repository.insert_submission(
             visitor_id=tracking.visitor_id if tracking else None,
@@ -165,10 +169,16 @@ class TrackingService:
         email_address: str | None,
         tracking: TrackingSnapshot | None,
         client_context: dict,
+        square_customer_id: str | None = None,
     ) -> None:
         """Captures a lead as soon as Step 1 (name + phone) is submitted — before a real Square
-        booking (and thus a Square customer) exists. No Square call happens here; that only
-        happens later, automatically, if/when this contact completes a real booking.
+        booking (and thus a Square customer *of our making*) exists. square_customer_id, if
+        given, comes from a read-only lookup the route already performed (see
+        SquareCustomerGateway.find_existing) against a customer who may already exist in Square
+        from before this lead was ever captured — we never create one here.
+
+        Also logs this event to marketing.submissions (submission_type="step1") so a contact's
+        full multi-touch history — not just their current/latest state — is reconstructable.
         """
         landing_page_slug, variant_name = await self._repository.resolve_landing_context(
             landing_page_id=tracking.landing_page_id if tracking else None,
@@ -190,6 +200,21 @@ class TrackingService:
             os_version=client_context.get("os_version"),
             browser_name=client_context.get("browser_name"),
             browser_version=client_context.get("browser_version"),
+            square_customer_id=square_customer_id,
+        )
+
+        fields: dict = {}
+        if tracking is not None:
+            fields.update(tracking.model_dump(exclude={"visitor_id"}))
+        fields.update(client_context)
+        fields["customer_email"] = email_address
+        fields["customer_phone"] = phone_number
+        fields["landing_page_slug"] = landing_page_slug
+        fields["variant_name"] = variant_name
+        await self._repository.insert_submission(
+            visitor_id=tracking.visitor_id if tracking else None,
+            submission_type="step1",
+            fields=fields,
         )
 
     async def record_step1_contact_safely(self, **kwargs) -> None:

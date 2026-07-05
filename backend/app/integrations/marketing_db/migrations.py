@@ -236,6 +236,16 @@ ALTER TABLE marketing.contacts ADD COLUMN IF NOT EXISTS browser_name TEXT;
 ALTER TABLE marketing.contacts ADD COLUMN IF NOT EXISTS browser_version TEXT;
 """
 
+# Same landing_page_slug/variant_name denormalization as contacts, but on submissions — every
+# submission (step1 lead capture, booking, four_hand_request) records which page/variant it came
+# from, so the portal can show a contact's full multi-touch history, not just their latest state.
+_DDL_SUBMISSIONS_LANDING_CONTEXT = """
+ALTER TABLE marketing.submissions ADD COLUMN IF NOT EXISTS landing_page_slug TEXT;
+ALTER TABLE marketing.submissions ADD COLUMN IF NOT EXISTS variant_name TEXT;
+CREATE INDEX IF NOT EXISTS idx_marketing_submissions_customer_phone ON marketing.submissions (customer_phone);
+CREATE INDEX IF NOT EXISTS idx_marketing_submissions_customer_email ON marketing.submissions (customer_email);
+"""
+
 
 async def run_migrations() -> None:
     pool = get_pool()
@@ -246,4 +256,5 @@ async def run_migrations() -> None:
         await conn.execute(_DDL_EMAIL_CONSENT)
         await conn.execute(_DDL_CONTACTS)
         await conn.execute(_DDL_CONTACTS_CAPTURE_CONTEXT)
+        await conn.execute(_DDL_SUBMISSIONS_LANDING_CONTEXT)
     logger.info("Marketing schema migrations applied")
