@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { createBooking, submitFourHandRequest } from "@/api/bookings";
+import { captureContact } from "@/api/contacts";
 import { ApiError } from "@/api/client";
 import type { BookingConfirmation, CartMenu, SlotOption } from "@/types/api";
 import { BookingModalState, BookingStep, initialBookingModalState } from "@/features/booking/types";
@@ -84,7 +85,18 @@ export function useBookingModal() {
   const goToStep = useCallback((step: BookingStep) => setState((s) => ({ ...s, step })), []);
 
   const next1 = useCallback(() => {
-    setState((s) => (isStep1Ready(s) ? { ...s, step: 2 } : s));
+    setState((s) => {
+      if (!isStep1Ready(s)) return s;
+      // Fire-and-forget lead capture — before a real Square customer exists, so this must
+      // never block progressing to Step 2.
+      captureContact({
+        given_name: s.givenName.trim(),
+        phone_number: s.phone.trim(),
+        email_address: s.email.trim() || null,
+        tracking: getTrackingSnapshot(),
+      });
+      return { ...s, step: 2 };
+    });
   }, []);
 
   const next2 = useCallback(() => {

@@ -184,6 +184,39 @@ CREATE INDEX IF NOT EXISTS idx_marketing_email_consent_email ON marketing.email_
 CREATE INDEX IF NOT EXISTS idx_marketing_email_consent_occurred_at ON marketing.email_consent (occurred_at);
 """
 
+# Leads captured as soon as Step 1 (name + phone, email optional) is submitted — before a real
+# Square booking (and thus a Square customer) exists. phone_number is the dedup key since it's
+# the only field guaranteed present at that point. original_traffic_source is set once, on first
+# insert, and never overwritten on conflict — the booking columns stay null until/unless this
+# contact later completes a real appointment (see update_contact_after_booking).
+_DDL_CONTACTS = """
+CREATE TABLE IF NOT EXISTS marketing.contacts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    phone_number TEXT NOT NULL UNIQUE,
+    given_name TEXT,
+    email_address TEXT,
+    original_traffic_source TEXT,
+    marketing_traffic_source TEXT,
+    utm_source TEXT,
+    utm_medium TEXT,
+    utm_campaign TEXT,
+    referrer TEXT,
+    sms_marketing_consent BOOLEAN,
+    email_marketing_consent BOOLEAN,
+    square_customer_id TEXT,
+    square_booking_id TEXT,
+    booking_status TEXT,
+    booking_start_at TIMESTAMPTZ,
+    booking_service_name TEXT,
+    booking_price NUMERIC(10, 2),
+    booking_artist_name TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_marketing_contacts_square_customer ON marketing.contacts (square_customer_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_contacts_created_at ON marketing.contacts (created_at);
+"""
+
 
 async def run_migrations() -> None:
     pool = get_pool()
@@ -192,4 +225,5 @@ async def run_migrations() -> None:
         await conn.execute(_DDL_EXPERIMENTS)
         await conn.execute(_DDL_SMS_CONSENT)
         await conn.execute(_DDL_EMAIL_CONSENT)
+        await conn.execute(_DDL_CONTACTS)
     logger.info("Marketing schema migrations applied")

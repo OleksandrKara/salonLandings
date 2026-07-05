@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 import logging
 
@@ -214,4 +215,128 @@ class MarketingRepository:
             source,
             visitor_id,
             ip_address,
+        )
+
+    async def upsert_contact_step1(
+        self,
+        *,
+        phone_number: str,
+        given_name: str,
+        email_address: str | None,
+        traffic_source: str,
+        utm_source: str | None,
+        utm_medium: str | None,
+        utm_campaign: str | None,
+        referrer: str | None,
+    ) -> None:
+        """First-touch capture at Step 1 — before a Square customer exists. Dedup key is
+        phone_number (the only field guaranteed present); original_traffic_source is set on
+        first insert and intentionally absent from the DO UPDATE SET clause below, so a repeat
+        visit updates only the "latest" fields and never overwrites first-touch attribution.
+        """
+        pool = get_pool()
+        await pool.execute(
+            """
+            INSERT INTO marketing.contacts (
+                phone_number, given_name, email_address,
+                original_traffic_source, marketing_traffic_source,
+                utm_source, utm_medium, utm_campaign, referrer, updated_at
+            ) VALUES ($1, $2, $3, $4, $4, $5, $6, $7, $8, now())
+            ON CONFLICT (phone_number) DO UPDATE SET
+                given_name = EXCLUDED.given_name,
+                email_address = COALESCE(EXCLUDED.email_address, marketing.contacts.email_address),
+                marketing_traffic_source = EXCLUDED.marketing_traffic_source,
+                utm_source = EXCLUDED.utm_source,
+                utm_medium = EXCLUDED.utm_medium,
+                utm_campaign = EXCLUDED.utm_campaign,
+                referrer = EXCLUDED.referrer,
+                updated_at = now()
+            """,
+            phone_number,
+            given_name,
+            email_address,
+            traffic_source,
+            utm_source,
+            utm_medium,
+            utm_campaign,
+            referrer,
+        )
+
+    async def update_contact_after_booking(
+        self,
+        *,
+        phone_number: str,
+        given_name: str,
+        email_address: str | None,
+        traffic_source: str,
+        utm_source: str | None,
+        utm_medium: str | None,
+        utm_campaign: str | None,
+        referrer: str | None,
+        sms_consent: bool,
+        email_consent: bool,
+        square_customer_id: str,
+        square_booking_id: str,
+        booking_status: str,
+        booking_start_at: str | None,
+        booking_service_name: str,
+        booking_price: float | None,
+        booking_artist_name: str | None,
+    ) -> None:
+        """Links a contact to its real Square booking once one is created. Same upsert shape
+        as upsert_contact_step1 (original_traffic_source untouched on conflict) — also handles
+        the edge case where a booking happens without a prior Step-1 capture (e.g. a network
+        hiccup dropped that call), inserting a fresh contact row instead of erroring.
+        """
+        # asyncpg validates the Python type against the column type itself — an explicit SQL
+        # cast doesn't help; it needs a real datetime.datetime, not a string, for timestamptz.
+        parsed_start_at = dt.datetime.fromisoformat(booking_start_at) if booking_start_at else None
+
+        pool = get_pool()
+        await pool.execute(
+            """
+            INSERT INTO marketing.contacts (
+                phone_number, given_name, email_address,
+                original_traffic_source, marketing_traffic_source,
+                utm_source, utm_medium, utm_campaign, referrer,
+                sms_marketing_consent, email_marketing_consent,
+                square_customer_id, square_booking_id, booking_status, booking_start_at,
+                booking_service_name, booking_price, booking_artist_name, updated_at
+            ) VALUES ($1, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, now())
+            ON CONFLICT (phone_number) DO UPDATE SET
+                given_name = EXCLUDED.given_name,
+                email_address = COALESCE(EXCLUDED.email_address, marketing.contacts.email_address),
+                marketing_traffic_source = EXCLUDED.marketing_traffic_source,
+                utm_source = EXCLUDED.utm_source,
+                utm_medium = EXCLUDED.utm_medium,
+                utm_campaign = EXCLUDED.utm_campaign,
+                referrer = EXCLUDED.referrer,
+                sms_marketing_consent = EXCLUDED.sms_marketing_consent,
+                email_marketing_consent = EXCLUDED.email_marketing_consent,
+                square_customer_id = EXCLUDED.square_customer_id,
+                square_booking_id = EXCLUDED.square_booking_id,
+                booking_status = EXCLUDED.booking_status,
+                booking_start_at = EXCLUDED.booking_start_at,
+                booking_service_name = EXCLUDED.booking_service_name,
+                booking_price = EXCLUDED.booking_price,
+                booking_artist_name = EXCLUDED.booking_artist_name,
+                updated_at = now()
+            """,
+            phone_number,
+            given_name,
+            email_address,
+            traffic_source,
+            utm_source,
+            utm_medium,
+            utm_campaign,
+            referrer,
+            sms_consent,
+            email_consent,
+            square_customer_id,
+            square_booking_id,
+            booking_status,
+            parsed_start_at,
+            booking_service_name,
+            booking_price,
+            booking_artist_name,
         )

@@ -66,6 +66,21 @@ async def create_booking(
         visitor_id=request.tracking.visitor_id if request.tracking else None,
         ip_address=client_context["ip_address"],
     )
+    await tracking_service.link_contact_to_booking_safely(
+        given_name=request.customer.given_name,
+        phone_number=request.customer.phone_number,
+        email_address=request.customer.email_address,
+        tracking=request.tracking,
+        sms_consent=request.customer.marketing_opt_in,
+        email_consent=True,
+        square_customer_id=confirmation.square_customer_id,
+        square_booking_id=confirmation.booking_id,
+        booking_status=confirmation.status,
+        booking_start_at=confirmation.start_at,
+        booking_service_name=confirmation.service_name,
+        booking_price=confirmation.price,
+        booking_artist_name=confirmation.artist_name,
+    )
     return confirmation
 
 
@@ -107,5 +122,22 @@ async def submit_four_hand_request(
         source="four_hand_request",
         visitor_id=submission.tracking.visitor_id if submission.tracking else None,
         ip_address=client_context["ip_address"],
+    )
+    await tracking_service.link_contact_to_booking_safely(
+        given_name=submission.customer.given_name,
+        phone_number=submission.customer.phone_number,
+        email_address=submission.customer.email_address,
+        tracking=submission.tracking,
+        sms_consent=submission.customer.marketing_opt_in,
+        email_consent=True,
+        square_customer_id=confirmation.square_customer_id,
+        square_booking_id=confirmation.booking_id,
+        booking_status=confirmation.status,
+        # The 4-hand path has no self-serve date/time or finalized price yet — the salon calls
+        # to schedule those, so there's nothing real to store here until that happens.
+        booking_start_at=None,
+        booking_service_name=confirmation.service_name,
+        booking_price=None,
+        booking_artist_name=None,
     )
     return confirmation
