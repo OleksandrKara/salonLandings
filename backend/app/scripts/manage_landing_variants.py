@@ -121,6 +121,24 @@ async def cmd_set_active(args: argparse.Namespace, active: bool) -> None:
     print(f"{result} — variant(s) with key '{args.key}' set to active={active}")
 
 
+async def cmd_set_key(args: argparse.Namespace) -> None:
+    """Assigns a deep-link key to an existing variant (e.g. one already in the random
+    A/B pool that has no key yet) so it becomes directly reachable via ?v=<key> too.
+    """
+    pool = get_pool()
+    page = await pool.fetchrow("SELECT id FROM marketing.landing_pages WHERE slug = $1", args.slug)
+    if page is None:
+        print(f"No landing page with slug '{args.slug}'.", file=sys.stderr)
+        return
+    result = await pool.execute(
+        "UPDATE marketing.landing_variants SET key = $1 WHERE landing_page_id = $2 AND name = $3",
+        args.key,
+        page["id"],
+        args.name,
+    )
+    print(f"{result} — variant '{args.name}' on '{args.slug}' now reachable via ?v={args.key}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Manage marketing landing pages/variants")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -155,6 +173,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_activate = sub.add_parser("activate", help="Reactivate a variant by key")
     p_activate.add_argument("--key", required=True)
     p_activate.set_defaults(func=lambda a: cmd_set_active(a, True))
+
+    p_set_key = sub.add_parser("set-key", help="Assign a deep-link key to an existing variant, looked up by name")
+    p_set_key.add_argument("--slug", default="mani")
+    p_set_key.add_argument("--name", required=True, help="Exact existing variant name, e.g. 'Control'")
+    p_set_key.add_argument("--key", required=True, help="New deep-link key, e.g. 'control'")
+    p_set_key.set_defaults(func=cmd_set_key)
 
     return parser
 
