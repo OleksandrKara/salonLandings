@@ -217,6 +217,20 @@ CREATE INDEX IF NOT EXISTS idx_marketing_contacts_square_customer ON marketing.c
 CREATE INDEX IF NOT EXISTS idx_marketing_contacts_created_at ON marketing.contacts (created_at);
 """
 
+# landing_page_slug/variant_name describe the original capture context — resolved and
+# denormalized (not a foreign key) at capture time so a later variant rename/delete never
+# changes what a historical lead's record says it saw, and deleting a variant is never
+# blocked by unrelated contacts data. device/os/browser reflect the most recent visit.
+_DDL_CONTACTS_CAPTURE_CONTEXT = """
+ALTER TABLE marketing.contacts ADD COLUMN IF NOT EXISTS landing_page_slug TEXT;
+ALTER TABLE marketing.contacts ADD COLUMN IF NOT EXISTS variant_name TEXT;
+ALTER TABLE marketing.contacts ADD COLUMN IF NOT EXISTS device_type TEXT;
+ALTER TABLE marketing.contacts ADD COLUMN IF NOT EXISTS os_name TEXT;
+ALTER TABLE marketing.contacts ADD COLUMN IF NOT EXISTS os_version TEXT;
+ALTER TABLE marketing.contacts ADD COLUMN IF NOT EXISTS browser_name TEXT;
+ALTER TABLE marketing.contacts ADD COLUMN IF NOT EXISTS browser_version TEXT;
+"""
+
 
 async def run_migrations() -> None:
     pool = get_pool()
@@ -226,4 +240,5 @@ async def run_migrations() -> None:
         await conn.execute(_DDL_SMS_CONSENT)
         await conn.execute(_DDL_EMAIL_CONSENT)
         await conn.execute(_DDL_CONTACTS)
+        await conn.execute(_DDL_CONTACTS_CAPTURE_CONTEXT)
     logger.info("Marketing schema migrations applied")

@@ -164,11 +164,16 @@ class TrackingService:
         phone_number: str,
         email_address: str | None,
         tracking: TrackingSnapshot | None,
+        client_context: dict,
     ) -> None:
         """Captures a lead as soon as Step 1 (name + phone) is submitted — before a real Square
         booking (and thus a Square customer) exists. No Square call happens here; that only
         happens later, automatically, if/when this contact completes a real booking.
         """
+        landing_page_slug, variant_name = await self._repository.resolve_landing_context(
+            landing_page_id=tracking.landing_page_id if tracking else None,
+            variant_id=tracking.variant_id if tracking else None,
+        )
         await self._repository.upsert_contact_step1(
             phone_number=phone_number,
             given_name=given_name,
@@ -178,6 +183,13 @@ class TrackingService:
             utm_medium=tracking.utm_medium if tracking else None,
             utm_campaign=tracking.utm_campaign if tracking else None,
             referrer=tracking.referrer if tracking else None,
+            landing_page_slug=landing_page_slug,
+            variant_name=variant_name,
+            device_type=client_context.get("device_type"),
+            os_name=client_context.get("os_name"),
+            os_version=client_context.get("os_version"),
+            browser_name=client_context.get("browser_name"),
+            browser_version=client_context.get("browser_version"),
         )
 
     async def record_step1_contact_safely(self, **kwargs) -> None:
@@ -194,6 +206,7 @@ class TrackingService:
         phone_number: str,
         email_address: str | None,
         tracking: TrackingSnapshot | None,
+        client_context: dict,
         sms_consent: bool,
         email_consent: bool,
         square_customer_id: str,
@@ -209,6 +222,10 @@ class TrackingService:
         itself has no equivalent of. Falls back to creating the contact now if Step 1's
         capture never landed (e.g. a dropped request) rather than silently losing the booking.
         """
+        landing_page_slug, variant_name = await self._repository.resolve_landing_context(
+            landing_page_id=tracking.landing_page_id if tracking else None,
+            variant_id=tracking.variant_id if tracking else None,
+        )
         await self._repository.update_contact_after_booking(
             phone_number=phone_number,
             given_name=given_name,
@@ -218,6 +235,13 @@ class TrackingService:
             utm_medium=tracking.utm_medium if tracking else None,
             utm_campaign=tracking.utm_campaign if tracking else None,
             referrer=tracking.referrer if tracking else None,
+            landing_page_slug=landing_page_slug,
+            variant_name=variant_name,
+            device_type=client_context.get("device_type"),
+            os_name=client_context.get("os_name"),
+            os_version=client_context.get("os_version"),
+            browser_name=client_context.get("browser_name"),
+            browser_version=client_context.get("browser_version"),
             sms_consent=sms_consent,
             email_consent=email_consent,
             square_customer_id=square_customer_id,
