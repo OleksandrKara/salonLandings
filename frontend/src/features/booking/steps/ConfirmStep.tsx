@@ -74,7 +74,7 @@ export function ConfirmStep({
             </div>
           ) : null}
           <div style={styles.discountRow}>
-            <span>First-visit &amp; Smart Match savings</span>
+            <span>{smartMatch ? "First-visit & Smart Match savings" : "First-visit savings"}</span>
             <span>−{formatPrice(Math.max((slot.compare_at_price ?? slot.price) - slot.price, 0))}</span>
           </div>
           <div style={styles.totalRow}>
