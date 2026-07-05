@@ -246,6 +246,16 @@ CREATE INDEX IF NOT EXISTS idx_marketing_submissions_customer_phone ON marketing
 CREATE INDEX IF NOT EXISTS idx_marketing_submissions_customer_email ON marketing.submissions (customer_email);
 """
 
+# Raw utm_source/medium/campaign are empty for a direct visit or an organic referral (no
+# campaign link involved) — that's correct, but it left the portal with nothing at all to show
+# for "traffic source" on those submissions. classify_traffic_source() already solves exactly
+# this for contacts.original_traffic_source/marketing_traffic_source (falls back through
+# fbclid/gclid/referrer to "Direct / No referrer" — never blank); store that same classification
+# per submission too.
+_DDL_SUBMISSIONS_TRAFFIC_SOURCE = """
+ALTER TABLE marketing.submissions ADD COLUMN IF NOT EXISTS traffic_source TEXT;
+"""
+
 
 async def run_migrations() -> None:
     pool = get_pool()
@@ -257,4 +267,5 @@ async def run_migrations() -> None:
         await conn.execute(_DDL_CONTACTS)
         await conn.execute(_DDL_CONTACTS_CAPTURE_CONTEXT)
         await conn.execute(_DDL_SUBMISSIONS_LANDING_CONTEXT)
+        await conn.execute(_DDL_SUBMISSIONS_TRAFFIC_SOURCE)
     logger.info("Marketing schema migrations applied")

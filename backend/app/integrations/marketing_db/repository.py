@@ -135,8 +135,8 @@ class MarketingRepository:
                 customer_email, customer_phone, landing_path, referrer,
                 utm_source, utm_medium, utm_campaign, utm_term, utm_content,
                 fbclid, gclid, user_agent, device_type, os_name, os_version,
-                browser_name, browser_version, ip_address, landing_page_slug, variant_name
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+                browser_name, browser_version, ip_address, landing_page_slug, variant_name, traffic_source
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
             """,
             visitor_id,
             submission_type,
@@ -163,6 +163,7 @@ class MarketingRepository:
             fields.get("ip_address"),
             fields.get("landing_page_slug"),
             fields.get("variant_name"),
+            fields.get("traffic_source"),
         )
 
     async def insert_sms_consent(
