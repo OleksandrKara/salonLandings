@@ -44,6 +44,11 @@ _DEFINITIONS = [
         "name": "SMS Marketing Consent",
         "description": "Whether this customer opted in to SMS marketing on their most recent booking. Convenience mirror only — the authoritative, timestamped consent/revocation record lives in the marketing database (Square has no API for SMS consent).",
     },
+    {
+        "key": "email_marketing_consent",
+        "name": "Email Marketing Consent",
+        "description": "Email marketing consent, granted automatically on every booking (independent of the SMS choice). Convenience mirror only — Square's own email_unsubscribed field is read-only via the API, so the marketing database is the actual record.",
+    },
 ]
 
 
@@ -140,6 +145,23 @@ class SquareCustomerAttributesGateway:
         except ApiError as exc:
             logger.error(
                 "Failed to set Square customer custom attribute 'sms_marketing_consent' for customer %s: %s",
+                customer_id,
+                exc.body,
+            )
+
+    def attach_email_consent(self, customer_id: str) -> None:
+        """Always "Opted In" — email marketing consent is granted automatically on every
+        booking today (see EMAIL_CONSENT_TEXT). Kept as its own method, not folded into
+        attach_sms_consent, so this is trivial to make conditional later if a real opt-out
+        control is ever added.
+        """
+        try:
+            self._client.customers.custom_attributes.upsert(
+                customer_id, "email_marketing_consent", custom_attribute={"value": "Opted In"}
+            )
+        except ApiError as exc:
+            logger.error(
+                "Failed to set Square customer custom attribute 'email_marketing_consent' for customer %s: %s",
                 customer_id,
                 exc.body,
             )

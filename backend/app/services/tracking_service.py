@@ -1,6 +1,11 @@
 import logging
 
-from app.domain.consent import SMS_CONSENT_TEXT, SMS_CONSENT_VERSION
+from app.domain.consent import (
+    EMAIL_CONSENT_TEXT,
+    EMAIL_CONSENT_VERSION,
+    SMS_CONSENT_TEXT,
+    SMS_CONSENT_VERSION,
+)
 from app.domain.schemas import TrackingEvent, TrackingSnapshot
 from app.integrations.marketing_db.repository import MarketingRepository
 
@@ -119,3 +124,34 @@ class TrackingService:
             await self.record_sms_consent(**kwargs)
         except Exception:
             logger.exception("Failed to record SMS consent (booking itself was unaffected)")
+
+    async def record_email_consent(
+        self,
+        *,
+        email_address: str,
+        source: str,
+        visitor_id: str | None,
+        ip_address: str | None,
+    ) -> None:
+        """Always consented=True — email marketing consent is granted automatically on
+        every booking, independent of the customer's SMS choice (no separate email opt-in
+        checkbox exists). See EMAIL_CONSENT_TEXT for why this is legally distinct from SMS.
+        """
+        await self._repository.insert_email_consent(
+            email_address=email_address,
+            consented=True,
+            consent_text=EMAIL_CONSENT_TEXT,
+            consent_version=EMAIL_CONSENT_VERSION,
+            source=source,
+            visitor_id=visitor_id,
+            ip_address=ip_address,
+        )
+
+    async def record_email_consent_safely(self, **kwargs) -> None:
+        """Email consent logging must never break a real booking — same guarantee as
+        record_submission_safely.
+        """
+        try:
+            await self.record_email_consent(**kwargs)
+        except Exception:
+            logger.exception("Failed to record email consent (booking itself was unaffected)")

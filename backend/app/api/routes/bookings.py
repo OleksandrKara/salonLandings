@@ -60,6 +60,12 @@ async def create_booking(
         visitor_id=request.tracking.visitor_id if request.tracking else None,
         ip_address=client_context["ip_address"],
     )
+    await tracking_service.record_email_consent_safely(
+        email_address=request.customer.email_address,
+        source="booking",
+        visitor_id=request.tracking.visitor_id if request.tracking else None,
+        ip_address=client_context["ip_address"],
+    )
     return confirmation
 
 
@@ -92,6 +98,12 @@ async def submit_four_hand_request(
     await tracking_service.record_sms_consent_safely(
         phone_number=submission.customer.phone_number,
         consented=submission.customer.marketing_opt_in,
+        source="four_hand_request",
+        visitor_id=submission.tracking.visitor_id if submission.tracking else None,
+        ip_address=client_context["ip_address"],
+    )
+    await tracking_service.record_email_consent_safely(
+        email_address=submission.customer.email_address,
         source="four_hand_request",
         visitor_id=submission.tracking.visitor_id if submission.tracking else None,
         ip_address=client_context["ip_address"],

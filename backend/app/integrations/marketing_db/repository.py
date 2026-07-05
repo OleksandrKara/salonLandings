@@ -188,3 +188,30 @@ class MarketingRepository:
             visitor_id,
             ip_address,
         )
+
+    async def insert_email_consent(
+        self,
+        *,
+        email_address: str,
+        consented: bool,
+        consent_text: str,
+        consent_version: str,
+        source: str,
+        visitor_id: str | None,
+        ip_address: str | None,
+    ) -> None:
+        pool = get_pool()
+        await pool.execute(
+            """
+            INSERT INTO marketing.email_consent
+                (email_address, consented, consent_text, consent_version, source, visitor_id, ip_address)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            """,
+            email_address,
+            consented,
+            consent_text,
+            consent_version,
+            source,
+            visitor_id,
+            ip_address,
+        )

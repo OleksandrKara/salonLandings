@@ -159,6 +159,25 @@ CREATE INDEX IF NOT EXISTS idx_marketing_sms_consent_phone ON marketing.sms_cons
 CREATE INDEX IF NOT EXISTS idx_marketing_sms_consent_occurred_at ON marketing.sms_consent (occurred_at);
 """
 
+# Email marketing consent — same rationale/shape as sms_consent, kept as its own table (rather
+# than a shared "channel" column) since the two have different semantics: SMS reflects an
+# explicit customer choice, email is granted automatically on every booking regardless of it.
+_DDL_EMAIL_CONSENT = """
+CREATE TABLE IF NOT EXISTS marketing.email_consent (
+    id BIGSERIAL PRIMARY KEY,
+    email_address TEXT NOT NULL,
+    consented BOOLEAN NOT NULL,
+    consent_text TEXT NOT NULL,
+    consent_version TEXT NOT NULL,
+    source TEXT NOT NULL,
+    visitor_id UUID,
+    ip_address TEXT,
+    occurred_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_marketing_email_consent_email ON marketing.email_consent (email_address);
+CREATE INDEX IF NOT EXISTS idx_marketing_email_consent_occurred_at ON marketing.email_consent (occurred_at);
+"""
+
 
 async def run_migrations() -> None:
     pool = get_pool()
@@ -166,4 +185,5 @@ async def run_migrations() -> None:
         await conn.execute(_DDL)
         await conn.execute(_DDL_EXPERIMENTS)
         await conn.execute(_DDL_SMS_CONSENT)
+        await conn.execute(_DDL_EMAIL_CONSENT)
     logger.info("Marketing schema migrations applied")
