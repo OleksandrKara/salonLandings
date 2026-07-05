@@ -62,6 +62,7 @@ class TrackingService:
             landing_page_id=tracking.landing_page_id if tracking else None,
             variant_id=tracking.variant_id if tracking else None,
         )
+        fields["traffic_source"] = classify_traffic_source(tracking)
 
         await self._repository.insert_submission(
             visitor_id=tracking.visitor_id if tracking else None,
@@ -184,11 +185,12 @@ class TrackingService:
             landing_page_id=tracking.landing_page_id if tracking else None,
             variant_id=tracking.variant_id if tracking else None,
         )
+        traffic_source = classify_traffic_source(tracking)
         await self._repository.upsert_contact_step1(
             phone_number=phone_number,
             given_name=given_name,
             email_address=email_address,
-            traffic_source=classify_traffic_source(tracking),
+            traffic_source=traffic_source,
             utm_source=tracking.utm_source if tracking else None,
             utm_medium=tracking.utm_medium if tracking else None,
             utm_campaign=tracking.utm_campaign if tracking else None,
@@ -211,6 +213,7 @@ class TrackingService:
         fields["customer_phone"] = phone_number
         fields["landing_page_slug"] = landing_page_slug
         fields["variant_name"] = variant_name
+        fields["traffic_source"] = traffic_source
         await self._repository.insert_submission(
             visitor_id=tracking.visitor_id if tracking else None,
             submission_type="step1",
