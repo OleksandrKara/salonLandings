@@ -7,6 +7,7 @@ from app.integrations.square.bookings import SquareBookingGateway
 from app.integrations.square.business import SquareBusinessRepository
 from app.integrations.square.catalog import SquareCatalogRepository
 from app.integrations.square.client import get_square_client
+from app.integrations.square.customer_attributes import SquareCustomerAttributesGateway
 from app.integrations.square.customers import SquareCustomerGateway
 from app.integrations.square.team import SquareTeamRepository
 from app.services.artist_service import ArtistService
@@ -49,6 +50,11 @@ def get_customer_gateway() -> SquareCustomerGateway:
 
 
 @lru_cache
+def get_customer_attributes_gateway() -> SquareCustomerAttributesGateway:
+    return SquareCustomerAttributesGateway(get_square_client())
+
+
+@lru_cache
 def get_booking_gateway() -> SquareBookingGateway:
     settings = get_settings()
     return SquareBookingGateway(get_square_client(), location_id=settings.square_location_id)
@@ -78,6 +84,7 @@ def get_booking_service() -> BookingService:
         get_artist_service(),
         get_business_repository(),
         get_availability_gateway(),
+        get_customer_attributes_gateway(),
     )
 
 

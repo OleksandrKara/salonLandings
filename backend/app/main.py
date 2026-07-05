@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.deps import get_customer_attributes_gateway
 from app.api.routes import artists, availability, bookings, experiments, services, tracking
 from app.core.config import get_settings
 from app.core.logging import configure_logging
@@ -22,6 +23,13 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     await init_pool()
     await run_migrations()
+    try:
+        get_customer_attributes_gateway().ensure_definitions()
+    except Exception:
+        # Non-fatal: Square custom attribute definitions self-heal on the next
+        # restart, and bookings still succeed without them (attach_tracking
+        # just logs and skips if the definitions aren't there yet).
+        logger.exception("Failed to ensure Square customer custom attribute definitions")
     yield
     await close_pool()
 

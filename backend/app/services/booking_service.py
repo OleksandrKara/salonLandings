@@ -15,6 +15,7 @@ from app.hooks.post_booking import run_post_booking_hooks
 from app.integrations.square.availability import SquareAvailabilityGateway
 from app.integrations.square.bookings import BookingSegment, SquareBookingGateway
 from app.integrations.square.business import SquareBusinessRepository
+from app.integrations.square.customer_attributes import SquareCustomerAttributesGateway
 from app.integrations.square.customers import SquareCustomerGateway
 from app.services.artist_service import ArtistNotFoundError, ArtistService
 from app.services.catalog_service import CatalogService, ServiceNotFoundError
@@ -35,6 +36,7 @@ class BookingService:
         artist_service: ArtistService,
         business_repo: SquareBusinessRepository,
         availability_gateway: SquareAvailabilityGateway,
+        customer_attributes_gateway: SquareCustomerAttributesGateway,
     ):
         self._customer_gateway = customer_gateway
         self._booking_gateway = booking_gateway
@@ -42,6 +44,7 @@ class BookingService:
         self._artist_service = artist_service
         self._business_repo = business_repo
         self._availability_gateway = availability_gateway
+        self._customer_attributes_gateway = customer_attributes_gateway
 
     def create_booking(self, request: BookingRequest) -> BookingConfirmation:
         cart_menu = self._catalog_service.get_cart_menu()
@@ -55,6 +58,7 @@ class BookingService:
             email_address=request.customer.email_address,
             phone_number=request.customer.phone_number,
         )
+        self._customer_attributes_gateway.attach_tracking(customer_id, request.tracking)
 
         booking = self._booking_gateway.create_booking(
             idempotency_key=str(uuid.uuid4()),
@@ -123,6 +127,7 @@ class BookingService:
             email_address=submission.customer.email_address,
             phone_number=submission.customer.phone_number,
         )
+        self._customer_attributes_gateway.attach_tracking(customer_id, submission.tracking)
 
         note_parts = []
         if submission.requested_services:
