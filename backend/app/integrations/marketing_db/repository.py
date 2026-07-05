@@ -217,6 +217,26 @@ class MarketingRepository:
             ip_address,
         )
 
+    async def resolve_landing_context(
+        self, *, landing_page_id: str | None, variant_id: str | None
+    ) -> tuple[str | None, str | None]:
+        """Resolves the (opaque, UUID) landing_page_id/variant_id from a tracking snapshot into
+        human-readable slug/name, denormalized onto the contact at capture time rather than
+        stored as a foreign key — so a later variant rename/delete never changes what a
+        historical lead's record says it saw, and deleting a variant is never blocked by
+        unrelated contacts data.
+        """
+        pool = get_pool()
+        page_slug = None
+        variant_name = None
+        if landing_page_id:
+            row = await pool.fetchrow("SELECT slug FROM marketing.landing_pages WHERE id = $1", landing_page_id)
+            page_slug = row["slug"] if row else None
+        if variant_id:
+            row = await pool.fetchrow("SELECT name FROM marketing.landing_variants WHERE id = $1", variant_id)
+            variant_name = row["name"] if row else None
+        return page_slug, variant_name
+
     async def upsert_contact_step1(
         self,
         *,
@@ -228,11 +248,20 @@ class MarketingRepository:
         utm_medium: str | None,
         utm_campaign: str | None,
         referrer: str | None,
+        landing_page_slug: str | None,
+        variant_name: str | None,
+        device_type: str | None,
+        os_name: str | None,
+        os_version: str | None,
+        browser_name: str | None,
+        browser_version: str | None,
     ) -> None:
         """First-touch capture at Step 1 — before a Square customer exists. Dedup key is
-        phone_number (the only field guaranteed present); original_traffic_source is set on
-        first insert and intentionally absent from the DO UPDATE SET clause below, so a repeat
-        visit updates only the "latest" fields and never overwrites first-touch attribution.
+        phone_number (the only field guaranteed present); original_traffic_source, and the
+        landing_page_slug/variant_name describing what the lead first saw, are set on first
+        insert and intentionally absent from the DO UPDATE SET clause below, so a repeat visit
+        updates only the "latest" fields (traffic source, device/os/browser) and never
+        overwrites first-touch attribution.
         """
         pool = get_pool()
         await pool.execute(
@@ -240,8 +269,10 @@ class MarketingRepository:
             INSERT INTO marketing.contacts (
                 phone_number, given_name, email_address,
                 original_traffic_source, marketing_traffic_source,
-                utm_source, utm_medium, utm_campaign, referrer, updated_at
-            ) VALUES ($1, $2, $3, $4, $4, $5, $6, $7, $8, now())
+                utm_source, utm_medium, utm_campaign, referrer,
+                landing_page_slug, variant_name,
+                device_type, os_name, os_version, browser_name, browser_version, updated_at
+            ) VALUES ($1, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, now())
             ON CONFLICT (phone_number) DO UPDATE SET
                 given_name = EXCLUDED.given_name,
                 email_address = COALESCE(EXCLUDED.email_address, marketing.contacts.email_address),
@@ -250,6 +281,11 @@ class MarketingRepository:
                 utm_medium = EXCLUDED.utm_medium,
                 utm_campaign = EXCLUDED.utm_campaign,
                 referrer = EXCLUDED.referrer,
+                device_type = EXCLUDED.device_type,
+                os_name = EXCLUDED.os_name,
+                os_version = EXCLUDED.os_version,
+                browser_name = EXCLUDED.browser_name,
+                browser_version = EXCLUDED.browser_version,
                 updated_at = now()
             """,
             phone_number,
@@ -260,6 +296,13 @@ class MarketingRepository:
             utm_medium,
             utm_campaign,
             referrer,
+            landing_page_slug,
+            variant_name,
+            device_type,
+            os_name,
+            os_version,
+            browser_name,
+            browser_version,
         )
 
     async def update_contact_after_booking(
@@ -273,6 +316,13 @@ class MarketingRepository:
         utm_medium: str | None,
         utm_campaign: str | None,
         referrer: str | None,
+        landing_page_slug: str | None,
+        variant_name: str | None,
+        device_type: str | None,
+        os_name: str | None,
+        os_version: str | None,
+        browser_name: str | None,
+        browser_version: str | None,
         sms_consent: bool,
         email_consent: bool,
         square_customer_id: str,
@@ -284,9 +334,10 @@ class MarketingRepository:
         booking_artist_name: str | None,
     ) -> None:
         """Links a contact to its real Square booking once one is created. Same upsert shape
-        as upsert_contact_step1 (original_traffic_source untouched on conflict) — also handles
-        the edge case where a booking happens without a prior Step-1 capture (e.g. a network
-        hiccup dropped that call), inserting a fresh contact row instead of erroring.
+        as upsert_contact_step1 (original_traffic_source and the landing_page_slug/variant_name
+        first-touch capture context both untouched on conflict) — also handles the edge case
+        where a booking happens without a prior Step-1 capture (e.g. a network hiccup dropped
+        that call), inserting a fresh contact row instead of erroring.
         """
         # asyncpg validates the Python type against the column type itself — an explicit SQL
         # cast doesn't help; it needs a real datetime.datetime, not a string, for timestamptz.
@@ -299,10 +350,15 @@ class MarketingRepository:
                 phone_number, given_name, email_address,
                 original_traffic_source, marketing_traffic_source,
                 utm_source, utm_medium, utm_campaign, referrer,
+                landing_page_slug, variant_name,
+                device_type, os_name, os_version, browser_name, browser_version,
                 sms_marketing_consent, email_marketing_consent,
                 square_customer_id, square_booking_id, booking_status, booking_start_at,
                 booking_service_name, booking_price, booking_artist_name, updated_at
-            ) VALUES ($1, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, now())
+            ) VALUES (
+                $1, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
+                $16, $17, $18, $19, $20, $21, $22, $23, $24, now()
+            )
             ON CONFLICT (phone_number) DO UPDATE SET
                 given_name = EXCLUDED.given_name,
                 email_address = COALESCE(EXCLUDED.email_address, marketing.contacts.email_address),
@@ -311,6 +367,11 @@ class MarketingRepository:
                 utm_medium = EXCLUDED.utm_medium,
                 utm_campaign = EXCLUDED.utm_campaign,
                 referrer = EXCLUDED.referrer,
+                device_type = EXCLUDED.device_type,
+                os_name = EXCLUDED.os_name,
+                os_version = EXCLUDED.os_version,
+                browser_name = EXCLUDED.browser_name,
+                browser_version = EXCLUDED.browser_version,
                 sms_marketing_consent = EXCLUDED.sms_marketing_consent,
                 email_marketing_consent = EXCLUDED.email_marketing_consent,
                 square_customer_id = EXCLUDED.square_customer_id,
@@ -330,6 +391,13 @@ class MarketingRepository:
             utm_medium,
             utm_campaign,
             referrer,
+            landing_page_slug,
+            variant_name,
+            device_type,
+            os_name,
+            os_version,
+            browser_name,
+            browser_version,
             sms_consent,
             email_consent,
             square_customer_id,
