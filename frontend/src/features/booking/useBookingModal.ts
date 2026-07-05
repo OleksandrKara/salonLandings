@@ -4,7 +4,8 @@ import { ApiError } from "@/api/client";
 import type { BookingConfirmation, CartMenu, SlotOption } from "@/types/api";
 import { BookingModalState, BookingStep, initialBookingModalState } from "@/features/booking/types";
 import { logExperimentEvent } from "@/lib/experiments";
-import { getTrackingSnapshot } from "@/lib/tracking";
+import { getTrackingSnapshot, recordMetaBookingConversion } from "@/lib/tracking";
+import { enterThankYouUrl, exitThankYouUrl } from "@/lib/thankYouUrl";
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "").replace(/^1(?=\d{10})/, "").slice(0, 10);
@@ -37,7 +38,10 @@ export function useBookingModal() {
   const [state, setState] = useState<BookingModalState>(initialBookingModalState);
 
   const open = useCallback(() => setState({ ...initialBookingModalState, isOpen: true }), []);
-  const close = useCallback(() => setState((s) => ({ ...s, isOpen: false })), []);
+  const close = useCallback(() => {
+    exitThankYouUrl();
+    setState((s) => ({ ...s, isOpen: false }));
+  }, []);
   const stop = useCallback((e: { stopPropagation: () => void }) => e.stopPropagation(), []);
 
   const setGivenName = useCallback((v: string) => setState((s) => ({ ...s, givenName: v })), []);
@@ -126,6 +130,8 @@ export function useBookingModal() {
           requested_services: requested || "4-hand service",
           tracking,
         });
+        enterThankYouUrl();
+        recordMetaBookingConversion();
         setState((s) => ({ ...s, submitting: false, done: true, fourHandConfirmation: confirmation }));
         return;
       }
@@ -157,6 +163,8 @@ export function useBookingModal() {
         tracking,
       });
       logExperimentEvent("booking_completed", tracking.landing_page_id ?? null, tracking.variant_id ?? null);
+      enterThankYouUrl();
+      recordMetaBookingConversion();
       setState((s) => ({ ...s, submitting: false, done: true, bookingConfirmation: confirmation }));
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "We couldn't confirm your appointment. Please try again.";

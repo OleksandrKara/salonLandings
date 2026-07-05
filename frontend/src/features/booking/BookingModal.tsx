@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { CancellationPolicyModal } from "@/features/booking/CancellationPolicyModal";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 import { selectedServiceSlugs } from "@/features/booking/useBookingModal";
@@ -15,6 +15,15 @@ export function BookingModal() {
     useBookingModalContext();
   const { cartMenu } = useCartMenu();
   const [policyOpen, setPolicyOpen] = useState(false);
+
+  // If the visitor hits the browser back button off the /thank-you URL, dismiss
+  // the confirmation sheet too so the UI matches the address bar.
+  useEffect(() => {
+    if (!state.done) return;
+    const handlePopState = () => close();
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [state.done, close]);
 
   if (!state.isOpen || !cartMenu) return null;
 
