@@ -25,7 +25,7 @@ class MarketingRepository:
         pool = get_pool()
         return await pool.fetch(
             "SELECT id, name, weight, content, active FROM marketing.landing_variants "
-            "WHERE landing_page_id = $1 AND active = true ORDER BY created_at ASC",
+            "WHERE landing_page_id = $1 AND active = true AND weight > 0 ORDER BY created_at ASC",
             landing_page_id,
         )
 
@@ -36,8 +36,20 @@ class MarketingRepository:
         pool = get_pool()
         return await pool.fetchrow(
             "SELECT id, name, weight, content, active FROM marketing.landing_variants "
-            "WHERE landing_page_id = $1 AND active = true ORDER BY created_at ASC LIMIT 1",
+            "WHERE landing_page_id = $1 AND active = true AND weight > 0 ORDER BY created_at ASC LIMIT 1",
             landing_page_id,
+        )
+
+    async def get_variant_by_key(self, landing_page_id, key: str):
+        """Deterministic lookup for a campaign link (?v=<key>) — bypasses weight/experiment
+        gating entirely so a weight-0 campaign-only variant is still directly reachable.
+        """
+        pool = get_pool()
+        return await pool.fetchrow(
+            "SELECT id, name, weight, content, active FROM marketing.landing_variants "
+            "WHERE landing_page_id = $1 AND key = $2 AND active = true",
+            landing_page_id,
+            key,
         )
 
     async def insert_event(

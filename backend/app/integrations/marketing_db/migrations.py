@@ -93,6 +93,13 @@ CREATE TABLE IF NOT EXISTS marketing.landing_variants (
 );
 CREATE INDEX IF NOT EXISTS idx_marketing_landing_variants_page ON marketing.landing_variants (landing_page_id);
 
+-- Stable, human-chosen slug (e.g. "holiday-gold") so a campaign link can request this
+-- exact variant via ?v=<key>, independent of its random UUID. Nullable: existing
+-- pure-A/B variants (randomly split, never linked to directly) don't need one.
+ALTER TABLE marketing.landing_variants ADD COLUMN IF NOT EXISTS key TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_marketing_landing_variants_page_key
+    ON marketing.landing_variants (landing_page_id, key) WHERE key IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS marketing.experiments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     landing_page_id UUID NOT NULL REFERENCES marketing.landing_pages (id),

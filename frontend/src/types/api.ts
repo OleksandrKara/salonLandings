@@ -114,6 +114,9 @@ export interface LandingVariantContent {
   heroSubheadline?: string;
   ctaText?: string;
   heroImageUrl?: string;
+  /** Single brand hex color (e.g. "#B8860B") — the rest of the palette (dark/hover/tints)
+   * is derived automatically, see lib/theme.ts. */
+  accentColor?: string;
 }
 
 export interface LandingVariant {

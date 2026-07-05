@@ -14,6 +14,7 @@ import { TrustGrid } from "@/features/landing/TrustGrid";
 import { WhyClientsStay } from "@/features/landing/WhyClientsStay";
 import { resolveExperiment } from "@/lib/experiments";
 import { recordVisit } from "@/lib/tracking";
+import { accentPaletteToCssVars, deriveAccentPalette } from "@/lib/theme";
 import type { LandingVariantContent } from "@/types/api";
 
 export function LandingPage() {
@@ -30,10 +31,14 @@ export function LandingPage() {
       });
   }, []);
 
+  // Every component already reads its colors via var(--color-accent) etc., so overriding
+  // these custom properties here re-themes the whole page — no other component changes.
+  const themeVars = overrides.accentColor ? accentPaletteToCssVars(deriveAccentPalette(overrides.accentColor)) : null;
+
   return (
     <CartMenuProvider>
       <BookingModalProvider>
-        <div style={styles.page}>
+        <div style={themeVars ? { ...styles.page, ...(themeVars as CSSProperties) } : styles.page}>
           <Header />
           <Hero overrides={overrides} />
           <TrustGrid />

@@ -63,9 +63,14 @@ export async function resolveExperiment(slug: string): Promise<{
   variantId: string | null;
   content: LandingVariantContent;
 }> {
+  // A campaign link (e.g. mani.akluxnails.com/?v=holiday-gold) forces that exact variant —
+  // guarantees the visitor sees creative matching the ad, bypassing the random A/B pool.
+  const variantKey = new URLSearchParams(window.location.search).get("v");
+  const query = variantKey ? `?variant_key=${encodeURIComponent(variantKey)}` : "";
+
   let resolution: ExperimentResolution;
   try {
-    resolution = await apiGet<ExperimentResolution>(`/api/experiments/${slug}`);
+    resolution = await apiGet<ExperimentResolution>(`/api/experiments/${slug}${query}`);
   } catch {
     return { landingPageId: null, variantId: null, content: {} };
   }
