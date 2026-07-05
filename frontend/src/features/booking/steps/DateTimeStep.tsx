@@ -2,6 +2,7 @@ import { useMemo, useState, type CSSProperties } from "react";
 import { fetchAvailability } from "@/api/availability";
 import { formatPrice, formatSlotTime, groupSlotsByDateKey, toPacificDateKey } from "@/lib/formatting";
 import { useAsync } from "@/lib/useAsync";
+import { Spinner } from "@/features/landing/Spinner";
 import { ANY_ARTIST, type SlotOption } from "@/types/api";
 
 const MONTHS = [
@@ -154,8 +155,8 @@ export function DateTimeStep({ serviceSlugs, stepLabel, onSelectSlot, onBack }: 
           <div style={styles.slotGrid}>
             {daySlots.map((slot) => (
               <button key={slot.start_at} onClick={() => onSelectSlot(slot)} style={styles.slotButton}>
-                {formatSlotTime(slot.start_at)}
-                {slot.savings > 0 ? <span style={styles.smartMatchMark}> ✦</span> : null}
+                {slot.savings > 0 ? <span style={styles.smartMatchBadge}>✦</span> : null}
+                <span style={styles.slotTime}>{formatSlotTime(slot.start_at)}</span>
                 <span style={styles.slotPrice}>{formatPrice(slot.price)}</span>
               </button>
             ))}
@@ -178,9 +179,7 @@ function LoadingState({ stepLabel }: { stepLabel: string }) {
     <div>
       <div style={styles.stepLabel}>{stepLabel}</div>
       <h3 style={styles.title}>Pick a date &amp; time</h3>
-      <div style={{ textAlign: "center", padding: "48px 0", color: "var(--color-muted-2)", fontSize: 14 }}>
-        Finding available times…
-      </div>
+      <Spinner label="Finding available times…" />
     </div>
   );
 }
@@ -228,7 +227,22 @@ const styles: Record<string, CSSProperties> = {
   availableTimesLabel: { fontSize: 13, fontWeight: 500, color: "var(--color-ink-soft)", margin: "16px 0 8px" },
   slotGrid: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 },
   slotButton: { position: "relative", padding: "11px 4px", fontSize: 13, fontWeight: 500, borderRadius: 10, cursor: "pointer", border: "1px solid #e0cfc6", background: "#fff", color: "var(--color-ink)", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 },
-  smartMatchMark: { color: "var(--color-gold-text)", fontSize: 11 },
+  slotTime: { lineHeight: 1.2 },
+  smartMatchBadge: {
+    position: "absolute",
+    top: -7,
+    right: -7,
+    width: 18,
+    height: 18,
+    borderRadius: "50%",
+    background: "var(--color-gold-text)",
+    color: "#fff",
+    fontSize: 10,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
+  },
   slotPrice: { fontSize: 11, color: "var(--color-muted-2)" },
   smartMatchHint: { fontSize: 11, color: "var(--color-gold-text)", marginTop: 9, lineHeight: 1.4 },
   backButton: { width: "100%", marginTop: 9, border: "none", background: "none", color: "var(--color-muted-2)", fontSize: 14, padding: 8, cursor: "pointer" },
