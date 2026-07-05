@@ -69,3 +69,18 @@ img {
     transform: rotate(360deg);
   }
 }
+
+.calendar-link {
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.calendar-link:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .calendar-link:hover {
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 4px 12px rgba(42, 33, 29, 0.1);
+  }
+}
