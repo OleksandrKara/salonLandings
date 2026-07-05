@@ -135,8 +135,8 @@ class MarketingRepository:
                 customer_email, customer_phone, landing_path, referrer,
                 utm_source, utm_medium, utm_campaign, utm_term, utm_content,
                 fbclid, gclid, user_agent, device_type, os_name, os_version,
-                browser_name, browser_version, ip_address
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+                browser_name, browser_version, ip_address, landing_page_slug, variant_name
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
             """,
             visitor_id,
             submission_type,
@@ -161,6 +161,8 @@ class MarketingRepository:
             fields.get("browser_name"),
             fields.get("browser_version"),
             fields.get("ip_address"),
+            fields.get("landing_page_slug"),
+            fields.get("variant_name"),
         )
 
     async def insert_sms_consent(
@@ -255,13 +257,19 @@ class MarketingRepository:
         os_version: str | None,
         browser_name: str | None,
         browser_version: str | None,
+        square_customer_id: str | None,
     ) -> None:
-        """First-touch capture at Step 1 — before a Square customer exists. Dedup key is
-        phone_number (the only field guaranteed present); original_traffic_source, and the
-        landing_page_slug/variant_name describing what the lead first saw, are set on first
-        insert and intentionally absent from the DO UPDATE SET clause below, so a repeat visit
-        updates only the "latest" fields (traffic source, device/os/browser) and never
+        """First-touch capture at Step 1 — before a Square customer exists *of our making*.
+        Dedup key is phone_number (the only field guaranteed present); original_traffic_source,
+        and the landing_page_slug/variant_name describing what the lead first saw, are set on
+        first insert and intentionally absent from the DO UPDATE SET clause below, so a repeat
+        visit updates only the "latest" fields (traffic source, device/os/browser) and never
         overwrites first-touch attribution.
+
+        square_customer_id here is the result of a *lookup*, not a creation — a Square customer
+        that already existed before this lead was ever captured (e.g. booked in person, or
+        through Square directly, in the past). COALESCE on conflict: once found, never clobber
+        it with null just because a later lookup attempt failed or found nothing.
         """
         pool = get_pool()
         await pool.execute(
@@ -271,8 +279,9 @@ class MarketingRepository:
                 original_traffic_source, marketing_traffic_source,
                 utm_source, utm_medium, utm_campaign, referrer,
                 landing_page_slug, variant_name,
-                device_type, os_name, os_version, browser_name, browser_version, updated_at
-            ) VALUES ($1, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, now())
+                device_type, os_name, os_version, browser_name, browser_version,
+                square_customer_id, updated_at
+            ) VALUES ($1, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, now())
             ON CONFLICT (phone_number) DO UPDATE SET
                 given_name = EXCLUDED.given_name,
                 email_address = COALESCE(EXCLUDED.email_address, marketing.contacts.email_address),
@@ -286,6 +295,7 @@ class MarketingRepository:
                 os_version = EXCLUDED.os_version,
                 browser_name = EXCLUDED.browser_name,
                 browser_version = EXCLUDED.browser_version,
+                square_customer_id = COALESCE(EXCLUDED.square_customer_id, marketing.contacts.square_customer_id),
                 updated_at = now()
             """,
             phone_number,
@@ -303,6 +313,7 @@ class MarketingRepository:
             os_version,
             browser_name,
             browser_version,
+            square_customer_id,
         )
 
     async def update_contact_after_booking(
