@@ -10,8 +10,9 @@ import { ServicesStep } from "@/features/booking/steps/ServicesStep";
 import { TurnstileWidget } from "@/features/booking/TurnstileWidget";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
 import { isStep1Ready } from "@/features/booking/useBookingModal";
+import type { LandingVariantContent } from "@/types/api";
 
-export function BookingModal() {
+export function BookingModal({ terminology }: { terminology?: LandingVariantContent["terminology"] }) {
   const {
     state,
     close,
@@ -106,6 +107,7 @@ export function BookingModal() {
             cartMenu={cartMenu}
             state={state}
             stepLabel={stepLabel}
+            terminology={terminology}
             onToggleMani={toggleMani}
             onTogglePedicure={togglePedicure}
             onToggleDesign={toggleDesign}
@@ -126,6 +128,7 @@ export function BookingModal() {
             <ConfirmStep
               state={state}
               stepLabel={stepLabel}
+              terminology={terminology}
               onToggleSms={toggleSms}
               onToggleCancelAgree={toggleCancelAgree}
               onOpenPolicy={() => setPolicyOpen(true)}

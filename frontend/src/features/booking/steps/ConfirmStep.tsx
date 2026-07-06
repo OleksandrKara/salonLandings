@@ -1,11 +1,13 @@
 import { useState, type CSSProperties } from "react";
-import { SMS_CONSENT_TEXT } from "@/data/designCopy";
+import { SMS_CONSENT_TEXT, terminologize } from "@/data/designCopy";
 import { BookingModalState } from "@/features/booking/types";
 import { formatPrice, formatSlotDay, formatSlotTime } from "@/lib/formatting";
+import type { LandingVariantContent } from "@/types/api";
 
 interface ConfirmStepProps {
   state: BookingModalState;
   stepLabel: string;
+  terminology?: LandingVariantContent["terminology"];
   onToggleSms: () => void;
   onToggleCancelAgree: () => void;
   onOpenPolicy: () => void;
@@ -16,6 +18,7 @@ interface ConfirmStepProps {
 export function ConfirmStep({
   state,
   stepLabel,
+  terminology,
   onToggleSms,
   onToggleCancelAgree,
   onOpenPolicy,
@@ -49,7 +52,7 @@ export function ConfirmStep({
         <div style={styles.breakdownBox}>
           {slot.segments.map((seg) => (
             <div key={seg.service_slug} style={styles.lineItem}>
-              <span>{seg.name}</span>
+              <span>{terminologize(seg.name, terminology)}</span>
               <span>{formatPrice(seg.compare_at_price ?? seg.price)}</span>
             </div>
           ))}
