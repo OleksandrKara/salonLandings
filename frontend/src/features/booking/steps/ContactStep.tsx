@@ -96,7 +96,7 @@ export function ContactStep({
       <button
         onClick={onContinue}
         disabled={!canContinue}
-        style={{ ...styles.continueButton, background: canContinue ? "var(--color-accent)" : "#d8bfb8" }}
+        style={{ ...styles.continueButton, background: canContinue ? "var(--color-accent)" : "var(--color-accent-border-soft)" }}
       >
         Continue
       </button>

@@ -195,6 +195,42 @@ async def cmd_delete(args: argparse.Namespace) -> None:
     )
 
 
+async def cmd_set_headline(args: argparse.Namespace) -> None:
+    """Sets (or clears, with --headline "") a variant's heroHeadline content override, looked up
+    by name — every other content key (accentColor, ctaText, terminology, etc.) is left
+    untouched. Clearing it falls back to the default HEADLINE constant, same as a variant that
+    never had one — useful for isolating a single variable (e.g. color) across variants that
+    otherwise differ in headline too.
+    """
+    pool = get_pool()
+    page = await pool.fetchrow("SELECT id FROM marketing.landing_pages WHERE slug = $1", args.slug)
+    if page is None:
+        print(f"No landing page with slug '{args.slug}'.", file=sys.stderr)
+        return
+    variant = await pool.fetchrow(
+        "SELECT id FROM marketing.landing_variants WHERE landing_page_id = $1 AND name = $2",
+        page["id"],
+        args.name,
+    )
+    if variant is None:
+        print(f"No variant named '{args.name}' on '{args.slug}'.", file=sys.stderr)
+        return
+
+    if args.headline:
+        await pool.execute(
+            "UPDATE marketing.landing_variants SET content = content || jsonb_build_object('heroHeadline', $1::text) WHERE id = $2",
+            args.headline,
+            variant["id"],
+        )
+        print(f"Set heroHeadline for '{args.name}' on '{args.slug}' to: {args.headline}")
+    else:
+        await pool.execute(
+            "UPDATE marketing.landing_variants SET content = content - 'heroHeadline' WHERE id = $1",
+            variant["id"],
+        )
+        print(f"Cleared the heroHeadline override for '{args.name}' on '{args.slug}' — it now shows the default headline.")
+
+
 async def cmd_rename(args: argparse.Namespace) -> None:
     """Renames a variant and regenerates its deep-link key from the new name, so the
     ?v=<key> URL always matches what the variant is currently called — pass --key to
@@ -352,6 +388,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_set_weight.add_argument("--name", required=True, help="Exact existing variant name, e.g. 'Version_1'")
     p_set_weight.add_argument("--weight", type=int, required=True, help="0 removes it from the random pool; otherwise its share relative to other variants' weights")
     p_set_weight.set_defaults(func=cmd_set_weight)
+
+    p_set_headline = sub.add_parser("set-headline", help="Set or clear a variant's heroHeadline content override, looked up by name")
+    p_set_headline.add_argument("--slug", default="mani")
+    p_set_headline.add_argument("--name", required=True, help="Exact existing variant name, e.g. 'Version_4'")
+    p_set_headline.add_argument("--headline", default="", help="New headline; omit or pass '' to clear it (falls back to the default)")
+    p_set_headline.set_defaults(func=cmd_set_headline)
 
     p_set_key = sub.add_parser("set-key", help="Assign a deep-link key to an existing variant, looked up by name")
     p_set_key.add_argument("--slug", default="mani")

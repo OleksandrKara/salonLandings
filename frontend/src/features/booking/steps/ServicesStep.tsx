@@ -48,8 +48,8 @@ export function ServicesStep({
       <div
         style={{
           ...styles.maniCard,
-          borderColor: state.maniSelected ? "#e0b8b0" : "var(--color-border-3)",
-          background: state.maniSelected ? "#faf3ef" : "#fff",
+          borderColor: state.maniSelected ? "var(--color-accent-border-soft)" : "var(--color-border-3)",
+          background: state.maniSelected ? "var(--color-accent-tint-2)" : "#fff",
         }}
       >
         <div
@@ -111,8 +111,8 @@ export function ServicesStep({
         onClick={onToggleFourHand}
         style={{
           ...styles.fourHandCard,
-          borderColor: state.fourHandSelected ? "var(--color-accent)" : "#e0b8b0",
-          background: state.fourHandSelected ? "#f1ddd7" : "#fbf3ef",
+          borderColor: state.fourHandSelected ? "var(--color-accent)" : "var(--color-accent-border-soft)",
+          background: state.fourHandSelected ? "var(--color-accent-tint)" : "var(--color-accent-tint-2)",
         }}
       >
         <div style={styles.row}>
@@ -142,7 +142,7 @@ export function ServicesStep({
       <button
         onClick={onContinue}
         disabled={!anySelected}
-        style={{ ...styles.continueButton, background: anySelected ? "var(--color-accent)" : "#d8bfb8" }}
+        style={{ ...styles.continueButton, background: anySelected ? "var(--color-accent)" : "var(--color-accent-border-soft)" }}
       >
         Continue
       </button>
@@ -167,7 +167,7 @@ function Checkbox({ checked, small = false }: { checked: boolean; small?: boolea
         width: size,
         height: size,
         borderRadius: 6,
-        border: `2px solid ${checked ? "var(--color-accent)" : "#c9b3aa"}`,
+        border: `2px solid ${checked ? "var(--color-accent)" : "var(--color-accent-border-soft)"}`,
         background: checked ? "var(--color-accent)" : "#fff",
         color: "#fff",
         display: "flex",
