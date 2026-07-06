@@ -45,14 +45,24 @@ export function LandingPage() {
     }
   }, [overrides.terminology]);
 
-  // Every component already reads its colors via var(--color-accent) etc., so overriding
-  // these custom properties here re-themes the whole page — no other component changes.
-  const themeVars = overrides.accentColor ? accentPaletteToCssVars(deriveAccentPalette(overrides.accentColor)) : null;
+  // Every component already reads its colors via var(--color-accent) etc. Setting these on the
+  // document root (not just a wrapper div) is what makes a variant's color actually reach
+  // StickyBottomBar and BookingModal too — both render as siblings of the page content, outside
+  // any wrapper div's subtree, so a div-scoped override would never have cascaded to them.
+  useEffect(() => {
+    const root = document.documentElement.style;
+    if (!overrides.accentColor) return;
+    const palette = accentPaletteToCssVars(deriveAccentPalette(overrides.accentColor));
+    for (const [prop, value] of Object.entries(palette)) root.setProperty(prop, value);
+    return () => {
+      for (const prop of Object.keys(palette)) root.removeProperty(prop);
+    };
+  }, [overrides.accentColor]);
 
   return (
     <CartMenuProvider>
       <BookingModalProvider>
-        <div style={themeVars ? { ...styles.page, ...(themeVars as CSSProperties) } : styles.page}>
+        <div style={styles.page}>
           <Header />
           <Hero overrides={overrides} />
           <TrustGrid terminology={overrides.terminology} />
