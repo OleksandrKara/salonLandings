@@ -85,12 +85,12 @@ export function ConfirmStep({
         onClick={onToggleSms}
         style={{
           ...styles.smsCard,
-          borderColor: state.smsOptIn ? "var(--color-accent)" : "#e0a89f",
-          background: state.smsOptIn ? "#f6e8e4" : "#fdf2ef",
+          borderColor: state.smsOptIn ? "var(--color-accent)" : "var(--color-accent-border-soft)",
+          background: state.smsOptIn ? "var(--color-accent-tint)" : "var(--color-accent-tint-2)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Checkbox checked={state.smsOptIn} border="#c9926f" />
+          <Checkbox checked={state.smsOptIn} border="var(--color-accent-border-soft)" />
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "block", fontWeight: 600, fontSize: 14.5, color: "var(--color-ink)" }}>
               Text me reminders &amp; exclusive offers
@@ -128,7 +128,7 @@ export function ConfirmStep({
           borderColor: state.cancelAgree ? "var(--color-accent)" : "var(--color-border-3)",
         }}
       >
-        <Checkbox checked={state.cancelAgree} border="#c9b3aa" topAlign />
+        <Checkbox checked={state.cancelAgree} border="var(--color-accent-border-soft)" topAlign />
         <span style={{ fontSize: 12.5, lineHeight: 1.45, color: "var(--color-muted)" }}>
           I agree to the{" "}
           <a
@@ -151,7 +151,7 @@ export function ConfirmStep({
       <button
         onClick={onSubmit}
         disabled={submitDisabled}
-        style={{ ...styles.submitButton, background: submitDisabled ? "#d8bfb8" : "var(--color-accent)" }}
+        style={{ ...styles.submitButton, background: submitDisabled ? "var(--color-accent-border-soft)" : "var(--color-accent)" }}
       >
         {state.submitting ? "Submitting…" : isFourHand ? "Send My Request" : "Confirm Booking"}
       </button>
@@ -220,21 +220,21 @@ function Checkbox({ checked, border, topAlign = false }: { checked: boolean; bor
 const styles: Record<string, CSSProperties> = {
   stepLabel: { fontSize: 11, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--color-accent)", fontWeight: 600, marginTop: 6 },
   title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 26, margin: "6px 0 14px" },
-  callNotice: { display: "flex", alignItems: "flex-start", gap: 11, padding: "14px 15px", border: "1.5px solid #e0b8b0", borderRadius: 12, background: "#f9efe9", marginBottom: 16 },
+  callNotice: { display: "flex", alignItems: "flex-start", gap: 11, padding: "14px 15px", border: "1.5px solid var(--color-accent-border-soft)", borderRadius: 12, background: "var(--color-accent-tint-2)", marginBottom: 16 },
   smartMatchPill: { padding: "9px 12px", border: "1px solid var(--color-warm-gold-border)", borderRadius: 10, background: "var(--color-warm-gold-bg)", marginBottom: 16 },
   smartMatchRow: { display: "flex", alignItems: "center", gap: 7 },
   smartMatchStar: { flex: "none", fontSize: 13, color: "var(--color-warm-gold-text)" },
   smartMatchLabel: { flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 600, lineHeight: 1.3, color: "var(--color-warm-gold-text)" },
   smartMatchToggle: { flex: "none", border: "none", background: "none", padding: 0, fontSize: 11, fontWeight: 600, color: "var(--color-warm-gold-text-2)", textDecoration: "underline", cursor: "pointer" },
   smartMatchDetail: { marginTop: 6, fontSize: 11.5, lineHeight: 1.5, color: "var(--color-warm-gold-text-2)" },
-  breakdownBox: { padding: 16, border: "1px solid var(--color-border-2)", borderRadius: 12, background: "#faf3ef", marginBottom: 16 },
+  breakdownBox: { padding: 16, border: "1px solid var(--color-border-2)", borderRadius: 12, background: "var(--color-accent-tint-2)", marginBottom: 16 },
   lineItem: { display: "flex", justifyContent: "space-between", fontSize: 13.5, padding: "3px 0", color: "var(--color-ink-soft)" },
   subtotalRow: { display: "flex", justifyContent: "space-between", fontSize: 12.5, padding: "5px 0 3px", marginTop: 5, borderTop: "1px dashed #e3d3ca", color: "var(--color-muted-2)" },
   discountRow: { display: "flex", justifyContent: "space-between", fontSize: 13, padding: "3px 0", color: "var(--color-accent)", fontWeight: 600 },
   totalRow: { borderTop: "1px solid var(--color-border-3)", marginTop: 8, paddingTop: 9, display: "flex", justifyContent: "space-between", alignItems: "baseline" },
   appointmentRow: { marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-muted)" },
   smsCard: { display: "block", padding: "15px 16px", border: "2px solid", borderRadius: 14, cursor: "pointer", marginBottom: 16 },
-  cancelCard: { display: "flex", alignItems: "flex-start", gap: 11, padding: "13px 14px", border: "1px solid", borderRadius: 12, cursor: "pointer", background: "#fbf7f4" },
+  cancelCard: { display: "flex", alignItems: "flex-start", gap: 11, padding: "13px 14px", border: "1px solid", borderRadius: 12, cursor: "pointer", background: "var(--color-accent-tint-2)" },
   errorBox: { marginTop: 12, padding: 12, borderRadius: 10, background: "#fbeceb", color: "var(--color-danger)", fontSize: 13 },
   submitButton: { width: "100%", marginTop: 16, border: "none", color: "#fff7f3", fontSize: 16, fontWeight: 600, padding: 16, borderRadius: 12, cursor: "pointer" },
   backButton: { width: "100%", marginTop: 9, border: "none", background: "none", color: "var(--color-muted-2)", fontSize: 14, padding: 8, cursor: "pointer" },

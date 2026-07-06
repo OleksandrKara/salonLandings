@@ -20,6 +20,10 @@
   --color-accent-hover: #8a4c55;
   --color-accent-tint: #f4ddd7;
   --color-accent-tint-2: #f7ece7;
+  /** Soft border/disabled-state tone — matches lib/theme.ts's deriveAccentPalette() formula for
+   * the default accent, so a variant with no accentColor override renders identically to before
+   * this token existed. */
+  --color-accent-border-soft: #dbb3b8;
   --color-gold: #e9b949;
   --color-gold-text: #9e7a3d;
   --color-success: #2f7d5b;

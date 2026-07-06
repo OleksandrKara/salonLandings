@@ -4,6 +4,7 @@ interface AccentPalette {
   accentHover: string;
   accentTint: string;
   accentTint2: string;
+  accentBorderSoft: string;
 }
 
 function hexToHsl(hex: string): [number, number, number] {
@@ -56,17 +57,22 @@ function hslToHex(h: number, s: number, l: number): string {
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
 /**
- * Derives the full accent palette (dark/hover/tints) from a single brand color, matching
- * the relationships already baked into tokens.css's default palette (dark ≈ -12% lightness,
- * tint ≈ 87% lightness, tint-2 ≈ 93% lightness) so a variant only needs to supply one hex
- * color and still gets a cohesive, readable theme everywhere the design system references it.
+ * Derives the full accent palette (dark/hover/tints/soft-border) from a single brand color,
+ * matching the relationships already baked into tokens.css's default palette (dark ≈ -12%
+ * lightness, tint ≈ 87% lightness, tint-2 ≈ 93% lightness, soft-border ≈ 78% lightness with a
+ * saturation floor so a low-saturation accent still reads as a visible border/disabled tone
+ * instead of washing out to gray) so a variant only needs to supply one hex color and still
+ * gets a cohesive, readable theme everywhere the design system references it — including the
+ * booking form's borders/disabled states, which used to be hardcoded to the default rose
+ * regardless of the variant's actual accent color.
  */
 export function deriveAccentPalette(hex: string): AccentPalette {
   const [h, s, l] = hexToHsl(hex);
   const accentDark = hslToHex(h, s, clamp01(l - 0.12));
   const accentTint = hslToHex(h, Math.min(s, 0.55), clamp01(0.87));
   const accentTint2 = hslToHex(h, Math.min(s, 0.45), clamp01(0.93));
-  return { accent: hex, accentDark, accentHover: accentDark, accentTint, accentTint2 };
+  const accentBorderSoft = hslToHex(h, clamp01(Math.max(Math.min(s, 0.5), 0.35)), 0.78);
+  return { accent: hex, accentDark, accentHover: accentDark, accentTint, accentTint2, accentBorderSoft };
 }
 
 /**
@@ -81,5 +87,6 @@ export function accentPaletteToCssVars(palette: AccentPalette): Record<string, s
     "--color-accent-hover": palette.accentHover,
     "--color-accent-tint": palette.accentTint,
     "--color-accent-tint-2": palette.accentTint2,
+    "--color-accent-border-soft": palette.accentBorderSoft,
   };
 }
