@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
+import { terminologize } from "@/data/designCopy";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
+import type { LandingVariantContent } from "@/types/api";
 
 export function BookingCtaBanner() {
   const { open } = useBookingModalContext();
@@ -16,7 +18,7 @@ export function BookingCtaBanner() {
   );
 }
 
-export function FinalUrgencyCta() {
+export function FinalUrgencyCta({ terminology }: { terminology?: LandingVariantContent["terminology"] }) {
   const { open } = useBookingModalContext();
   return (
     <section style={{ padding: "36px 22px 20px" }}>
@@ -26,7 +28,7 @@ export function FinalUrgencyCta() {
           Only a few first-visit slots left this week — San Diego books fast in high season.
         </p>
         <button onClick={open} style={styles.urgencyButton}>
-          Book Russian Manicure Appointment
+          {terminologize("Book Russian Manicure Appointment", terminology)}
         </button>
       </div>
     </section>

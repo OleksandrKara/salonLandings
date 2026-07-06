@@ -100,6 +100,8 @@ def _build_content(args: argparse.Namespace) -> dict:
         content["heroImageUrl"] = args.hero_image_url
     if args.accent_color:
         content["accentColor"] = args.accent_color
+    if getattr(args, "terminology", None):
+        content["terminology"] = args.terminology
     return content
 
 
@@ -251,6 +253,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_add.add_argument("--cta", default=None, help="Primary button text")
     p_add.add_argument("--hero-image-url", default=None)
     p_add.add_argument("--accent-color", default=None, help="Hex brand color, e.g. '#B8860B' — full palette derived automatically")
+    p_add.add_argument(
+        "--terminology",
+        choices=["russian", "european"],
+        default=None,
+        help="'european' swaps every 'Russian manicure' branding mention across the page for 'European manicure' wording (same service, different terminology test)",
+    )
     p_add.add_argument("--description", default=None, help="What this variant is testing and why, e.g. 'Urgency-focused headline + green accent vs. control'")
     p_add.set_defaults(func=cmd_add)
 

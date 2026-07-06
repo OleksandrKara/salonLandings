@@ -117,6 +117,10 @@ export interface LandingVariantContent {
   /** Single brand hex color (e.g. "#B8860B") — the rest of the palette (dark/hover/tints)
    * is derived automatically, see lib/theme.ts. */
   accentColor?: string;
+  /** Swaps every "Russian manicure" branding mention across the page for "European manicure"
+   * wording — a terminology/branding test, not a different technique: absent or "russian" is
+   * today's default copy. See data/designCopy.ts's terminologize(). */
+  terminology?: "russian" | "european";
 }
 
 export interface LandingVariant {

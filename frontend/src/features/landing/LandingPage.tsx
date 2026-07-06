@@ -13,6 +13,7 @@ import { StickyBottomBar } from "@/features/landing/StickyBottomBar";
 import { TrustGrid } from "@/features/landing/TrustGrid";
 import { WhyClientsStay } from "@/features/landing/WhyClientsStay";
 import { resolveExperiment } from "@/lib/experiments";
+import { terminologize } from "@/data/designCopy";
 import { recordVisit } from "@/lib/tracking";
 import { accentPaletteToCssVars, deriveAccentPalette } from "@/lib/theme";
 import type { LandingVariantContent } from "@/types/api";
@@ -31,6 +32,19 @@ export function LandingPage() {
       });
   }, []);
 
+  // index.html's <title>/meta description are static HTML, so a terminology override can only
+  // reach them via a runtime patch once the variant resolves — a brief flash of the default is
+  // fine here (same tradeoff as the visible copy below), and this only ever changes what's
+  // already the exact same wording, just relabeled.
+  useEffect(() => {
+    if (overrides.terminology !== "european") return;
+    document.title = terminologize(document.title, "european");
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute("content", terminologize(metaDescription.getAttribute("content") ?? "", "european"));
+    }
+  }, [overrides.terminology]);
+
   // Every component already reads its colors via var(--color-accent) etc., so overriding
   // these custom properties here re-themes the whole page — no other component changes.
   const themeVars = overrides.accentColor ? accentPaletteToCssVars(deriveAccentPalette(overrides.accentColor)) : null;
@@ -41,14 +55,14 @@ export function LandingPage() {
         <div style={themeVars ? { ...styles.page, ...(themeVars as CSSProperties) } : styles.page}>
           <Header />
           <Hero overrides={overrides} />
-          <TrustGrid />
-          <ResultsCarousel />
-          <WhyClientsStay />
-          <GoogleReviews />
+          <TrustGrid terminology={overrides.terminology} />
+          <ResultsCarousel terminology={overrides.terminology} />
+          <WhyClientsStay terminology={overrides.terminology} />
+          <GoogleReviews terminology={overrides.terminology} />
           <LocationSection />
           <BookingCtaBanner />
-          <FinalUrgencyCta />
-          <Footer />
+          <FinalUrgencyCta terminology={overrides.terminology} />
+          <Footer terminology={overrides.terminology} />
         </div>
         <StickyBottomBar />
         <BookingModal />

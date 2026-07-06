@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
-import { WHY_CLIENTS_STAY } from "@/data/designCopy";
+import { WHY_CLIENTS_STAY, terminologize } from "@/data/designCopy";
+import type { LandingVariantContent } from "@/types/api";
 
-export function WhyClientsStay() {
+export function WhyClientsStay({ terminology }: { terminology?: LandingVariantContent["terminology"] }) {
   return (
     <section style={styles.section}>
       <div style={styles.eyebrow}>Why Clients Stay</div>
@@ -9,7 +10,7 @@ export function WhyClientsStay() {
         {WHY_CLIENTS_STAY.map((reason) => (
           <div key={reason} style={styles.row}>
             <span style={styles.bullet} />
-            <span style={styles.text}>{reason}</span>
+            <span style={styles.text}>{terminologize(reason, terminology)}</span>
           </div>
         ))}
       </div>

@@ -1,15 +1,18 @@
 import type { CSSProperties } from "react";
 import logo from "@/assets/logo.png";
-import { LOCATION } from "@/data/designCopy";
+import { LOCATION, terminologize } from "@/data/designCopy";
+import type { LandingVariantContent } from "@/types/api";
 
-export function Footer() {
+export function Footer({ terminology }: { terminology?: LandingVariantContent["terminology"] }) {
   return (
     <footer style={styles.footer}>
       <img src={logo} alt="AK.LUX.NAILS" style={styles.logo} />
       <div style={{ marginTop: 6 }}>{LOCATION.address}</div>
       <div>Open 7 days a week · By appointment</div>
       <div>★ 4.7 · 113 Google reviews</div>
-      <div style={styles.disclaimer}>Russian hard-gel manicure only · No acrylics · Health-first nail care</div>
+      <div style={styles.disclaimer}>
+        {terminologize("Russian hard-gel manicure only · No acrylics · Health-first nail care", terminology)}
+      </div>
     </footer>
   );
 }
