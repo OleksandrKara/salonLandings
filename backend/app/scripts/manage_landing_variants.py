@@ -151,6 +151,50 @@ async def cmd_set_active(args: argparse.Namespace, active: bool) -> None:
     print(f"{result} — variant(s) with key '{args.key}' set to active={active}")
 
 
+async def cmd_delete(args: argparse.Namespace) -> None:
+    """Permanently removes a variant, looked up by name. Refuses if it has any recorded
+    events/attribution unless --force is passed, since that's real tracked history, not just
+    config — --force deletes that history too (events/attribution rows), not just the variant,
+    so there's nothing left over to violate the foreign key.
+    """
+    pool = get_pool()
+    page = await pool.fetchrow("SELECT id FROM marketing.landing_pages WHERE slug = $1", args.slug)
+    if page is None:
+        print(f"No landing page with slug '{args.slug}'.", file=sys.stderr)
+        return
+
+    variant = await pool.fetchrow(
+        "SELECT id FROM marketing.landing_variants WHERE landing_page_id = $1 AND name = $2",
+        page["id"],
+        args.name,
+    )
+    if variant is None:
+        print(f"No variant named '{args.name}' on '{args.slug}'.", file=sys.stderr)
+        return
+    variant_id = variant["id"]
+
+    event_count = await pool.fetchval("SELECT COUNT(*) FROM marketing.events WHERE variant_id = $1", variant_id)
+    attribution_count = await pool.fetchval("SELECT COUNT(*) FROM marketing.attribution WHERE variant_id = $1", variant_id)
+    if (event_count or attribution_count) and not args.force:
+        print(
+            f"Variant '{args.name}' has {event_count} event(s) and {attribution_count} attribution "
+            f"row(s) recorded. Pass --force to delete it (and that history) anyway.",
+            file=sys.stderr,
+        )
+        return
+
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            await conn.execute("DELETE FROM marketing.events WHERE variant_id = $1", variant_id)
+            await conn.execute("DELETE FROM marketing.attribution WHERE variant_id = $1", variant_id)
+            await conn.execute("DELETE FROM marketing.landing_variants WHERE id = $1", variant_id)
+
+    print(
+        f"Deleted variant '{args.name}' ({variant_id}) from '{args.slug}', "
+        f"including {event_count} event(s) and {attribution_count} attribution row(s)."
+    )
+
+
 async def cmd_rename(args: argparse.Namespace) -> None:
     """Renames a variant and regenerates its deep-link key from the new name, so the
     ?v=<key> URL always matches what the variant is currently called — pass --key to
@@ -281,6 +325,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_add.add_argument("--description", default=None, help="What this variant is testing and why, e.g. 'Urgency-focused headline + green accent vs. control'")
     p_add.set_defaults(func=cmd_add)
+
+    p_delete = sub.add_parser("delete", help="Permanently delete a variant, looked up by name")
+    p_delete.add_argument("--slug", default="mani")
+    p_delete.add_argument("--name", required=True, help="Exact existing variant name, e.g. 'Verification Test 2'")
+    p_delete.add_argument("--force", action="store_true", help="Also delete its recorded events/attribution, if any")
+    p_delete.set_defaults(func=cmd_delete)
 
     p_deactivate = sub.add_parser("deactivate", help="Deactivate a variant by key")
     p_deactivate.add_argument("--key", required=True)
