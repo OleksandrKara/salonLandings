@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { CancellationPolicyModal } from "@/features/booking/CancellationPolicyModal";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 import { selectedServiceSlugs } from "@/features/booking/useBookingModal";
@@ -35,6 +35,7 @@ export function BookingModal() {
   } = useBookingModalContext();
   const { cartMenu } = useCartMenu();
   const [policyOpen, setPolicyOpen] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   // If the visitor hits the browser back button off the /thank-you URL, dismiss
   // the confirmation sheet too so the UI matches the address bar.
@@ -45,13 +46,32 @@ export function BookingModal() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [state.done, close]);
 
+  // The page behind the sheet shouldn't scroll while it's open — otherwise the visitor can
+  // drag the background out from under a fixed-position overlay, which reads as broken.
+  useEffect(() => {
+    if (!state.isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [state.isOpen]);
+
+  // The sheet is one long-lived scroll container reused across every step (never remounted), so
+  // without this a step that opens already scrolled — e.g. Step 3 rendering scrolled to the
+  // bottom because Step 2 was left scrolled down before "Continue" was tapped — would just keep
+  // whatever scrollTop the previous step ended on.
+  useEffect(() => {
+    sheetRef.current?.scrollTo({ top: 0 });
+  }, [state.step, state.done]);
+
   if (!state.isOpen || !cartMenu) return null;
 
   const stepLabel = state.fourHandSelected ? `Step ${state.step === 4 ? 3 : state.step} of 3` : `Step ${state.step} of 4`;
 
   return (
     <div onClick={close} style={styles.overlay}>
-      <div onClick={stop} style={styles.sheet}>
+      <div ref={sheetRef} onClick={stop} style={styles.sheet}>
         <div style={styles.grabberRow}>
           <div style={styles.grabber} />
           <button onClick={close} style={styles.closeButton} aria-label="Close">
