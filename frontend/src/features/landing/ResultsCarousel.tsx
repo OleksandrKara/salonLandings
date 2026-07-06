@@ -1,7 +1,8 @@
 import { useRef, useState, type CSSProperties } from "react";
-import { CAROUSEL_SLIDES } from "@/data/designCopy";
+import { CAROUSEL_SLIDES, terminologize } from "@/data/designCopy";
+import type { LandingVariantContent } from "@/types/api";
 
-export function ResultsCarousel() {
+export function ResultsCarousel({ terminology }: { terminology?: LandingVariantContent["terminology"] }) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [slideIdx, setSlideIdx] = useState(0);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
@@ -36,13 +37,13 @@ export function ResultsCarousel() {
         {CAROUSEL_SLIDES.map((slide, i) => (
           <div key={slide.id} style={styles.slide}>
             <div style={styles.slideImageWrap}>
-              <img src={slide.src} alt={slide.caption} style={styles.slideImage} />
+              <img src={slide.src} alt={terminologize(slide.caption, terminology)} style={styles.slideImage} />
               <span style={styles.slideBadge}>{slide.badge}</span>
               <button onClick={() => setLightboxIdx(i)} title="Enlarge" style={styles.zoomButton}>
                 🔍
               </button>
             </div>
-            <div style={styles.slideCaption}>{slide.caption}</div>
+            <div style={styles.slideCaption}>{terminologize(slide.caption, terminology)}</div>
             <div style={styles.slideSub}>{slide.sub}</div>
           </div>
         ))}
@@ -78,6 +79,7 @@ export function ResultsCarousel() {
       {lightboxIdx !== null ? (
         <Lightbox
           index={lightboxIdx}
+          terminology={terminology}
           onClose={() => setLightboxIdx(null)}
           onPrev={() => setLightboxIdx((i) => (i! - 1 + CAROUSEL_SLIDES.length) % CAROUSEL_SLIDES.length)}
           onNext={() => setLightboxIdx((i) => (i! + 1) % CAROUSEL_SLIDES.length)}
@@ -87,8 +89,21 @@ export function ResultsCarousel() {
   );
 }
 
-function Lightbox({ index, onClose, onPrev, onNext }: { index: number; onClose: () => void; onPrev: () => void; onNext: () => void }) {
+function Lightbox({
+  index,
+  terminology,
+  onClose,
+  onPrev,
+  onNext,
+}: {
+  index: number;
+  terminology?: LandingVariantContent["terminology"];
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
   const slide = CAROUSEL_SLIDES[index];
+  const caption = terminologize(slide.caption, terminology);
   return (
     <div onClick={onClose} style={styles.lightboxOverlay}>
       <button onClick={onClose} style={{ ...styles.lightboxNav, top: 18, right: 18, transform: "none" }}>
@@ -104,9 +119,9 @@ function Lightbox({ index, onClose, onPrev, onNext }: { index: number; onClose: 
         ‹
       </button>
       <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560, width: "100%", textAlign: "center" }}>
-        <img src={slide.src} alt={slide.caption} style={styles.lightboxImage} />
+        <img src={slide.src} alt={caption} style={styles.lightboxImage} />
         <div style={{ color: "#f3e2da", fontSize: 14, fontWeight: 600, marginTop: 14 }}>{slide.badge}</div>
-        <div style={{ color: "#c9b7ac", fontSize: 13, marginTop: 3 }}>{slide.caption}</div>
+        <div style={{ color: "#c9b7ac", fontSize: 13, marginTop: 3 }}>{caption}</div>
       </div>
       <button
         onClick={(e) => {

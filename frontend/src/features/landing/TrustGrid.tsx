@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
-import { TRUST_POINTS } from "@/data/designCopy";
+import { TRUST_POINTS, terminologize } from "@/data/designCopy";
+import type { LandingVariantContent } from "@/types/api";
 
-export function TrustGrid() {
+export function TrustGrid({ terminology }: { terminology?: LandingVariantContent["terminology"] }) {
   return (
     <section style={styles.section}>
       <div style={styles.eyebrow}>Why It's Different</div>
@@ -9,7 +10,7 @@ export function TrustGrid() {
         {TRUST_POINTS.map((point) => (
           <div key={point.no} style={styles.cell}>
             <div style={styles.number}>{point.no}</div>
-            <div style={styles.title}>{point.title}</div>
+            <div style={styles.title}>{terminologize(point.title, terminology)}</div>
             <div style={styles.desc}>{point.desc}</div>
           </div>
         ))}

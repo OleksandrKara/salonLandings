@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import mani1 from "@/assets/mani1.jpg";
-import { CREDIBILITY_STATS, HEADLINE, SUBHEAD } from "@/data/designCopy";
+import { CREDIBILITY_STATS, HEADLINE, SUBHEAD, terminologize } from "@/data/designCopy";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
@@ -21,7 +21,11 @@ export function Hero({ overrides }: { overrides?: LandingVariantContent }) {
   return (
     <section style={styles.section}>
       <div style={styles.imageWrap}>
-        <img src={overrides?.heroImageUrl ?? mani1} alt="Russian hard-gel manicure close-up" style={styles.image} />
+        <img
+          src={overrides?.heroImageUrl ?? mani1}
+          alt={terminologize("Russian hard-gel manicure close-up", overrides?.terminology)}
+          style={styles.image}
+        />
         <div style={styles.imageGradient} />
         <div style={styles.ratingBadge}>
           <GoogleLogo size={20} />
@@ -33,7 +37,7 @@ export function Hero({ overrides }: { overrides?: LandingVariantContent }) {
 
       <div style={{ paddingTop: 20 }}>
         <div style={styles.eyebrow}>Downtown San Diego · First-Visit Offer</div>
-        <h1 style={styles.headline}>{overrides?.heroHeadline ?? HEADLINE}</h1>
+        <h1 style={styles.headline}>{overrides?.heroHeadline ?? terminologize(HEADLINE, overrides?.terminology)}</h1>
         <p style={styles.subhead}>{overrides?.heroSubheadline ?? SUBHEAD}</p>
 
         <div style={styles.credStrip}>

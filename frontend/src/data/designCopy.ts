@@ -2,6 +2,7 @@
 // ("Russian Manicure Landing.dc.html") — headline, trust points, reviews, etc.
 // Anything price-related is NOT here; that always comes live from the API.
 
+import type { LandingVariantContent } from "@/types/api";
 import mani1Img from "@/assets/mani1.jpg";
 import customer1Img from "@/assets/customer1.jpg";
 import milkyNailsImg from "@/assets/milkynails.jpg";
@@ -9,6 +10,17 @@ import nail3Img from "@/assets/nail3.jpg";
 import nail4Img from "@/assets/nail4.jpg";
 import nailart1Img from "@/assets/nailart1.jpg";
 import nudemani1Img from "@/assets/nudemani1.jpg";
+
+/** Every occurrence of "Russian" in this file's copy is the exact same branding word — a real
+ * technique name in the industry ("Russian manicure" = precise dry-cuticle/e-file work, distinct
+ * from "European manicure"'s softer cream-based cuticle care), but here it's used purely as this
+ * business's marketing label for the one hard-gel service it offers. terminology: "european"
+ * tests whether that label alone (not the underlying service) converts differently — a plain
+ * find/replace is correct for that, since nothing about the described service actually changes.
+ */
+export function terminologize(text: string, terminology?: LandingVariantContent["terminology"]): string {
+  return terminology === "european" ? text.replace(/Russian/g, "European") : text;
+}
 
 export const HEADLINE = "Russian Hard Gel Manicure in Downtown San Diego";
 export const SUBHEAD = "Long-lasting, chip-free nails up to 4 weeks — trusted by 534+ local clients.";

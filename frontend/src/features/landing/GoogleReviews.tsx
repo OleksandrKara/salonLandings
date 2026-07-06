@@ -1,8 +1,9 @@
 import { useState, type CSSProperties } from "react";
-import { MORE_REVIEWS, REVIEWS, type Review } from "@/data/designCopy";
+import { MORE_REVIEWS, REVIEWS, terminologize, type Review } from "@/data/designCopy";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
+import type { LandingVariantContent } from "@/types/api";
 
-export function GoogleReviews() {
+export function GoogleReviews({ terminology }: { terminology?: LandingVariantContent["terminology"] }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -23,9 +24,11 @@ export function GoogleReviews() {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {REVIEWS.map((review) => (
-          <ReviewCard key={review.name} review={review} />
+          <ReviewCard key={review.name} review={review} terminology={terminology} />
         ))}
-        {expanded ? MORE_REVIEWS.map((review) => <ReviewCard key={review.name} review={review} />) : null}
+        {expanded
+          ? MORE_REVIEWS.map((review) => <ReviewCard key={review.name} review={review} terminology={terminology} />)
+          : null}
       </div>
 
       <button onClick={() => setExpanded((e) => !e)} style={styles.toggleButton}>
@@ -35,7 +38,7 @@ export function GoogleReviews() {
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review, terminology }: { review: Review; terminology?: LandingVariantContent["terminology"] }) {
   return (
     <div style={styles.reviewCard}>
       <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 9 }}>
@@ -46,7 +49,9 @@ function ReviewCard({ review }: { review: Review }) {
         </span>
         <span style={{ flex: "none", color: "var(--color-gold)", fontSize: 13, letterSpacing: 0.5 }}>{review.stars}</span>
       </div>
-      <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.5, color: "var(--color-ink-soft)" }}>{review.text}</p>
+      <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.5, color: "var(--color-ink-soft)" }}>
+        {terminologize(review.text, terminology)}
+      </p>
     </div>
   );
 }
