@@ -1,13 +1,15 @@
 import type { CSSProperties } from "react";
+import { terminologize } from "@/data/designCopy";
 import { estimatedTotal } from "@/features/booking/useBookingModal";
 import { BookingModalState } from "@/features/booking/types";
 import { formatPrice } from "@/lib/formatting";
-import type { CartMenu } from "@/types/api";
+import type { CartMenu, LandingVariantContent } from "@/types/api";
 
 interface ServicesStepProps {
   cartMenu: CartMenu;
   state: BookingModalState;
   stepLabel: string;
+  terminology?: LandingVariantContent["terminology"];
   onToggleMani: () => void;
   onTogglePedicure: () => void;
   onToggleDesign: () => void;
@@ -20,6 +22,7 @@ export function ServicesStep({
   cartMenu,
   state,
   stepLabel,
+  terminology,
   onToggleMani,
   onTogglePedicure,
   onToggleDesign,
@@ -55,7 +58,7 @@ export function ServicesStep({
         >
           <Checkbox checked={state.maniSelected} />
           <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={styles.itemName}>{manicure.name}</span>
+            <span style={styles.itemName}>{terminologize(manicure.name, terminology)}</span>
             <span style={styles.noAcrylicBadge}>✦ No acrylic — nail-safe</span>
           </span>
           <span style={{ flex: "none", textAlign: "right", lineHeight: 1.1 }}>
@@ -91,7 +94,7 @@ export function ServicesStep({
       >
         <Checkbox checked={state.pedicureSelected} />
         <span style={{ flex: 1 }}>
-          <span style={styles.itemName}>{pedicure.name}</span>
+          <span style={styles.itemName}>{terminologize(pedicure.name, terminology)}</span>
           <span style={{ display: "block", fontSize: 12, color: "var(--color-muted-2)" }}>
             {pedicure.description}
           </span>

@@ -208,6 +208,26 @@ async def cmd_set_key(args: argparse.Namespace) -> None:
     print(f"{result} — variant '{args.name}' on '{args.slug}' now reachable via ?v={args.key}")
 
 
+async def cmd_set_weight(args: argparse.Namespace) -> None:
+    """Sets an existing variant's weight — its share of the random A/B pool relative to the
+    other active variants' weights (they don't need to sum to 100; it's a ratio, e.g. three
+    variants at 1/1/1 split traffic exactly as evenly as 33/33/34 would). Weight 0 removes it
+    from the random pool entirely while leaving any deep-link key still reachable.
+    """
+    pool = get_pool()
+    page = await pool.fetchrow("SELECT id FROM marketing.landing_pages WHERE slug = $1", args.slug)
+    if page is None:
+        print(f"No landing page with slug '{args.slug}'.", file=sys.stderr)
+        return
+    result = await pool.execute(
+        "UPDATE marketing.landing_variants SET weight = $1 WHERE landing_page_id = $2 AND name = $3",
+        args.weight,
+        page["id"],
+        args.name,
+    )
+    print(f"{result} — weight set to {args.weight} for variant '{args.name}' on '{args.slug}'")
+
+
 async def cmd_set_description(args: argparse.Namespace) -> None:
     """Sets (or clears, with --description "") the free-text note on what a variant is
     testing and why — the main way to backfill this on variants that already exist, or for
@@ -276,6 +296,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_rename.add_argument("--new-name", required=True, help="New display name")
     p_rename.add_argument("--key", default=None, help="Override the auto-generated key, e.g. to keep a link stable")
     p_rename.set_defaults(func=cmd_rename)
+
+    p_set_weight = sub.add_parser("set-weight", help="Set an existing variant's random-A/B-pool weight, looked up by name")
+    p_set_weight.add_argument("--slug", default="mani")
+    p_set_weight.add_argument("--name", required=True, help="Exact existing variant name, e.g. 'Version_1'")
+    p_set_weight.add_argument("--weight", type=int, required=True, help="0 removes it from the random pool; otherwise its share relative to other variants' weights")
+    p_set_weight.set_defaults(func=cmd_set_weight)
 
     p_set_key = sub.add_parser("set-key", help="Assign a deep-link key to an existing variant, looked up by name")
     p_set_key.add_argument("--slug", default="mani")

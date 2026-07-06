@@ -65,7 +65,7 @@ export function LandingPage() {
           <Footer terminology={overrides.terminology} />
         </div>
         <StickyBottomBar />
-        <BookingModal />
+        <BookingModal terminology={overrides.terminology} />
       </BookingModalProvider>
     </CartMenuProvider>
   );
