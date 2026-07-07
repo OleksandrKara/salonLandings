@@ -1,11 +1,12 @@
 import logging
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from starlette.concurrency import run_in_threadpool
 
 from app.api.deps import get_customer_gateway, get_tracking_service
 from app.domain.schemas import ContactCaptureRequest, ContactCaptureResponse
 from app.integrations.square.customers import SquareCustomerGateway
+from app.services.identity import resolve_tracking_snapshot
 from app.services.request_context import derive_client_context
 from app.services.tracking_service import TrackingService
 
@@ -17,9 +18,12 @@ router = APIRouter(prefix="/api/contacts", tags=["contacts"])
 async def capture_contact(
     request: ContactCaptureRequest,
     http_request: Request,
+    http_response: Response,
     tracking_service: TrackingService = Depends(get_tracking_service),
     customer_gateway: SquareCustomerGateway = Depends(get_customer_gateway),
 ) -> ContactCaptureResponse:
+    tracking = resolve_tracking_snapshot(http_request, http_response, request.tracking)
+
     # Read-only lookup — never creates a Square customer here. A failure must never block
     # Step 1, so it's wrapped independently of record_step1_contact_safely's own guarantee.
     try:
@@ -36,7 +40,7 @@ async def capture_contact(
         given_name=request.given_name,
         phone_number=request.phone_number,
         email_address=request.email_address,
-        tracking=request.tracking,
+        tracking=tracking,
         client_context=derive_client_context(http_request),
         square_customer_id=square_customer_id,
     )
