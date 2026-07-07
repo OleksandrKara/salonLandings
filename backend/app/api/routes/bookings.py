@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from starlette.concurrency import run_in_threadpool
 
 from app.api.deps import get_abuse_guard, get_booking_service, get_tracking_service
@@ -15,6 +15,7 @@ from app.services.abuse_guard import AbuseGuard, AbuseGuardError
 from app.services.artist_service import ArtistNotFoundError
 from app.services.booking_service import BookingService, InvalidSlotError
 from app.services.catalog_service import ServiceNotFoundError
+from app.services.identity import resolve_tracking_snapshot
 from app.services.request_context import derive_client_context
 from app.services.tracking_service import TrackingService
 
@@ -30,10 +31,12 @@ ABUSE_BLOCKED_MESSAGE = "We couldn't verify your submission. Please try again."
 async def create_booking(
     request: BookingRequest,
     http_request: Request,
+    http_response: Response,
     booking_service: BookingService = Depends(get_booking_service),
     tracking_service: TrackingService = Depends(get_tracking_service),
     abuse_guard: AbuseGuard = Depends(get_abuse_guard),
 ) -> BookingConfirmation:
+    tracking = resolve_tracking_snapshot(http_request, http_response, request.tracking)
     client_context = derive_client_context(http_request)
     try:
         await abuse_guard.check(
@@ -59,7 +62,7 @@ async def create_booking(
 
     await tracking_service.record_submission_safely(
         submission_type="booking",
-        tracking=request.tracking,
+        tracking=tracking,
         client_context=client_context,
         square_booking_id=confirmation.booking_id,
         service_name=confirmation.service_name,
@@ -68,27 +71,27 @@ async def create_booking(
         customer_phone=request.customer.phone_number,
     )
     await tracking_service.record_attribution_safely(
-        tracking=request.tracking,
+        tracking=tracking,
         booking_id=confirmation.booking_id,
     )
     await tracking_service.record_sms_consent_safely(
         phone_number=request.customer.phone_number,
         consented=request.customer.marketing_opt_in,
         source="booking",
-        visitor_id=request.tracking.visitor_id if request.tracking else None,
+        visitor_id=tracking.visitor_id if tracking else None,
         ip_address=client_context["ip_address"],
     )
     await tracking_service.record_email_consent_safely(
         email_address=request.customer.email_address,
         source="booking",
-        visitor_id=request.tracking.visitor_id if request.tracking else None,
+        visitor_id=tracking.visitor_id if tracking else None,
         ip_address=client_context["ip_address"],
     )
     await tracking_service.link_contact_to_booking_safely(
         given_name=request.customer.given_name,
         phone_number=request.customer.phone_number,
         email_address=request.customer.email_address,
-        tracking=request.tracking,
+        tracking=tracking,
         client_context=client_context,
         sms_consent=request.customer.marketing_opt_in,
         email_consent=True,
@@ -107,10 +110,12 @@ async def create_booking(
 async def submit_four_hand_request(
     submission: FourHandRequestSubmission,
     http_request: Request,
+    http_response: Response,
     booking_service: BookingService = Depends(get_booking_service),
     tracking_service: TrackingService = Depends(get_tracking_service),
     abuse_guard: AbuseGuard = Depends(get_abuse_guard),
 ) -> FourHandRequestConfirmation:
+    tracking = resolve_tracking_snapshot(http_request, http_response, submission.tracking)
     client_context = derive_client_context(http_request)
     try:
         await abuse_guard.check(
@@ -134,7 +139,7 @@ async def submit_four_hand_request(
 
     await tracking_service.record_submission_safely(
         submission_type="four_hand_request",
-        tracking=submission.tracking,
+        tracking=tracking,
         client_context=client_context,
         square_booking_id=confirmation.booking_id,
         service_name=confirmation.service_name,
@@ -146,20 +151,20 @@ async def submit_four_hand_request(
         phone_number=submission.customer.phone_number,
         consented=submission.customer.marketing_opt_in,
         source="four_hand_request",
-        visitor_id=submission.tracking.visitor_id if submission.tracking else None,
+        visitor_id=tracking.visitor_id if tracking else None,
         ip_address=client_context["ip_address"],
     )
     await tracking_service.record_email_consent_safely(
         email_address=submission.customer.email_address,
         source="four_hand_request",
-        visitor_id=submission.tracking.visitor_id if submission.tracking else None,
+        visitor_id=tracking.visitor_id if tracking else None,
         ip_address=client_context["ip_address"],
     )
     await tracking_service.link_contact_to_booking_safely(
         given_name=submission.customer.given_name,
         phone_number=submission.customer.phone_number,
         email_address=submission.customer.email_address,
-        tracking=submission.tracking,
+        tracking=tracking,
         client_context=client_context,
         sms_consent=submission.customer.marketing_opt_in,
         email_consent=True,
