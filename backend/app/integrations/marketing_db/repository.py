@@ -75,6 +75,35 @@ class MarketingRepository:
             json.dumps(metadata),
         )
 
+    async def insert_funnel_event(
+        self,
+        *,
+        session_id: str,
+        landing_page_id: str | None,
+        variant_id: str | None,
+        flow_key: str,
+        step_key: str,
+        step_index: int,
+        step_count_total: int,
+        metadata: dict,
+    ) -> None:
+        pool = get_pool()
+        await pool.execute(
+            """
+            INSERT INTO marketing.funnel_events
+                (session_id, landing_page_id, variant_id, flow_key, step_key, step_index, step_count_total, metadata)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            """,
+            session_id,
+            landing_page_id,
+            variant_id,
+            flow_key,
+            step_key,
+            step_index,
+            step_count_total,
+            json.dumps(metadata),
+        )
+
     async def insert_attribution(
         self,
         *,

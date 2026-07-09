@@ -19,7 +19,7 @@ import uuid
 
 from fastapi import Request, Response
 
-from app.domain.schemas import TrackingEvent, TrackingSnapshot
+from app.domain.schemas import BookingFunnelStepEvent, TrackingEvent, TrackingSnapshot
 
 VISITOR_COOKIE = "mani_vid"
 VARIANT_COOKIE = "mani_variant"
@@ -84,6 +84,18 @@ def resolve_tracking_snapshot(
 
 
 def resolve_tracking_event(request: Request, response: Response, event: TrackingEvent) -> TrackingEvent:
+    resolved_vid = resolve_visitor_id(request, response, event.session_id)
+    resolved_lpid, resolved_variant = resolve_variant_assignment(
+        request, response, event.landing_page_id, event.variant_id
+    )
+    return event.model_copy(
+        update={"session_id": resolved_vid, "landing_page_id": resolved_lpid, "variant_id": resolved_variant}
+    )
+
+
+def resolve_booking_funnel_step_event(
+    request: Request, response: Response, event: BookingFunnelStepEvent
+) -> BookingFunnelStepEvent:
     resolved_vid = resolve_visitor_id(request, response, event.session_id)
     resolved_lpid, resolved_variant = resolve_variant_assignment(
         request, response, event.landing_page_id, event.variant_id

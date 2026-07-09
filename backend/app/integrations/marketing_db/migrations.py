@@ -272,6 +272,37 @@ CREATE TABLE IF NOT EXISTS marketing.abuse_blocks (
 CREATE INDEX IF NOT EXISTS idx_marketing_abuse_blocks_occurred_at ON marketing.abuse_blocks (occurred_at);
 """
 
+# Generic booking-funnel step progress, shared by every landing page's booking flow (mani,
+# akluxnails-home's homepage, and any future one) even though the flows themselves have
+# different numbers of steps and different step names/order (e.g. mani asks for contact info at
+# step 1; homepage asks for it last). A dedicated table rather than cramming this into
+# marketing.events, whose event_type CHECK constraint every existing row already depends on —
+# this is purely additive and touches nothing else.
+#
+# Genericity comes from (flow_key, step_index, step_count_total), not from forcing every flow to
+# share step_key names: flow_key identifies which flow definition produced the event, step_index
+# is that step's 0-based position, step_count_total is how many steps that flow had *at event
+# time* (denormalized so a later flow redesign never retroactively changes what an older row
+# meant). Adding a new landing page/flow later needs no schema change — just a new flow_key.
+_DDL_FUNNEL_EVENTS = """
+CREATE TABLE IF NOT EXISTS marketing.funnel_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL,
+    landing_page_id UUID REFERENCES marketing.landing_pages (id),
+    variant_id UUID REFERENCES marketing.landing_variants (id),
+    flow_key TEXT NOT NULL,
+    step_key TEXT NOT NULL,
+    step_index INTEGER NOT NULL,
+    step_count_total INTEGER NOT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_marketing_funnel_events_session ON marketing.funnel_events (session_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_funnel_events_variant ON marketing.funnel_events (variant_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_funnel_events_flow_step ON marketing.funnel_events (flow_key, step_index);
+CREATE INDEX IF NOT EXISTS idx_marketing_funnel_events_created_at ON marketing.funnel_events (created_at);
+"""
+
 
 async def run_migrations() -> None:
     pool = get_pool()
@@ -285,4 +316,5 @@ async def run_migrations() -> None:
         await conn.execute(_DDL_SUBMISSIONS_LANDING_CONTEXT)
         await conn.execute(_DDL_SUBMISSIONS_TRAFFIC_SOURCE)
         await conn.execute(_DDL_ABUSE_BLOCKS)
+        await conn.execute(_DDL_FUNNEL_EVENTS)
     logger.info("Marketing schema migrations applied")

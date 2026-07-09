@@ -180,6 +180,27 @@ class EventRecordedResponse(BaseModel):
     recorded: bool
 
 
+class BookingFunnelStepEvent(BaseModel):
+    """One step-reached event within a booking flow — see marketing.funnel_events.
+
+    Distinct from `TrackingEvent` (page_view/click/booking_started/booking_completed): this
+    tracks progress *through* the booking modal's own steps, which differ in count and order
+    between landing pages (mani asks for contact info at step 1; akluxnails-home's homepage asks
+    last). `flow_key` identifies which flow definition produced the event; `step_index`/
+    `step_count_total` let differently-shaped flows be compared by relative position rather than
+    by step name.
+    """
+
+    session_id: str = Field(max_length=64)
+    landing_page_id: str | None = None
+    variant_id: str | None = None
+    flow_key: str = Field(max_length=64)
+    step_key: str = Field(max_length=64)
+    step_index: int = Field(ge=0)
+    step_count_total: int = Field(ge=1)
+    metadata: dict = Field(default_factory=dict)
+
+
 class BookingRequest(BaseModel):
     slot: BookingSlotSelection
     customer: CustomerContact
