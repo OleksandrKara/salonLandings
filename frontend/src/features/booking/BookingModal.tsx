@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { CancellationPolicyModal } from "@/features/booking/CancellationPolicyModal";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 import { selectedServiceSlugs } from "@/features/booking/useBookingModal";
+import type { BookingStep } from "@/features/booking/types";
 import { ConfirmStep } from "@/features/booking/steps/ConfirmStep";
 import { ContactStep } from "@/features/booking/steps/ContactStep";
 import { DateTimeStep } from "@/features/booking/steps/DateTimeStep";
@@ -10,7 +11,19 @@ import { ServicesStep } from "@/features/booking/steps/ServicesStep";
 import { TurnstileWidget } from "@/features/booking/TurnstileWidget";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
 import { isStep1Ready } from "@/features/booking/useBookingModal";
+import type { BookingFlowStep } from "@/lib/funnelFlow";
+import { recordBookingFunnelStep } from "@/lib/tracking";
 import type { LandingVariantContent } from "@/types/api";
+
+/** Maps this app's numeric BookingStep to the funnel's step_key vocabulary — see
+ * lib/funnelFlow.ts. Four-hand bookings skip DateTime (step 3) entirely (see useBookingModal's
+ * next2/back), so "datetime" is naturally under-represented for that branch — expected, not a bug. */
+const FUNNEL_STEP_KEY: Record<BookingStep, BookingFlowStep> = {
+  1: "contact",
+  2: "services",
+  3: "datetime",
+  4: "confirm",
+};
 
 export function BookingModal({ terminology }: { terminology?: LandingVariantContent["terminology"] }) {
   const {
@@ -37,6 +50,27 @@ export function BookingModal({ terminology }: { terminology?: LandingVariantCont
   const { cartMenu } = useCartMenu();
   const [policyOpen, setPolicyOpen] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const trackedStepsRef = useRef<{ formOpenedAt: string; steps: Set<BookingFlowStep> }>({
+    formOpenedAt: "",
+    steps: new Set(),
+  });
+
+  // Booking-funnel step tracking (see marketing.funnel_events / lib/funnelFlow.ts). Fires once
+  // per step newly reached this modal session — keyed off formOpenedAt so a fresh open() (a new
+  // formOpenedAt) resets the dedup set, while back-navigation within the same session doesn't
+  // re-fire for a step already reached. "done" isn't tracked here — booking_completed already
+  // covers completion more reliably (Square-backed, not a best-effort client beacon).
+  useEffect(() => {
+    if (!state.isOpen) return;
+    if (trackedStepsRef.current.formOpenedAt !== state.formOpenedAt) {
+      trackedStepsRef.current = { formOpenedAt: state.formOpenedAt, steps: new Set() };
+    }
+    const stepKey = FUNNEL_STEP_KEY[state.step];
+    if (!trackedStepsRef.current.steps.has(stepKey)) {
+      trackedStepsRef.current.steps.add(stepKey);
+      recordBookingFunnelStep(stepKey);
+    }
+  }, [state.isOpen, state.step, state.formOpenedAt]);
 
   // If the visitor hits the browser back button off the /thank-you URL, dismiss
   // the confirmation sheet too so the UI matches the address bar.

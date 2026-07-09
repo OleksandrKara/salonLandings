@@ -6,7 +6,7 @@ from app.domain.consent import (
     SMS_CONSENT_TEXT,
     SMS_CONSENT_VERSION,
 )
-from app.domain.schemas import TrackingEvent, TrackingSnapshot
+from app.domain.schemas import BookingFunnelStepEvent, TrackingEvent, TrackingSnapshot
 from app.integrations.marketing_db.repository import MarketingRepository
 from app.services.traffic_source import classify_traffic_source
 
@@ -36,6 +36,30 @@ class TrackingService:
             await self.record_event(event)
         except Exception:
             logger.exception("Failed to record tracking event (event_type=%s)", event.event_type)
+
+    async def record_booking_funnel_step(self, event: BookingFunnelStepEvent) -> None:
+        await self._repository.insert_funnel_event(
+            session_id=event.session_id,
+            landing_page_id=event.landing_page_id,
+            variant_id=event.variant_id,
+            flow_key=event.flow_key,
+            step_key=event.step_key,
+            step_index=event.step_index,
+            step_count_total=event.step_count_total,
+            metadata=event.metadata,
+        )
+
+    async def record_booking_funnel_step_safely(self, event: BookingFunnelStepEvent) -> None:
+        """Booking-funnel step tracking is analytics only — a failure here must never affect
+        the visitor's actual booking flow."""
+        try:
+            await self.record_booking_funnel_step(event)
+        except Exception:
+            logger.exception(
+                "Failed to record booking funnel step (flow_key=%s, step_key=%s)",
+                event.flow_key,
+                event.step_key,
+            )
 
     async def record_submission(
         self,
