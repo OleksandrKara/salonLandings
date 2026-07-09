@@ -38,13 +38,18 @@ function pickWeighted(variants: LandingVariant[]): LandingVariant {
   return variants[variants.length - 1];
 }
 
-function logEvent(eventType: TrackingEventType, landingPageId: string | null, variantId: string | null): void {
+function logEvent(
+  eventType: TrackingEventType,
+  landingPageId: string | null,
+  variantId: string | null,
+  metadata: Record<string, unknown> = {},
+): void {
   apiPost("/api/tracking/event", {
     session_id: getOrCreateVisitorId(),
     landing_page_id: landingPageId,
     variant_id: variantId,
     event_type: eventType,
-    metadata: {},
+    metadata,
   }).catch(() => {
     // analytics only — nothing to recover, nothing to surface to the visitor
   });
