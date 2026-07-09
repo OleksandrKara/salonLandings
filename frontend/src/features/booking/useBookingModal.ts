@@ -38,10 +38,11 @@ export function estimatedTotal(state: BookingModalState, cartMenu: CartMenu): nu
 export function useBookingModal() {
   const [state, setState] = useState<BookingModalState>(initialBookingModalState);
 
-  const open = useCallback(
-    () => setState({ ...initialBookingModalState, isOpen: true, formOpenedAt: new Date().toISOString() }),
-    [],
-  );
+  const open = useCallback(() => {
+    const tracking = getTrackingSnapshot();
+    logExperimentEvent("click", tracking.landing_page_id ?? null, tracking.variant_id ?? null, { target: "book_now" });
+    setState({ ...initialBookingModalState, isOpen: true, formOpenedAt: new Date().toISOString() });
+  }, []);
   const close = useCallback(() => {
     exitThankYouUrl();
     setState((s) => ({ ...s, isOpen: false }));
