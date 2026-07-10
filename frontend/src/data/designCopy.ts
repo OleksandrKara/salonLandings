@@ -3,13 +3,18 @@
 // Anything price-related is NOT here; that always comes live from the API.
 
 import type { LandingVariantContent } from "@/types/api";
-import mani1Img from "@/assets/mani1.jpg";
-import customer1Img from "@/assets/customer1.jpg";
-import milkyNailsImg from "@/assets/milkynails.jpg";
-import nail3Img from "@/assets/nail3.jpg";
-import nail4Img from "@/assets/nail4.jpg";
-import nailart1Img from "@/assets/nailart1.jpg";
-import nudemani1Img from "@/assets/nudemani1.jpg";
+import nailartAbstractImg from "@/assets/work-nailart-abstract.jpg";
+import redClassicImg from "@/assets/work-red-classic.jpg";
+import yellowFloralImg from "@/assets/work-yellow-floral.jpg";
+import reverseFrenchImg from "@/assets/work-reverse-french.jpg";
+import gelOverlayImg from "@/assets/work-gel-overlay.jpg";
+import milkyWhiteImg from "@/assets/work-milky-white.jpg";
+import nudeBirdartImg from "@/assets/work-nude-birdart.jpg";
+import almondFrenchImg from "@/assets/work-almond-french.jpg";
+import pedicureImg from "@/assets/work-pedicure.jpg";
+import mauveGlitterImg from "@/assets/work-mauve-glitter.jpg";
+import gelExtensionsImg from "@/assets/work-gel-extensions.jpg";
+import japanManiImg from "@/assets/work-japan-mani.jpg";
 
 /** Every occurrence of "Russian" in this file's copy is the exact same branding word — a real
  * technique name in the industry ("Russian manicure" = precise dry-cuticle/e-file work, distinct
@@ -50,15 +55,25 @@ export interface CarouselSlide {
   sub: string;
 }
 
+// First 5 slides render (and load) immediately; the rest only mount once the visitor taps
+// "See More Photos" in ResultsCarousel — this is a paid-ads landing page, so the initial page
+// load must not pay for all 12 photos when 5 is enough to show the carousel is real and full.
 export const CAROUSEL_SLIDES: CarouselSlide[] = [
-  { id: "slMani1", src: mani1Img, badge: "Manicure", caption: "Russian hard-gel manicure", sub: "Flawless cuticles · high-gloss finish" },
-  { id: "slMani2", src: customer1Img, badge: "Real Client", caption: "Glossy hard-gel finish", sub: "Nail-safe, no acrylic" },
-  { id: "slNail3", src: nail3Img, badge: "Cuticle work", caption: "Clean Russian cuticle work", sub: "Precise dry technique" },
-  { id: "slNail4", src: nail4Img, badge: "Natural nails", caption: "Natural nail-health focused", sub: "Strengthened, structured gel" },
-  { id: "slMilky", src: milkyNailsImg, badge: "Design", caption: "Milky white manicure", sub: "Soft, elegant, on-trend finish" },
-  { id: "slNailArt", src: nailart1Img, badge: "Nail Art", caption: "Custom nail art design", sub: "Hand-painted details, your choice" },
-  { id: "slNudeMani", src: nudemani1Img, badge: "Manicure", caption: "Natural nude finish", sub: "Subtle, elegant, everyday-ready" },
+  { id: "slNailArt", src: nailartAbstractImg, badge: "Nail Art", caption: "Gel Nail Extension with Nail Art", sub: "Long-lasting length, custom design" },
+  { id: "slRedClassic", src: redClassicImg, badge: "Manicure", caption: "Russian Hard Gel Manicure", sub: "Classic red, high-shine finish" },
+  { id: "slYellowFloral", src: yellowFloralImg, badge: "Nail Art", caption: "Butter yellow with floral accent", sub: "Sculpted 3D nail art detail" },
+  { id: "slReverseFrench", src: reverseFrenchImg, badge: "Design", caption: "Ombre Design", sub: "Soft nude-to-white gradient tips" },
+  { id: "slGelOverlay", src: gelOverlayImg, badge: "Manicure", caption: "Gel-overlay manicure", sub: "Smooth, durable structured gel" },
+  { id: "slMilkyWhite", src: milkyWhiteImg, badge: "Manicure", caption: "Russian Hard Gel Manicure", sub: "Soft, glossy, on-trend finish" },
+  { id: "slNudeBirdart", src: nudeBirdartImg, badge: "Nail Art", caption: "Nude manicure with bird art", sub: "Delicate hand-painted detail" },
+  { id: "slAlmondFrench", src: almondFrenchImg, badge: "Manicure", caption: "Russian Hard Gel Manicure", sub: "Classic white tip, natural base" },
+  { id: "slPedicure", src: pedicureImg, badge: "Pedicure", caption: "Dry Russian Pedicure", sub: "Dry technique, no foot soak" },
+  { id: "slMauveGlitter", src: mauveGlitterImg, badge: "Design", caption: "Russian Hard Gel Manicure", sub: "Subtle shimmer, gold glitter finish" },
+  { id: "slGelExtensions", src: gelExtensionsImg, badge: "Nail Extensions", caption: "Gel nail extensions", sub: "Long-lasting sculpted length, floral art" },
+  { id: "slJapanMani", src: japanManiImg, badge: "Manicure", caption: "Japanese Manicure", sub: "Clean, healthy, everyday finish" },
 ];
+
+export const CAROUSEL_INITIAL_COUNT = 5;
 
 export const WHY_CLIENTS_STAY = [
   "Long-lasting wear — up to 4 full weeks",

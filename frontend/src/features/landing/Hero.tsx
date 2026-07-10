@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import mani1 from "@/assets/mani1.jpg";
+import mani1 from "@/assets/hero-white-manicure.jpg";
 import { CREDIBILITY_STATS, HEADLINE, SUBHEAD, terminologize } from "@/data/designCopy";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
@@ -25,6 +25,7 @@ export function Hero({ overrides }: { overrides?: LandingVariantContent }) {
           src={overrides?.heroImageUrl ?? mani1}
           alt={terminologize("Russian hard-gel manicure close-up", overrides?.terminology)}
           style={styles.image}
+          fetchPriority="high"
         />
         <div style={styles.imageGradient} />
         <div style={styles.ratingBadge}>
