@@ -1,7 +1,15 @@
+# Two identical replicas ("blue"/"green") of both backend and frontend instead of one each, so a
+# deploy can restart them one at a time. The host nginx (mani.akluxnails.com.conf) load-balances
+# across both frontend replicas, and the frontend's own internal nginx (frontend/nginx.container.conf)
+# load-balances /api/ across both backend replicas — both retry against the other replica if the
+# one they picked is mid-restart, so a rolling deploy (see .github/workflows/deploy.yml) never
+# drops a real request, including mid-booking API calls. Each pair builds from the same image
+# (see `image:` below) so `docker compose build` only builds once per pair.
 services:
-  backend:
+  backend-blue:
+    image: mani-backend:latest
     build: ./backend
-    container_name: mani-backend
+    container_name: mani-backend-blue
     restart: unless-stopped
     env_file:
       - ./backend/.env
@@ -11,14 +19,38 @@ services:
       - default
       - salaryreview_default
 
-  frontend:
+  backend-green:
+    image: mani-backend:latest
+    container_name: mani-backend-green
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    ports:
+      - "127.0.0.1:8002:8000"
+    networks:
+      - default
+      - salaryreview_default
+
+  frontend-blue:
+    image: mani-frontend:latest
     build: ./frontend
-    container_name: mani-frontend
+    container_name: mani-frontend-blue
     restart: unless-stopped
     depends_on:
-      - backend
+      - backend-blue
+      - backend-green
     ports:
       - "127.0.0.1:3001:3000"
+
+  frontend-green:
+    image: mani-frontend:latest
+    container_name: mani-frontend-green
+    restart: unless-stopped
+    depends_on:
+      - backend-blue
+      - backend-green
+    ports:
+      - "127.0.0.1:3003:3000"
 
 networks:
   default: {}

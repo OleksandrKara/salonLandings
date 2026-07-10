@@ -75,14 +75,39 @@ jobs:
             # Match main exactly; the gitignored .env (secrets) is untouched.
             git reset --hard origin/main
             # 'ubuntu' needs sudo for docker on this host (passwordless sudo is enabled).
-            sudo docker compose up -d --build
+
+            # Rolling deploy: build both shared images once, then recreate backend-blue/green and
+            # frontend-blue/green one at a time (backend fully rolled out before frontend, since
+            # frontend's internal nginx resolves both backend hostnames at its own startup),
+            # waiting for each to report healthy before touching the next. mani runs paid ads —
+            # nginx's upstream retry (see nginx/mani.akluxnails.com.conf and
+            # frontend/nginx.container.conf) means a visitor never sees a dropped request even
+            # while one replica is mid-restart, since its pair keeps serving throughout.
+            sudo docker compose build backend-blue frontend-blue
+
+            wait_healthy() {
+              for i in \$(seq 1 30); do
+                if [ "\$(sudo docker inspect -f '{{.State.Health.Status}}' "\$1" 2>/dev/null)" = "healthy" ]; then
+                  echo "\$1 healthy"; return 0
+                fi
+                sleep 3
+              done
+              echo "\$1 did not become healthy in time" >&2
+              return 1
+            }
+
+            sudo docker compose up -d --no-deps backend-blue
+            wait_healthy mani-backend-blue
+
+            sudo docker compose up -d --no-deps backend-green
+            wait_healthy mani-backend-green
+
+            sudo docker compose up -d --no-deps frontend-blue
+            wait_healthy mani-frontend-blue
+
+            sudo docker compose up -d --no-deps frontend-green
+            wait_healthy mani-frontend-green
+
             sudo docker image prune -f
-            # Wait for the backend health check to report healthy (up to ~90s).
-            for i in \$(seq 1 30); do
-              if [ "\$(sudo docker inspect -f '{{.State.Health.Status}}' mani-backend 2>/dev/null)" = "healthy" ]; then
-                echo "backend healthy"; break
-              fi
-              sleep 3
-            done
             sudo docker compose ps
           EOF
