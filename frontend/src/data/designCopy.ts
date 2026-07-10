@@ -60,15 +60,15 @@ export interface CarouselSlide {
 // load must not pay for all 12 photos when 5 is enough to show the carousel is real and full.
 export const CAROUSEL_SLIDES: CarouselSlide[] = [
   { id: "slNailArt", src: nailartAbstractImg, badge: "Nail Art", caption: "Gel Nail Extension with Nail Art", sub: "Long-lasting length, custom design" },
-  { id: "slRedClassic", src: redClassicImg, badge: "Manicure", caption: "Russian Gel Manicure", sub: "Classic red, high-shine finish" },
+  { id: "slRedClassic", src: redClassicImg, badge: "Manicure", caption: "Russian Hard Gel Manicure", sub: "Classic red, high-shine finish" },
   { id: "slYellowFloral", src: yellowFloralImg, badge: "Nail Art", caption: "Butter yellow with floral accent", sub: "Sculpted 3D nail art detail" },
   { id: "slReverseFrench", src: reverseFrenchImg, badge: "Design", caption: "Ombre Design", sub: "Soft nude-to-white gradient tips" },
   { id: "slGelOverlay", src: gelOverlayImg, badge: "Manicure", caption: "Gel-overlay manicure", sub: "Smooth, durable structured gel" },
-  { id: "slMilkyWhite", src: milkyWhiteImg, badge: "Manicure", caption: "Russian Gel Manicure", sub: "Soft, glossy, on-trend finish" },
+  { id: "slMilkyWhite", src: milkyWhiteImg, badge: "Manicure", caption: "Russian Hard Gel Manicure", sub: "Soft, glossy, on-trend finish" },
   { id: "slNudeBirdart", src: nudeBirdartImg, badge: "Nail Art", caption: "Nude manicure with bird art", sub: "Delicate hand-painted detail" },
-  { id: "slAlmondFrench", src: almondFrenchImg, badge: "Manicure", caption: "Russian Gel Manicure", sub: "Classic white tip, natural base" },
-  { id: "slPedicure", src: pedicureImg, badge: "Pedicure", caption: "Polished pedicure", sub: "Dry technique, no foot soak" },
-  { id: "slMauveGlitter", src: mauveGlitterImg, badge: "Design", caption: "Russian Gel Manicure", sub: "Subtle shimmer, gold glitter finish" },
+  { id: "slAlmondFrench", src: almondFrenchImg, badge: "Manicure", caption: "Russian Hard Gel Manicure", sub: "Classic white tip, natural base" },
+  { id: "slPedicure", src: pedicureImg, badge: "Pedicure", caption: "Dry Russian Pedicure", sub: "Dry technique, no foot soak" },
+  { id: "slMauveGlitter", src: mauveGlitterImg, badge: "Design", caption: "Russian Hard Gel Manicure", sub: "Subtle shimmer, gold glitter finish" },
   { id: "slGelExtensions", src: gelExtensionsImg, badge: "Nail Extensions", caption: "Gel nail extensions", sub: "Long-lasting sculpted length, floral art" },
   { id: "slJapanMani", src: japanManiImg, badge: "Manicure", caption: "Japanese Manicure", sub: "Clean, healthy, everyday finish" },
 ];
