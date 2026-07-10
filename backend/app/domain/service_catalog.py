@@ -67,7 +67,7 @@ SERVICE_OFFER_DEFINITIONS: list[ServiceOfferDefinition] = [
             "in one flawless color — no length change, no acrylic."
         ),
         first_time_item_id="OPNE2Z2QTZR2USBD7AUJRRYF",  # "1st Time Regular Manicure Gel-Overlay"
-        regular_price_item_id="OCMEURM3ONES53H4TCHRY5BS",  # "Regular Manicure Gel-Overlay"
+        regular_price_item_id="OCMEURM3ONES53H4TCHRY5BS",  # "Russian Gel-Overlay Manicure"
     ),
     ServiceOfferDefinition(
         slug="pedicure",
