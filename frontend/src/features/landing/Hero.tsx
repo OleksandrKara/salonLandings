@@ -103,7 +103,15 @@ function PriceBlock({ priceOld, priceNew }: { priceOld: number; priceNew: number
 const styles: Record<string, CSSProperties> = {
   section: { padding: "22px 22px 8px" },
   imageWrap: { position: "relative", borderRadius: 18, overflow: "hidden" },
-  image: { display: "block", width: "100%", height: "clamp(300px, 66vw, 420px)", objectFit: "cover" },
+  // objectPosition biased toward the bottom of the frame — the default center crop cut off the
+  // bottom nail's glossy highlight and kept an out-of-focus nail at the top that added nothing.
+  image: {
+    display: "block",
+    width: "100%",
+    height: "clamp(300px, 66vw, 420px)",
+    objectFit: "cover",
+    objectPosition: "50% 75%",
+  },
   imageGradient: { position: "absolute", left: 0, right: 0, bottom: 0, height: "56%", background: "linear-gradient(to top, rgba(38,24,20,0.68), rgba(38,24,20,0))", pointerEvents: "none" },
   ratingBadge: { position: "absolute", left: 12, bottom: 12, display: "flex", alignItems: "center", gap: 9, background: "rgba(255,255,255,0.96)", borderRadius: 11, padding: "8px 11px", boxShadow: "0 4px 14px rgba(38,24,20,0.28)" },
   eyebrow: { fontSize: 11.5, letterSpacing: 2.4, textTransform: "uppercase", color: "var(--color-accent)", fontWeight: 600 },
