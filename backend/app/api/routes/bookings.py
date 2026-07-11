@@ -147,6 +147,10 @@ async def submit_four_hand_request(
         customer_email=submission.customer.email_address,
         customer_phone=submission.customer.phone_number,
     )
+    await tracking_service.record_attribution_safely(
+        tracking=tracking,
+        booking_id=confirmation.booking_id,
+    )
     await tracking_service.record_sms_consent_safely(
         phone_number=submission.customer.phone_number,
         consented=submission.customer.marketing_opt_in,
