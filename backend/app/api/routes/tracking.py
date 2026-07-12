@@ -15,7 +15,7 @@ from app.services.identity import (
     resolve_tracking_event,
     resolve_tracking_snapshot,
 )
-from app.services.request_context import derive_client_context
+from app.services.request_context import derive_client_context, is_bot_request
 from app.services.tracking_service import TrackingService
 
 logger = logging.getLogger(__name__)
@@ -30,6 +30,8 @@ async def record_visit(
     tracking_service: TrackingService = Depends(get_tracking_service),
 ) -> VisitRecordedResponse:
     snapshot = resolve_tracking_snapshot(request, response, snapshot)
+    if is_bot_request(request):
+        return VisitRecordedResponse(visitor_id=snapshot.visitor_id)
     client_context = derive_client_context(request)
     try:
         await tracking_service.record_visit(snapshot, client_context)
@@ -47,6 +49,8 @@ async def record_event(
     tracking_service: TrackingService = Depends(get_tracking_service),
 ) -> EventRecordedResponse:
     event = resolve_tracking_event(request, response, event)
+    if is_bot_request(request):
+        return EventRecordedResponse(recorded=True)
     await tracking_service.record_event_safely(event)
     return EventRecordedResponse(recorded=True)
 
@@ -59,5 +63,7 @@ async def record_booking_funnel_step(
     tracking_service: TrackingService = Depends(get_tracking_service),
 ) -> EventRecordedResponse:
     event = resolve_booking_funnel_step_event(request, response, event)
+    if is_bot_request(request):
+        return EventRecordedResponse(recorded=True)
     await tracking_service.record_booking_funnel_step_safely(event)
     return EventRecordedResponse(recorded=True)
