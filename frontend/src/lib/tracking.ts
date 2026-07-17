@@ -1,5 +1,5 @@
 import { apiPost } from "@/api/client";
-import { BOOKING_FLOW, type BookingFlowStep } from "@/lib/funnelFlow";
+import type { BookingFlowStep } from "@/lib/funnelFlow";
 import { getPersistedVariantAssignment } from "@/lib/experiments";
 import { getOrCreateVisitorId } from "@/lib/visitorId";
 import type { TrackingSnapshot } from "@/types/api";
@@ -73,18 +73,25 @@ export function recordVisit(): void {
 /**
  * Fire-and-forget booking-funnel step event (see marketing.funnel_events). The caller is
  * responsible for deduping per modal session — see BookingModal.tsx's step effect — so
- * back-navigation to an already-visited step doesn't double count.
+ * back-navigation to an already-visited step doesn't double count. flowKey/stepIndex/
+ * stepCountTotal come from the caller's BOOKING_FLOWS[position] entry (see lib/funnelFlow.ts) so
+ * differently-ordered flows (e.g. the contact-last variant) record under their own flow_key.
  */
-export function recordBookingFunnelStep(step: BookingFlowStep): void {
+export function recordBookingFunnelStep(
+  step: BookingFlowStep,
+  flowKey: string,
+  stepIndex: number,
+  stepCountTotal: number,
+): void {
   const snapshot = getTrackingSnapshot();
   apiPost("/api/tracking/funnel-event", {
     session_id: snapshot.visitor_id,
     landing_page_id: snapshot.landing_page_id ?? null,
     variant_id: snapshot.variant_id ?? null,
-    flow_key: BOOKING_FLOW.flowKey,
+    flow_key: flowKey,
     step_key: step,
-    step_index: BOOKING_FLOW.steps.indexOf(step),
-    step_count_total: BOOKING_FLOW.steps.length,
+    step_index: stepIndex,
+    step_count_total: stepCountTotal,
   }).catch(() => {
     // analytics only — nothing to recover, nothing to surface to the visitor
   });

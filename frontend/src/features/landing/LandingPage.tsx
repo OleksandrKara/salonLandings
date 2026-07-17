@@ -61,7 +61,7 @@ export function LandingPage() {
 
   return (
     <CartMenuProvider>
-      <BookingModalProvider>
+      <BookingModalProvider position={overrides.contactStepPosition ?? "start"}>
         <div style={styles.page}>
           <Header />
           <Hero overrides={overrides} />
@@ -75,7 +75,7 @@ export function LandingPage() {
           <Footer terminology={overrides.terminology} />
         </div>
         <StickyBottomBar />
-        <BookingModal terminology={overrides.terminology} />
+        <BookingModal terminology={overrides.terminology} position={overrides.contactStepPosition ?? "start"} />
       </BookingModalProvider>
     </CartMenuProvider>
   );

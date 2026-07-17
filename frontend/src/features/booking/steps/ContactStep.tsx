@@ -15,6 +15,9 @@ interface ContactStepProps {
   onWebsiteChange: (v: string) => void;
   onContinue: () => void;
   canContinue: boolean;
+  /** Only present when this step isn't first in the flow (e.g. the contact-last variant) — no
+   * back button when there's nowhere to go back to. */
+  onBack?: () => void;
 }
 
 export function ContactStep({
@@ -30,6 +33,7 @@ export function ContactStep({
   onWebsiteChange,
   onContinue,
   canContinue,
+  onBack,
 }: ContactStepProps) {
   const top = manicure.pricing.find((p) => p.tier === "top") ?? manicure.pricing[0];
 
@@ -100,6 +104,11 @@ export function ContactStep({
       >
         Continue
       </button>
+      {onBack ? (
+        <button onClick={onBack} style={styles.backButton}>
+          Back
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -158,4 +167,5 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 12,
     cursor: "pointer",
   },
+  backButton: { width: "100%", marginTop: 9, border: "none", background: "none", color: "var(--color-muted-2)", fontSize: 14, padding: 8, cursor: "pointer" },
 };
