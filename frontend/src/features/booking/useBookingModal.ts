@@ -4,9 +4,35 @@ import { captureContact } from "@/api/contacts";
 import { ApiError } from "@/api/client";
 import type { BookingConfirmation, CartMenu, SlotOption } from "@/types/api";
 import { BookingModalState, BookingStep, initialBookingModalState } from "@/features/booking/types";
+import { BOOKING_FLOWS, type BookingFlowStep, type ContactStepPosition } from "@/lib/funnelFlow";
 import { logExperimentEvent } from "@/lib/experiments";
 import { getTrackingSnapshot, recordMetaBookingConversion } from "@/lib/tracking";
 import { enterThankYouUrl, exitThankYouUrl } from "@/lib/thankYouUrl";
+
+/** Which BookingFlowStep kind renders at a given 1-based numeric BookingStep, for this flow. */
+export function kindAtStep(steps: readonly BookingFlowStep[], step: BookingStep): BookingFlowStep {
+  return steps[step - 1];
+}
+
+/** The 1-based numeric BookingStep a given kind renders at, for this flow. */
+function stepOfKind(steps: readonly BookingFlowStep[], kind: BookingFlowStep): BookingStep {
+  return (steps.indexOf(kind) + 1) as BookingStep;
+}
+
+/** Moves one kind forward/back in `steps`, skipping over "datetime" when four-hand is selected
+ * (the 4-hand path has no self-serve slot picker — see BookingService.submit_four_hand_request).
+ * Clamped to the flow's bounds, so calling this from the first/last kind is a safe no-op. */
+function shiftKind(
+  steps: readonly BookingFlowStep[],
+  kind: BookingFlowStep,
+  delta: 1 | -1,
+  fourHandSelected: boolean,
+): BookingFlowStep {
+  let idx = steps.indexOf(kind) + delta;
+  if (fourHandSelected && steps[idx] === "datetime") idx += delta;
+  idx = Math.max(0, Math.min(steps.length - 1, idx));
+  return steps[idx];
+}
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "").replace(/^1(?=\d{10})/, "").slice(0, 10);
@@ -35,8 +61,9 @@ export function estimatedTotal(state: BookingModalState, cartMenu: CartMenu): nu
   return total;
 }
 
-export function useBookingModal() {
+export function useBookingModal(position: ContactStepPosition = "start") {
   const [state, setState] = useState<BookingModalState>(initialBookingModalState);
+  const steps = BOOKING_FLOWS[position].steps;
 
   const open = useCallback(() => {
     const tracking = getTrackingSnapshot();
@@ -90,37 +117,47 @@ export function useBookingModal() {
 
   const goToStep = useCallback((step: BookingStep) => setState((s) => ({ ...s, step })), []);
 
-  const next1 = useCallback(() => {
+  const advanceFromContact = useCallback(() => {
     setState((s) => {
-      if (!isStep1Ready(s)) return s;
+      if (!isContactReady(s)) return s;
       // Fire-and-forget lead capture — before a real Square customer exists, so this must
-      // never block progressing to Step 2.
+      // never block advancing past the contact step, wherever it falls in this flow.
       captureContact({
         given_name: s.givenName.trim(),
         phone_number: s.phone.trim(),
         email_address: s.email.trim() || null,
         tracking: getTrackingSnapshot(),
       });
-      return { ...s, step: 2 };
+      const nextKind = shiftKind(steps, "contact", 1, s.fourHandSelected);
+      return { ...s, step: stepOfKind(steps, nextKind) };
     });
-  }, []);
+  }, [steps]);
 
-  const next2 = useCallback(() => {
+  const advanceFromServices = useCallback(() => {
     setState((s) => {
       const anySelected = s.fourHandSelected || s.maniSelected || s.pedicureSelected;
       if (!anySelected) return s;
-      return { ...s, step: s.fourHandSelected ? 4 : 3 };
+      const nextKind = shiftKind(steps, "services", 1, s.fourHandSelected);
+      return { ...s, step: stepOfKind(steps, nextKind) };
     });
-  }, []);
+  }, [steps]);
 
-  const selectSlot = useCallback((slot: SlotOption) => setState((s) => ({ ...s, selectedSlot: slot, step: 4 })), []);
+  const selectSlot = useCallback(
+    (slot: SlotOption) =>
+      setState((s) => {
+        const nextKind = shiftKind(steps, "datetime", 1, s.fourHandSelected);
+        return { ...s, selectedSlot: slot, step: stepOfKind(steps, nextKind) };
+      }),
+    [steps],
+  );
 
   const back = useCallback(() => {
     setState((s) => {
-      if (s.step === 4) return { ...s, step: s.fourHandSelected ? 2 : 3 };
-      return { ...s, step: Math.max(1, s.step - 1) as BookingStep };
+      const currentKind = kindAtStep(steps, s.step);
+      const prevKind = shiftKind(steps, currentKind, -1, s.fourHandSelected);
+      return { ...s, step: stepOfKind(steps, prevKind) };
     });
-  }, []);
+  }, [steps]);
 
   const toggleSms = useCallback(() => setState((s) => ({ ...s, smsOptIn: !s.smsOptIn })), []);
   const toggleCancelAgree = useCallback(() => setState((s) => ({ ...s, cancelAgree: !s.cancelAgree })), []);
@@ -141,7 +178,7 @@ export function useBookingModal() {
           customer: {
             given_name: current.givenName.trim(),
             family_name: familyName,
-            email_address: current.email.trim(),
+            email_address: current.email.trim() || null,
             phone_number: current.phone.trim(),
             marketing_opt_in: current.smsOptIn,
           },
@@ -176,7 +213,7 @@ export function useBookingModal() {
         customer: {
           given_name: current.givenName.trim(),
           family_name: familyName,
-          email_address: current.email.trim(),
+          email_address: current.email.trim() || null,
           phone_number: current.phone.trim(),
           marketing_opt_in: current.smsOptIn,
         },
@@ -211,8 +248,8 @@ export function useBookingModal() {
     toggleDesign,
     toggleFourHand,
     goToStep,
-    next1,
-    next2,
+    advanceFromContact,
+    advanceFromServices,
     selectSlot,
     back,
     toggleSms,
@@ -221,7 +258,7 @@ export function useBookingModal() {
   };
 }
 
-export function isStep1Ready(state: BookingModalState): boolean {
+export function isContactReady(state: BookingModalState): boolean {
   const phoneDigits = state.phone.replace(/\D/g, "");
   return state.givenName.trim().length > 0 && phoneDigits.length === 10;
 }

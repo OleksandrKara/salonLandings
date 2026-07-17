@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { CancellationPolicyModal } from "@/features/booking/CancellationPolicyModal";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
-import { selectedServiceSlugs } from "@/features/booking/useBookingModal";
-import type { BookingStep } from "@/features/booking/types";
+import { isContactReady, kindAtStep, selectedServiceSlugs } from "@/features/booking/useBookingModal";
 import { ConfirmStep } from "@/features/booking/steps/ConfirmStep";
 import { ContactStep } from "@/features/booking/steps/ContactStep";
 import { DateTimeStep } from "@/features/booking/steps/DateTimeStep";
@@ -10,22 +9,17 @@ import { DoneStep } from "@/features/booking/steps/DoneStep";
 import { ServicesStep } from "@/features/booking/steps/ServicesStep";
 import { TurnstileWidget } from "@/features/booking/TurnstileWidget";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
-import { isStep1Ready } from "@/features/booking/useBookingModal";
-import type { BookingFlowStep } from "@/lib/funnelFlow";
+import { BOOKING_FLOWS, type BookingFlowStep, type ContactStepPosition } from "@/lib/funnelFlow";
 import { recordBookingFunnelStep } from "@/lib/tracking";
 import type { LandingVariantContent } from "@/types/api";
 
-/** Maps this app's numeric BookingStep to the funnel's step_key vocabulary — see
- * lib/funnelFlow.ts. Four-hand bookings skip DateTime (step 3) entirely (see useBookingModal's
- * next2/back), so "datetime" is naturally under-represented for that branch — expected, not a bug. */
-const FUNNEL_STEP_KEY: Record<BookingStep, BookingFlowStep> = {
-  1: "contact",
-  2: "services",
-  3: "datetime",
-  4: "confirm",
-};
-
-export function BookingModal({ terminology }: { terminology?: LandingVariantContent["terminology"] }) {
+export function BookingModal({
+  terminology,
+  position = "start",
+}: {
+  terminology?: LandingVariantContent["terminology"];
+  position?: ContactStepPosition;
+}) {
   const {
     state,
     close,
@@ -39,8 +33,8 @@ export function BookingModal({ terminology }: { terminology?: LandingVariantCont
     togglePedicure,
     toggleDesign,
     toggleFourHand,
-    next1,
-    next2,
+    advanceFromContact,
+    advanceFromServices,
     selectSlot,
     back,
     toggleSms,
@@ -55,6 +49,9 @@ export function BookingModal({ terminology }: { terminology?: LandingVariantCont
     steps: new Set(),
   });
 
+  const flow = BOOKING_FLOWS[position];
+  const currentKind = kindAtStep(flow.steps, state.step);
+
   // Booking-funnel step tracking (see marketing.funnel_events / lib/funnelFlow.ts). Fires once
   // per step newly reached this modal session — keyed off formOpenedAt so a fresh open() (a new
   // formOpenedAt) resets the dedup set, while back-navigation within the same session doesn't
@@ -65,12 +62,11 @@ export function BookingModal({ terminology }: { terminology?: LandingVariantCont
     if (trackedStepsRef.current.formOpenedAt !== state.formOpenedAt) {
       trackedStepsRef.current = { formOpenedAt: state.formOpenedAt, steps: new Set() };
     }
-    const stepKey = FUNNEL_STEP_KEY[state.step];
-    if (!trackedStepsRef.current.steps.has(stepKey)) {
-      trackedStepsRef.current.steps.add(stepKey);
-      recordBookingFunnelStep(stepKey);
+    if (!trackedStepsRef.current.steps.has(currentKind)) {
+      trackedStepsRef.current.steps.add(currentKind);
+      recordBookingFunnelStep(currentKind, flow.flowKey, state.step - 1, flow.steps.length);
     }
-  }, [state.isOpen, state.step, state.formOpenedAt]);
+  }, [state.isOpen, currentKind, state.formOpenedAt, flow, state.step]);
 
   // If the visitor hits the browser back button off the /thank-you URL, dismiss
   // the confirmation sheet too so the UI matches the address bar.
@@ -102,7 +98,13 @@ export function BookingModal({ terminology }: { terminology?: LandingVariantCont
 
   if (!state.isOpen || !cartMenu) return null;
 
-  const stepLabel = state.fourHandSelected ? `Step ${state.step === 4 ? 3 : state.step} of 3` : `Step ${state.step} of 4`;
+  // Four-hand bookings skip the DateTime step entirely (see useBookingModal's shiftKind), so the
+  // displayed "X of 3" count needs to drop by one for every step past wherever DateTime would
+  // have fallen in this flow's order — not just "step 4", since DateTime's position differs
+  // between the default and contact-last flows.
+  const datetimeIndex = flow.steps.indexOf("datetime");
+  const displayStep = state.fourHandSelected && state.step - 1 > datetimeIndex ? state.step - 1 : state.step;
+  const stepLabel = state.fourHandSelected ? `Step ${displayStep} of 3` : `Step ${state.step} of 4`;
 
   return (
     <div onClick={close} style={styles.overlay}>
@@ -121,7 +123,7 @@ export function BookingModal({ terminology }: { terminology?: LandingVariantCont
             fourHandConfirmation={state.fourHandConfirmation}
             onClose={close}
           />
-        ) : state.step === 1 ? (
+        ) : currentKind === "contact" ? (
           <ContactStep
             manicure={cartMenu.manicure}
             stepLabel={stepLabel}
@@ -133,10 +135,11 @@ export function BookingModal({ terminology }: { terminology?: LandingVariantCont
             onPhoneChange={setPhone}
             onEmailChange={setEmail}
             onWebsiteChange={setWebsite}
-            onContinue={next1}
-            canContinue={isStep1Ready(state)}
+            onContinue={advanceFromContact}
+            canContinue={isContactReady(state)}
+            onBack={state.step > 1 ? back : undefined}
           />
-        ) : state.step === 2 ? (
+        ) : currentKind === "services" ? (
           <ServicesStep
             cartMenu={cartMenu}
             state={state}
@@ -146,10 +149,10 @@ export function BookingModal({ terminology }: { terminology?: LandingVariantCont
             onTogglePedicure={togglePedicure}
             onToggleDesign={toggleDesign}
             onToggleFourHand={toggleFourHand}
-            onContinue={next2}
-            onBack={back}
+            onContinue={advanceFromServices}
+            onBack={state.step > 1 ? back : undefined}
           />
-        ) : state.step === 3 ? (
+        ) : currentKind === "datetime" ? (
           <DateTimeStep
             serviceSlugs={selectedServiceSlugs(state)}
             stepLabel={stepLabel}

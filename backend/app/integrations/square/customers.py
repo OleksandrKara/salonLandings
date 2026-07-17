@@ -3,6 +3,7 @@ import re
 
 from square import Square
 from square.core.api_error import ApiError
+from square.customers.client import OMIT
 
 from app.integrations.square.exceptions import SquareIntegrationError
 
@@ -72,7 +73,7 @@ class SquareCustomerGateway:
         *,
         given_name: str,
         family_name: str,
-        email_address: str,
+        email_address: str | None,
         phone_number: str,
     ) -> str:
         try:
@@ -87,7 +88,7 @@ class SquareCustomerGateway:
             response = self._client.customers.create(
                 given_name=given_name,
                 family_name=family_name,
-                email_address=email_address,
+                email_address=email_address if email_address is not None else OMIT,
                 phone_number=phone_number,
                 reference_id="mani-akluxnails-landing",
             )

@@ -121,7 +121,7 @@ class AvailabilityResponse(BaseModel):
 class CustomerContact(BaseModel):
     given_name: str = Field(min_length=1, max_length=100)
     family_name: str = Field(min_length=1, max_length=100)
-    email_address: EmailStr
+    email_address: EmailStr | None = None
     phone_number: str = Field(min_length=7, max_length=20)
     marketing_opt_in: bool = False
 

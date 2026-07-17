@@ -89,7 +89,7 @@ export interface AvailabilityResponse {
 export interface CustomerContact {
   given_name: string;
   family_name: string;
-  email_address: string;
+  email_address: string | null;
   phone_number: string;
   marketing_opt_in: boolean;
 }
@@ -121,6 +121,11 @@ export interface LandingVariantContent {
    * wording — a terminology/branding test, not a different technique: absent or "russian" is
    * today's default copy. See data/designCopy.ts's terminologize(). */
   terminology?: "russian" | "european";
+  /** Where the booking modal collects contact info (name/phone/email): "start" (today's default,
+   * step 1 of 4) or "end" (right before Confirm, after services + date/time are picked) — see
+   * lib/funnelFlow.ts's BOOKING_FLOWS. Absent means "start", so every variant that doesn't set
+   * this explicitly keeps today's exact behavior. */
+  contactStepPosition?: "start" | "end";
 }
 
 export interface LandingVariant {

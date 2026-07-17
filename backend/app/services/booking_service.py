@@ -60,7 +60,8 @@ class BookingService:
         )
         self._customer_attributes_gateway.attach_tracking(customer_id, request.tracking)
         self._customer_attributes_gateway.attach_sms_consent(customer_id, request.customer.marketing_opt_in)
-        self._customer_attributes_gateway.attach_email_consent(customer_id)
+        if request.customer.email_address is not None:
+            self._customer_attributes_gateway.attach_email_consent(customer_id)
 
         booking = self._booking_gateway.create_booking(
             idempotency_key=str(uuid.uuid4()),
@@ -132,7 +133,8 @@ class BookingService:
         )
         self._customer_attributes_gateway.attach_tracking(customer_id, submission.tracking)
         self._customer_attributes_gateway.attach_sms_consent(customer_id, submission.customer.marketing_opt_in)
-        self._customer_attributes_gateway.attach_email_consent(customer_id)
+        if submission.customer.email_address is not None:
+            self._customer_attributes_gateway.attach_email_consent(customer_id)
 
         note_parts = []
         if submission.requested_services:

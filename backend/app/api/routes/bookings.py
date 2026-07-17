@@ -81,12 +81,13 @@ async def create_booking(
         visitor_id=tracking.visitor_id if tracking else None,
         ip_address=client_context["ip_address"],
     )
-    await tracking_service.record_email_consent_safely(
-        email_address=request.customer.email_address,
-        source="booking",
-        visitor_id=tracking.visitor_id if tracking else None,
-        ip_address=client_context["ip_address"],
-    )
+    if request.customer.email_address is not None:
+        await tracking_service.record_email_consent_safely(
+            email_address=request.customer.email_address,
+            source="booking",
+            visitor_id=tracking.visitor_id if tracking else None,
+            ip_address=client_context["ip_address"],
+        )
     await tracking_service.link_contact_to_booking_safely(
         given_name=request.customer.given_name,
         phone_number=request.customer.phone_number,
@@ -94,7 +95,7 @@ async def create_booking(
         tracking=tracking,
         client_context=client_context,
         sms_consent=request.customer.marketing_opt_in,
-        email_consent=True,
+        email_consent=request.customer.email_address is not None,
         square_customer_id=confirmation.square_customer_id,
         square_booking_id=confirmation.booking_id,
         booking_status=confirmation.status,
@@ -158,12 +159,13 @@ async def submit_four_hand_request(
         visitor_id=tracking.visitor_id if tracking else None,
         ip_address=client_context["ip_address"],
     )
-    await tracking_service.record_email_consent_safely(
-        email_address=submission.customer.email_address,
-        source="four_hand_request",
-        visitor_id=tracking.visitor_id if tracking else None,
-        ip_address=client_context["ip_address"],
-    )
+    if submission.customer.email_address is not None:
+        await tracking_service.record_email_consent_safely(
+            email_address=submission.customer.email_address,
+            source="four_hand_request",
+            visitor_id=tracking.visitor_id if tracking else None,
+            ip_address=client_context["ip_address"],
+        )
     await tracking_service.link_contact_to_booking_safely(
         given_name=submission.customer.given_name,
         phone_number=submission.customer.phone_number,
@@ -171,7 +173,7 @@ async def submit_four_hand_request(
         tracking=tracking,
         client_context=client_context,
         sms_consent=submission.customer.marketing_opt_in,
-        email_consent=True,
+        email_consent=submission.customer.email_address is not None,
         square_customer_id=confirmation.square_customer_id,
         square_booking_id=confirmation.booking_id,
         booking_status=confirmation.status,

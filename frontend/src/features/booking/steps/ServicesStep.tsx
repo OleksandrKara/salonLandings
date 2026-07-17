@@ -15,7 +15,9 @@ interface ServicesStepProps {
   onToggleDesign: () => void;
   onToggleFourHand: () => void;
   onContinue: () => void;
-  onBack: () => void;
+  /** Only present when this step isn't first in the flow — no back button when there's nowhere
+   * to go back to (e.g. the contact-last variant, where Services is step 1). */
+  onBack?: () => void;
 }
 
 export function ServicesStep({
@@ -151,9 +153,11 @@ export function ServicesStep({
           Select at least one service to continue.
         </div>
       ) : null}
-      <button onClick={onBack} style={styles.backButton}>
-        Back
-      </button>
+      {onBack ? (
+        <button onClick={onBack} style={styles.backButton}>
+          Back
+        </button>
+      ) : null}
     </div>
   );
 }
