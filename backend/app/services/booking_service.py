@@ -15,6 +15,7 @@ from app.integrations.square.bookings import BookingSegment, SquareBookingGatewa
 from app.integrations.square.business import SquareBusinessRepository
 from app.integrations.square.customer_attributes import SquareCustomerAttributesGateway
 from app.integrations.square.customers import SquareCustomerGateway
+from app.integrations.sms.notifier import notify_four_hand_request_sms
 from app.integrations.telegram.notifier import notify_four_hand_request
 from app.services.artist_service import ArtistNotFoundError, ArtistService
 from app.services.catalog_service import CatalogService
@@ -160,6 +161,11 @@ class BookingService:
             requested_services=submission.requested_services,
             preferred_start_at=submission.slot.start_at,
             note=note,
+        )
+        notify_four_hand_request_sms(
+            given_name=submission.customer.given_name,
+            phone_number=submission.customer.phone_number,
+            preferred_start_at=submission.slot.start_at,
         )
 
         return FourHandRequestConfirmation(
