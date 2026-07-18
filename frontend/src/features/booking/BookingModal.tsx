@@ -98,13 +98,9 @@ export function BookingModal({
 
   if (!state.isOpen || !cartMenu) return null;
 
-  // Four-hand bookings skip the DateTime step entirely (see useBookingModal's shiftKind), so the
-  // displayed "X of 3" count needs to drop by one for every step past wherever DateTime would
-  // have fallen in this flow's order — not just "step 4", since DateTime's position differs
-  // between the default and contact-last flows.
-  const datetimeIndex = flow.steps.indexOf("datetime");
-  const displayStep = state.fourHandSelected && state.step - 1 > datetimeIndex ? state.step - 1 : state.step;
-  const stepLabel = state.fourHandSelected ? `Step ${displayStep} of 3` : `Step ${state.step} of 4`;
+  // Four-hand now goes through the same steps as every other path (it picks a real preferred
+  // slot too — see useBookingModal's shiftKind) so the count is simply the flow's length.
+  const stepLabel = `Step ${state.step} of ${flow.steps.length}`;
 
   return (
     <div onClick={close} style={styles.overlay}>

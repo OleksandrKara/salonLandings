@@ -235,6 +235,7 @@ class BookingConfirmation(BaseModel):
 
 
 class FourHandRequestSubmission(BaseModel):
+    slot: BookingSlotSelection
     customer: CustomerContact
     requested_services: str | None = Field(default=None, max_length=200)
     note: str | None = Field(default=None, max_length=500)
@@ -246,6 +247,9 @@ class FourHandRequestSubmission(BaseModel):
 
 
 class FourHandRequestConfirmation(BaseModel):
+    # A synthetic id (not a real Square booking) — see BookingService.submit_four_hand_request.
+    # Kept under the same "booking_id" name (rather than renamed) so it still keys the
+    # submissions/attribution join the same way a real booking_id would.
     booking_id: str
     status: str
     service_name: str

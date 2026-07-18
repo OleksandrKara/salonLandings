@@ -132,8 +132,6 @@ async def submit_four_hand_request(
 
     try:
         confirmation = await run_in_threadpool(booking_service.submit_four_hand_request, submission)
-    except ServiceNotFoundError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
     except SquareIntegrationError as exc:
         logger.error("4-hand request failed: %s", exc.detail)
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -177,9 +175,9 @@ async def submit_four_hand_request(
         square_customer_id=confirmation.square_customer_id,
         square_booking_id=confirmation.booking_id,
         booking_status=confirmation.status,
-        # The 4-hand path has no self-serve date/time or finalized price yet — the salon calls
-        # to schedule those, so there's nothing real to store here until that happens.
-        booking_start_at=None,
+        # A real preferred date/time now exists (the customer picked it) even though there's no
+        # real Square appointment — final price isn't set until the salon calls to confirm.
+        booking_start_at=submission.slot.start_at,
         booking_service_name=confirmation.service_name,
         booking_price=None,
         booking_artist_name=None,

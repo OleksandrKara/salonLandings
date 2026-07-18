@@ -184,6 +184,7 @@ export interface BookingConfirmation {
 }
 
 export interface FourHandRequestSubmission {
+  slot: BookingSlotSelection;
   customer: CustomerContact;
   requested_services?: string | null;
   note?: string | null;

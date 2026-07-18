@@ -29,7 +29,7 @@ export function ConfirmStep({
   const isFourHand = state.fourHandSelected;
   const smartMatch = !isFourHand && !!slot && slot.savings > 0;
   const total = isFourHand ? null : slot?.price ?? 0;
-  const submitDisabled = !state.cancelAgree || state.submitting;
+  const submitDisabled = (!isFourHand && !state.cancelAgree) || state.submitting;
 
   return (
     <div>
@@ -42,6 +42,15 @@ export function ConfirmStep({
           <span style={{ fontSize: 13, lineHeight: 1.45, color: "var(--color-ink-soft)" }}>
             <strong style={{ color: "var(--color-accent)" }}>We'll call you to schedule.</strong> A 4-hand visit
             needs two techs, so we confirm the exact date, time &amp; pricing by phone — usually within a few hours.
+          </span>
+        </div>
+      ) : null}
+
+      {isFourHand && slot ? (
+        <div style={styles.appointmentRow}>
+          <span>Preferred time</span>
+          <span style={{ color: "var(--color-ink)", fontWeight: 500, textAlign: "right", maxWidth: "60%" }}>
+            {formatSlotDay(slot.start_at)} · {formatSlotTime(slot.start_at)}
           </span>
         </div>
       ) : null}
@@ -121,30 +130,32 @@ export function ConfirmStep({
         </span>
       </label>
 
-      <label
-        onClick={onToggleCancelAgree}
-        style={{
-          ...styles.cancelCard,
-          borderColor: state.cancelAgree ? "var(--color-accent)" : "var(--color-border-3)",
-        }}
-      >
-        <Checkbox checked={state.cancelAgree} border="var(--color-accent-border-soft)" topAlign />
-        <span style={{ fontSize: 12.5, lineHeight: 1.45, color: "var(--color-muted)" }}>
-          I agree to the{" "}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onOpenPolicy();
-            }}
-            style={{ color: "var(--color-accent)", textDecoration: "underline", fontWeight: 600 }}
-          >
-            Cancellation Policy
-          </a>{" "}
-          — reschedule or cancel at least 24 hours ahead, or a <strong style={{ color: "var(--color-accent)" }}>$25 fee</strong> may apply.
-        </span>
-      </label>
+      {!isFourHand ? (
+        <label
+          onClick={onToggleCancelAgree}
+          style={{
+            ...styles.cancelCard,
+            borderColor: state.cancelAgree ? "var(--color-accent)" : "var(--color-border-3)",
+          }}
+        >
+          <Checkbox checked={state.cancelAgree} border="var(--color-accent-border-soft)" topAlign />
+          <span style={{ fontSize: 12.5, lineHeight: 1.45, color: "var(--color-muted)" }}>
+            I agree to the{" "}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onOpenPolicy();
+              }}
+              style={{ color: "var(--color-accent)", textDecoration: "underline", fontWeight: 600 }}
+            >
+              Cancellation Policy
+            </a>{" "}
+            — reschedule or cancel at least 24 hours ahead, or a <strong style={{ color: "var(--color-accent)" }}>$25 fee</strong> may apply.
+          </span>
+        </label>
+      ) : null}
 
       {state.submitError ? <div style={styles.errorBox}>{state.submitError}</div> : null}
 

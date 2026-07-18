@@ -3,6 +3,7 @@ import logging
 from dataclasses import dataclass
 
 from app.domain.schemas import ArtistTier, AvailabilityResponse, CartMenu, SegmentOption, SlotOption
+from app.domain.service_catalog import FOUR_HAND_REQUEST
 from app.integrations.square.availability import SquareAvailabilityGateway
 from app.services.artist_service import ArtistService
 from app.services.catalog_service import CatalogService, ServiceNotFoundError
@@ -10,6 +11,7 @@ from app.services.catalog_service import CatalogService, ServiceNotFoundError
 logger = logging.getLogger(__name__)
 
 ANY_ARTIST = "any"
+FOUR_HAND_SLUG = FOUR_HAND_REQUEST.slug
 
 
 class InvalidCartError(Exception):
@@ -75,6 +77,9 @@ class AvailabilityService:
         self._artist_service = artist_service
 
     def get_availability(self, *, service_slugs: list[str], artist_selection: str, days: int) -> AvailabilityResponse:
+        if service_slugs == [FOUR_HAND_SLUG]:
+            return self._get_four_hand_availability(days)
+
         cart_menu = self._catalog_service.get_cart_menu()
         combo_options = self._build_combo_options(cart_menu, service_slugs)
         if not combo_options:
@@ -113,6 +118,54 @@ class AvailabilityService:
         self._flag_best_price(slots)
         slots.sort(key=lambda s: s.start_at)
         return AvailabilityResponse(services=service_slugs, artist_selection=artist_selection, slots=slots)
+
+    def _get_four_hand_availability(self, days: int) -> AvailabilityResponse:
+        """The 4-hand path books Square's own $0 placeholder item (see catalog_service.
+        get_four_hand_catalog_item) — no artist tiers, no SmartMatch pricing, just "is this real
+        time slot open on the one team member Square has assigned to it." Kept as its own method
+        rather than squeezed into _build_combo_options, since none of that method's tier/price
+        comparison machinery applies to a flat $0 lead-capture item.
+        """
+        item = self._catalog_service.get_four_hand_catalog_item()
+        start_at, end_at = self._search_window(days)
+        availabilities = self._availability_gateway.search(
+            service_variation_ids=[item["variation_id"]],
+            start_at=start_at,
+            end_at=end_at,
+            team_member_ids=[item["team_member_id"]],
+        )
+        slots = [self._build_four_hand_slot(item, a.start_at) for a in availabilities]
+        slots.sort(key=lambda s: s.start_at)
+        return AvailabilityResponse(services=[FOUR_HAND_SLUG], artist_selection=ANY_ARTIST, slots=slots)
+
+    @staticmethod
+    def _build_four_hand_slot(item: dict, start_at: str) -> SlotOption:
+        start = dt.datetime.fromisoformat(start_at.replace("Z", "+00:00"))
+        end = start + dt.timedelta(minutes=item["duration_minutes"])
+        return SlotOption(
+            start_at=start_at,
+            end_at=end.isoformat().replace("+00:00", "Z"),
+            duration_minutes=item["duration_minutes"],
+            team_member_id=item["team_member_id"],
+            artist_name=None,
+            tier=ArtistTier.REGULAR,  # unused for this path; required by the schema
+            price=0.0,
+            compare_at_price=None,
+            advertised_price=0.0,
+            savings=0.0,
+            is_best_price=True,
+            segments=[
+                SegmentOption(
+                    service_slug=FOUR_HAND_SLUG,
+                    name=FOUR_HAND_REQUEST.name,
+                    variation_id=item["variation_id"],
+                    variation_version=item["variation_version"],
+                    price=0.0,
+                    compare_at_price=None,
+                    duration_minutes=item["duration_minutes"],
+                )
+            ],
+        )
 
     def _build_combo_options(self, cart_menu: CartMenu, service_slugs: list[str]) -> list[_ComboOption]:
         tiered_offers = {cart_menu.manicure.slug: cart_menu.manicure, cart_menu.pedicure.slug: cart_menu.pedicure}
