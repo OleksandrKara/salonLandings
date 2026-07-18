@@ -117,6 +117,10 @@ export function BookingModal({
             givenName={state.givenName}
             bookingConfirmation={state.bookingConfirmation}
             fourHandConfirmation={state.fourHandConfirmation}
+            fourHandSlot={state.selectedSlot}
+            fourHandRequestedServices={
+              [state.maniSelected && "manicure", state.pedicureSelected && "pedicure"].filter(Boolean).join(" + ") || null
+            }
             onClose={close}
           />
         ) : currentKind === "contact" ? (

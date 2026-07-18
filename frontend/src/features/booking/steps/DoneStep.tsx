@@ -1,16 +1,25 @@
 import type { CSSProperties } from "react";
 import { buildGoogleCalendarLink, buildIcsDataUri } from "@/lib/calendar";
 import { formatPrice, formatSlotDay, formatSlotTime } from "@/lib/formatting";
-import type { BookingConfirmation, FourHandRequestConfirmation } from "@/types/api";
+import type { BookingConfirmation, FourHandRequestConfirmation, SlotOption } from "@/types/api";
 
 interface DoneStepProps {
   givenName: string;
   bookingConfirmation: BookingConfirmation | null;
   fourHandConfirmation: FourHandRequestConfirmation | null;
+  fourHandSlot: SlotOption | null;
+  fourHandRequestedServices: string | null;
   onClose: () => void;
 }
 
-export function DoneStep({ givenName, bookingConfirmation, fourHandConfirmation, onClose }: DoneStepProps) {
+export function DoneStep({
+  givenName,
+  bookingConfirmation,
+  fourHandConfirmation,
+  fourHandSlot,
+  fourHandRequestedServices,
+  onClose,
+}: DoneStepProps) {
   const name = givenName.trim() || "friend";
   const isFourHand = !!fourHandConfirmation;
   const title = isFourHand ? `Request received, ${name}!` : `You're on the list, ${name}!`;
@@ -63,6 +72,18 @@ export function DoneStep({ givenName, bookingConfirmation, fourHandConfirmation,
               <span style={styles.detailPrice}>{formatPrice(bookingConfirmation.price)}</span>
             </span>
           </div>
+        </div>
+      ) : isFourHand ? (
+        <div style={styles.detailsCard}>
+          <DetailRow label="Requested" value={fourHandRequestedServices || "4-hand service"} />
+          {fourHandSlot ? (
+            <div style={{ ...styles.detailRow, borderBottom: "none" }}>
+              <span style={styles.detailLabel}>Preferred time</span>
+              <span style={styles.detailValue}>
+                {formatSlotDay(fourHandSlot.start_at)} · {formatSlotTime(fourHandSlot.start_at)}
+              </span>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
