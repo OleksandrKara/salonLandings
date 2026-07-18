@@ -19,18 +19,13 @@ function stepOfKind(steps: readonly BookingFlowStep[], kind: BookingFlowStep): B
   return (steps.indexOf(kind) + 1) as BookingStep;
 }
 
-/** Moves one kind forward/back in `steps`, skipping over "datetime" when four-hand is selected
- * (the 4-hand path has no self-serve slot picker — see BookingService.submit_four_hand_request).
- * Clamped to the flow's bounds, so calling this from the first/last kind is a safe no-op. */
-function shiftKind(
-  steps: readonly BookingFlowStep[],
-  kind: BookingFlowStep,
-  delta: 1 | -1,
-  fourHandSelected: boolean,
-): BookingFlowStep {
-  let idx = steps.indexOf(kind) + delta;
-  if (fourHandSelected && steps[idx] === "datetime") idx += delta;
-  idx = Math.max(0, Math.min(steps.length - 1, idx));
+/** Moves one kind forward/back in `steps`. Four-hand now goes through the same datetime step as
+ * every other path (it picks a real preferred slot too — see
+ * BookingService.submit_four_hand_request — just without a real Square appointment behind it), so
+ * there's no more skip-over-datetime special case here. Clamped to the flow's bounds, so calling
+ * this from the first/last kind is a safe no-op. */
+function shiftKind(steps: readonly BookingFlowStep[], kind: BookingFlowStep, delta: 1 | -1): BookingFlowStep {
+  const idx = Math.max(0, Math.min(steps.length - 1, steps.indexOf(kind) + delta));
   return steps[idx];
 }
 
@@ -46,6 +41,7 @@ function formatPhone(value: string): string {
 }
 
 export function selectedServiceSlugs(state: BookingModalState): string[] {
+  if (state.fourHandSelected) return ["four-hand-request"];
   const slugs: string[] = [];
   if (state.maniSelected) slugs.push("manicure");
   if (state.pedicureSelected) slugs.push("pedicure");
@@ -128,7 +124,7 @@ export function useBookingModal(position: ContactStepPosition = "start") {
         email_address: s.email.trim() || null,
         tracking: getTrackingSnapshot(),
       });
-      const nextKind = shiftKind(steps, "contact", 1, s.fourHandSelected);
+      const nextKind = shiftKind(steps, "contact", 1);
       return { ...s, step: stepOfKind(steps, nextKind) };
     });
   }, [steps]);
@@ -137,7 +133,7 @@ export function useBookingModal(position: ContactStepPosition = "start") {
     setState((s) => {
       const anySelected = s.fourHandSelected || s.maniSelected || s.pedicureSelected;
       if (!anySelected) return s;
-      const nextKind = shiftKind(steps, "services", 1, s.fourHandSelected);
+      const nextKind = shiftKind(steps, "services", 1);
       return { ...s, step: stepOfKind(steps, nextKind) };
     });
   }, [steps]);
@@ -145,7 +141,7 @@ export function useBookingModal(position: ContactStepPosition = "start") {
   const selectSlot = useCallback(
     (slot: SlotOption) =>
       setState((s) => {
-        const nextKind = shiftKind(steps, "datetime", 1, s.fourHandSelected);
+        const nextKind = shiftKind(steps, "datetime", 1);
         return { ...s, selectedSlot: slot, step: stepOfKind(steps, nextKind) };
       }),
     [steps],
@@ -154,7 +150,7 @@ export function useBookingModal(position: ContactStepPosition = "start") {
   const back = useCallback(() => {
     setState((s) => {
       const currentKind = kindAtStep(steps, s.step);
-      const prevKind = shiftKind(steps, currentKind, -1, s.fourHandSelected);
+      const prevKind = shiftKind(steps, currentKind, -1);
       return { ...s, step: stepOfKind(steps, prevKind) };
     });
   }, [steps]);
@@ -170,11 +166,26 @@ export function useBookingModal(position: ContactStepPosition = "start") {
     logExperimentEvent("booking_started", tracking.landing_page_id ?? null, tracking.variant_id ?? null);
 
     try {
+      const slot = current.selectedSlot;
+      if (!slot) {
+        setState((s) => ({ ...s, submitting: false, submitError: "Please choose a time first." }));
+        return;
+      }
+
       if (current.fourHandSelected) {
         const requested = [current.maniSelected && "manicure", current.pedicureSelected && "pedicure"]
           .filter(Boolean)
           .join(" + ");
         const confirmation = await submitFourHandRequest({
+          slot: {
+            start_at: slot.start_at,
+            team_member_id: slot.team_member_id,
+            segments: slot.segments.map((seg) => ({
+              service_slug: seg.service_slug,
+              service_variation_id: seg.variation_id,
+              service_variation_version: seg.variation_version,
+            })),
+          },
           customer: {
             given_name: current.givenName.trim(),
             family_name: familyName,
@@ -191,12 +202,6 @@ export function useBookingModal(position: ContactStepPosition = "start") {
         enterThankYouUrl();
         recordMetaBookingConversion();
         setState((s) => ({ ...s, submitting: false, done: true, fourHandConfirmation: confirmation }));
-        return;
-      }
-
-      const slot = current.selectedSlot;
-      if (!slot) {
-        setState((s) => ({ ...s, submitting: false, submitError: "Please choose a time first." }));
         return;
       }
 

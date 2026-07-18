@@ -1,4 +1,3 @@
-import datetime as dt
 import logging
 import uuid
 
@@ -12,13 +11,13 @@ from app.domain.schemas import (
 )
 from app.domain.service_catalog import FOUR_HAND_REQUEST
 from app.hooks.post_booking import run_post_booking_hooks
-from app.integrations.square.availability import SquareAvailabilityGateway
 from app.integrations.square.bookings import BookingSegment, SquareBookingGateway
 from app.integrations.square.business import SquareBusinessRepository
 from app.integrations.square.customer_attributes import SquareCustomerAttributesGateway
 from app.integrations.square.customers import SquareCustomerGateway
+from app.integrations.telegram.notifier import notify_four_hand_request
 from app.services.artist_service import ArtistNotFoundError, ArtistService
-from app.services.catalog_service import CatalogService, ServiceNotFoundError
+from app.services.catalog_service import CatalogService
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,6 @@ class BookingService:
         catalog_service: CatalogService,
         artist_service: ArtistService,
         business_repo: SquareBusinessRepository,
-        availability_gateway: SquareAvailabilityGateway,
         customer_attributes_gateway: SquareCustomerAttributesGateway,
     ):
         self._customer_gateway = customer_gateway
@@ -43,7 +41,6 @@ class BookingService:
         self._catalog_service = catalog_service
         self._artist_service = artist_service
         self._business_repo = business_repo
-        self._availability_gateway = availability_gateway
         self._customer_attributes_gateway = customer_attributes_gateway
 
     def create_booking(self, request: BookingRequest) -> BookingConfirmation:
@@ -121,9 +118,17 @@ class BookingService:
         return confirmation
 
     def submit_four_hand_request(self, submission: FourHandRequestSubmission) -> FourHandRequestConfirmation:
-        """The 4-hand path has no self-serve date/time — we capture the lead as
-        a real Square booking on Square's own placeholder item so it shows up
-        on the salon's calendar for callback, using the next available slot.
+        """The 4-hand path collects the customer's real preferred date/time (the same
+        live-availability picker as a normal booking — see
+        AvailabilityService._get_four_hand_availability) but deliberately does NOT create a Square
+        appointment: a 4-hand visit needs two techs coordinated by staff, so the salon still calls
+        to confirm. We capture the Square contact and alert the team on Telegram instead, so
+        nothing has to be checked manually in Square to notice a new request came in.
+
+        Trade-off: since no Square booking is created, there's no server-side re-check that the
+        picked slot is still open by the time the request is submitted (previously, Square's own
+        create_booking call was that safety net) — acceptable given staff always calls back to
+        actually schedule this, per the confirmation message below.
         """
         customer_id = self._customer_gateway.find_or_create(
             given_name=submission.customer.given_name,
@@ -143,44 +148,27 @@ class BookingService:
             note_parts.append(submission.note)
         note = " — ".join(note_parts) or None
 
-        item = self._catalog_service.get_four_hand_catalog_item()
-        start_at = self._find_next_available_start_at(item["variation_id"], item["team_member_id"])
-        booking = self._booking_gateway.create_booking(
-            idempotency_key=str(uuid.uuid4()),
-            customer_id=customer_id,
-            start_at=start_at,
-            team_member_id=item["team_member_id"],
-            segments=[
-                BookingSegment(
-                    service_variation_id=item["variation_id"],
-                    service_variation_version=item["variation_version"],
-                    duration_minutes=item["duration_minutes"],
-                )
-            ],
-            customer_note=note,
+        # Not a real Square booking id — see FourHandRequestConfirmation.booking_id. Generated here
+        # (rather than left null) so this request still counts in landing-page-variant
+        # conversion/attribution reporting the same way a real booking would.
+        request_id = f"four-hand-req-{uuid.uuid4()}"
+
+        notify_four_hand_request(
+            source="mani",
+            customer_name=f"{submission.customer.given_name} {submission.customer.family_name}".strip(),
+            phone_number=submission.customer.phone_number,
+            requested_services=submission.requested_services,
+            preferred_start_at=submission.slot.start_at,
+            note=note,
         )
 
         return FourHandRequestConfirmation(
-            booking_id=booking.id,
-            status=booking.status,
+            booking_id=request_id,
+            status="requested",
             service_name=FOUR_HAND_REQUEST.name,
-            message="We've received your request and will call you shortly to schedule the date, time & final pricing.",
+            message="We've received your request and will call you shortly to confirm the exact date, time & final pricing.",
             square_customer_id=customer_id,
         )
-
-    def _find_next_available_start_at(self, variation_id: str, team_member_id: str) -> str:
-        now = dt.datetime.now(dt.timezone.utc)
-        start_at = now.isoformat().replace("+00:00", "Z")
-        end_at = (now + dt.timedelta(days=30)).isoformat().replace("+00:00", "Z")
-        availabilities = self._availability_gateway.search(
-            service_variation_ids=[variation_id],
-            start_at=start_at,
-            end_at=end_at,
-            team_member_ids=[team_member_id],
-        )
-        if not availabilities:
-            raise ServiceNotFoundError("No availability found to record the 4-hand request placeholder booking.")
-        return availabilities[0].start_at
 
     def _resolve_segment(self, cart_menu: CartMenu, service_slug: str, variation_id: str) -> dict:
         for offer in (cart_menu.manicure, cart_menu.pedicure):

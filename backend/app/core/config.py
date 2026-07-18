@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     marketing_db_user: str = "salon"
     marketing_db_password: str = ""
 
+    # salaryReview's internal API (Telegram 4-hand-request relay) — reached over the same private
+    # Docker network already joined for the marketing DB above. Blank = silently skip the alert.
+    internal_api_base_url: str | None = None  # e.g. "http://backend:8080"
+    internal_api_key: str | None = None
+
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
