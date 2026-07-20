@@ -15,6 +15,7 @@ def notify_four_hand_request(
     requested_services: str | None,
     preferred_start_at: str,
     note: str | None,
+    estimated_price: float | None = None,
 ) -> bool:
     """Best-effort Telegram alert for a new 4-hand lead, relayed through salaryReview (which owns
     the bot token — this app never holds it). Never raises: a relay outage or missing/invalid
@@ -32,6 +33,7 @@ def notify_four_hand_request(
         "requestedServices": requested_services,
         "preferredStartAt": preferred_start_at,
         "note": note,
+        "estimatedPrice": estimated_price,
     }
     try:
         with httpx.Client(timeout=5.0) as client:
