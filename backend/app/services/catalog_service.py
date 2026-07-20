@@ -39,6 +39,8 @@ class CatalogService:
                 name=FOUR_HAND_REQUEST.name,
                 description=FOUR_HAND_REQUEST.description,
                 price_description=self._four_hand_price_description(),
+                price=FOUR_HAND_REQUEST.display_price,
+                compare_at_price=FOUR_HAND_REQUEST.display_compare_at_price,
             ),
         )
 

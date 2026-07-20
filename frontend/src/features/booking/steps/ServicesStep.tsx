@@ -125,7 +125,19 @@ export function ServicesStep({
               Two nail techs work at once — get mani + pedi together, or finish twice as fast.
             </span>
           </span>
-          <span style={styles.byRequestBadge}>By request</span>
+          {cartMenu.four_hand_request.price != null ? (
+            <span style={{ flex: "none", textAlign: "right", lineHeight: 1.1 }}>
+              {cartMenu.four_hand_request.compare_at_price != null && (
+                <span style={styles.strikePrice}>{formatPrice(cartMenu.four_hand_request.compare_at_price)}</span>
+              )}
+              <span style={styles.itemPrice}>{formatPrice(cartMenu.four_hand_request.price)}</span>
+              {cartMenu.four_hand_request.compare_at_price != null && (
+                <span style={styles.discountLabel}>15% off</span>
+              )}
+            </span>
+          ) : (
+            <span style={styles.byRequestBadge}>By request</span>
+          )}
         </div>
         {state.fourHandSelected ? (
           <span style={{ display: "block", fontSize: 11.5, color: "var(--color-accent)", marginTop: 10, lineHeight: 1.4 }}>

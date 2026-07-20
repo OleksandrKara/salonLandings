@@ -161,6 +161,7 @@ class BookingService:
             requested_services=submission.requested_services,
             preferred_start_at=submission.slot.start_at,
             note=note,
+            estimated_price=FOUR_HAND_REQUEST.display_price,
         )
         notify_four_hand_request_sms(
             given_name=submission.customer.given_name,
