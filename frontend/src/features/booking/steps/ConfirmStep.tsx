@@ -2,10 +2,11 @@ import { useState, type CSSProperties } from "react";
 import { SMS_CONSENT_TEXT, terminologize } from "@/data/designCopy";
 import { BookingModalState } from "@/features/booking/types";
 import { formatPrice, formatSlotDay, formatSlotTime } from "@/lib/formatting";
-import type { LandingVariantContent } from "@/types/api";
+import type { CartMenu, LandingVariantContent } from "@/types/api";
 
 interface ConfirmStepProps {
   state: BookingModalState;
+  cartMenu: CartMenu;
   stepLabel: string;
   terminology?: LandingVariantContent["terminology"];
   onToggleSms: () => void;
@@ -17,6 +18,7 @@ interface ConfirmStepProps {
 
 export function ConfirmStep({
   state,
+  cartMenu,
   stepLabel,
   terminology,
   onToggleSms,
@@ -51,6 +53,22 @@ export function ConfirmStep({
           <span>Preferred time</span>
           <span style={{ color: "var(--color-ink)", fontWeight: 500, textAlign: "right", maxWidth: "60%" }}>
             {formatSlotDay(slot.start_at)} · {formatSlotTime(slot.start_at)}
+          </span>
+        </div>
+      ) : null}
+
+      {isFourHand && cartMenu.four_hand_request.price != null ? (
+        <div style={styles.appointmentRow}>
+          <span>Estimated price</span>
+          <span style={{ textAlign: "right" }}>
+            {cartMenu.four_hand_request.compare_at_price != null && (
+              <span style={{ textDecoration: "line-through", color: "var(--color-muted-3)", marginRight: 6 }}>
+                {formatPrice(cartMenu.four_hand_request.compare_at_price)}
+              </span>
+            )}
+            <span style={{ color: "var(--color-ink)", fontWeight: 600 }}>
+              {formatPrice(cartMenu.four_hand_request.price)}
+            </span>
           </span>
         </div>
       ) : null}

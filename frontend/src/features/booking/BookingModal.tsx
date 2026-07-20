@@ -121,6 +121,8 @@ export function BookingModal({
             fourHandRequestedServices={
               [state.maniSelected && "manicure", state.pedicureSelected && "pedicure"].filter(Boolean).join(" + ") || null
             }
+            fourHandPrice={cartMenu.four_hand_request.price}
+            fourHandCompareAtPrice={cartMenu.four_hand_request.compare_at_price}
             onClose={close}
           />
         ) : currentKind === "contact" ? (
@@ -164,6 +166,7 @@ export function BookingModal({
             <TurnstileWidget onToken={setTurnstileToken} />
             <ConfirmStep
               state={state}
+              cartMenu={cartMenu}
               stepLabel={stepLabel}
               terminology={terminology}
               onToggleSms={toggleSms}

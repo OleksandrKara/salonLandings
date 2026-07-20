@@ -9,6 +9,8 @@ interface DoneStepProps {
   fourHandConfirmation: FourHandRequestConfirmation | null;
   fourHandSlot: SlotOption | null;
   fourHandRequestedServices: string | null;
+  fourHandPrice: number | null;
+  fourHandCompareAtPrice: number | null;
   onClose: () => void;
 }
 
@@ -18,6 +20,8 @@ export function DoneStep({
   fourHandConfirmation,
   fourHandSlot,
   fourHandRequestedServices,
+  fourHandPrice,
+  fourHandCompareAtPrice,
   onClose,
 }: DoneStepProps) {
   const name = givenName.trim() || "friend";
@@ -77,10 +81,21 @@ export function DoneStep({
         <div style={styles.detailsCard}>
           <DetailRow label="Requested" value={fourHandRequestedServices || "4-hand service"} />
           {fourHandSlot ? (
-            <div style={{ ...styles.detailRow, borderBottom: "none" }}>
+            <div style={{ ...styles.detailRow, borderBottom: fourHandPrice != null ? undefined : "none" }}>
               <span style={styles.detailLabel}>Preferred time</span>
               <span style={styles.detailValue}>
                 {formatSlotDay(fourHandSlot.start_at)} · {formatSlotTime(fourHandSlot.start_at)}
+              </span>
+            </div>
+          ) : null}
+          {fourHandPrice != null ? (
+            <div style={{ ...styles.detailRow, borderBottom: "none" }}>
+              <span style={styles.detailLabel}>Estimated price</span>
+              <span style={{ textAlign: "right" }}>
+                {fourHandCompareAtPrice != null ? (
+                  <span style={styles.strikePrice}>{formatPrice(fourHandCompareAtPrice)}</span>
+                ) : null}
+                <span style={styles.detailPrice}>{formatPrice(fourHandPrice)}</span>
               </span>
             </div>
           ) : null}
