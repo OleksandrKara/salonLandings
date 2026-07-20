@@ -38,6 +38,8 @@ export interface FourHandRequestInfo {
   name: string;
   description: string;
   price_description: string | null;
+  price: number | null;
+  compare_at_price: number | null;
 }
 
 export interface CartMenu {

@@ -63,6 +63,8 @@ class FourHandRequestInfo(BaseModel):
     name: str
     description: str
     price_description: str | None = None
+    price: float | None = None
+    compare_at_price: float | None = None
 
 
 class CartMenu(BaseModel):

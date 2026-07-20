@@ -55,6 +55,13 @@ class FourHandRequestDefinition:
     description: str
     item_id: str
     variation_id: str
+    # Curated marketing figures, deliberately NOT read from Square — the real catalog price for
+    # this item is genuinely $0 (call-for-pricing; final price is worked out on the follow-up
+    # call). Shown instead of the $0/price_description on the landing page. display_compare_at_price
+    # is optional so a future site using this same definition can drop the "before" price and just
+    # show display_price flat, with no discount framing.
+    display_price: float
+    display_compare_at_price: float | None = None
 
 
 SERVICE_OFFER_DEFINITIONS: list[ServiceOfferDefinition] = [
@@ -98,6 +105,8 @@ FOUR_HAND_REQUEST = FourHandRequestDefinition(
     ),
     item_id="HOQVAY5LVBH65RJHISMHLQVF",  # "Request for 4-Hands Manicure & Pedicure Gel Overlay"
     variation_id="NUEKRALUQ5TSZZGP346BCL4Y",
+    display_price=254.00,  # $299 - 15%, matching the same figure shown on akluxnails-home
+    display_compare_at_price=299.00,
 )
 
 
