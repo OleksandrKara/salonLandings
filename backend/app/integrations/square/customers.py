@@ -2,9 +2,9 @@ import logging
 import re
 
 from square import Square
-from square.core.api_error import ApiError
 from square.customers.client import OMIT
 
+from app.integrations.square.errors import SQUARE_CALL_ERRORS, square_error_detail
 from app.integrations.square.exceptions import SquareIntegrationError
 
 logger = logging.getLogger(__name__)
@@ -37,8 +37,9 @@ class SquareCustomerGateway:
         """
         try:
             return self._search_by_phone_then_email(phone_number=phone_number, email_address=email_address)
-        except ApiError as exc:
-            logger.warning("Square customer lookup failed, treating as not found: %s", exc.body)
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
+            logger.warning("Square customer lookup failed, treating as not found: %s", detail if detail is not None else exc)
             return None
 
     def _search_by_phone_then_email(self, *, phone_number: str | None, email_address: str | None) -> str | None:
@@ -78,9 +79,10 @@ class SquareCustomerGateway:
     ) -> str:
         try:
             existing_id = self._search_by_phone_then_email(phone_number=phone_number, email_address=email_address)
-        except ApiError as exc:
-            logger.error("Square customer search failed: %s", exc.body)
-            raise SquareIntegrationError("Unable to look up customer record in Square", detail=exc.body) from exc
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
+            logger.error("Square customer search failed: %s", detail if detail is not None else exc)
+            raise SquareIntegrationError("Unable to look up customer record in Square", detail=detail) from exc
         if existing_id:
             return existing_id
 
@@ -92,8 +94,9 @@ class SquareCustomerGateway:
                 phone_number=phone_number,
                 reference_id="mani-akluxnails-landing",
             )
-        except ApiError as exc:
-            logger.error("Square customer create failed: %s", exc.body)
-            raise SquareIntegrationError("Unable to create customer record in Square", detail=exc.body) from exc
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
+            logger.error("Square customer create failed: %s", detail if detail is not None else exc)
+            raise SquareIntegrationError("Unable to create customer record in Square", detail=detail) from exc
 
         return response.customer.id

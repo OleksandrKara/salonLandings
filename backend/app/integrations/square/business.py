@@ -1,11 +1,11 @@
 import logging
 
 from square import Square
-from square.core.api_error import ApiError
 from square.types.business_booking_profile import BusinessBookingProfile
 from square.types.location import Location
 
 from app.core.cache import TTLCache
+from app.integrations.square.errors import SQUARE_CALL_ERRORS, square_error_detail
 from app.integrations.square.exceptions import SquareIntegrationError
 
 logger = logging.getLogger(__name__)
@@ -27,17 +27,19 @@ class SquareBusinessRepository:
     def _fetch_location(self) -> Location:
         try:
             response = self._client.locations.get(self._location_id)
-        except ApiError as exc:
-            logger.error("Square location lookup failed: %s", exc.body)
-            raise SquareIntegrationError("Unable to load salon location details from Square", detail=exc.body) from exc
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
+            logger.error("Square location lookup failed: %s", detail if detail is not None else exc)
+            raise SquareIntegrationError("Unable to load salon location details from Square", detail=detail) from exc
         return response.location
 
     def _fetch_booking_profile(self) -> BusinessBookingProfile:
         try:
             response = self._client.bookings.get_business_profile()
-        except ApiError as exc:
-            logger.error("Square business booking profile lookup failed: %s", exc.body)
-            raise SquareIntegrationError("Unable to load booking policy from Square", detail=exc.body) from exc
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
+            logger.error("Square business booking profile lookup failed: %s", detail if detail is not None else exc)
+            raise SquareIntegrationError("Unable to load booking policy from Square", detail=detail) from exc
         return response.business_booking_profile
 
     def get_location(self) -> Location:

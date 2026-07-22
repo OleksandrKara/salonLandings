@@ -1,9 +1,9 @@
 import logging
 
 from square import Square
-from square.core.api_error import ApiError
 
 from app.domain.schemas import TrackingSnapshot
+from app.integrations.square.errors import SQUARE_CALL_ERRORS, square_error_detail, square_error_status_code
 from app.services.traffic_source import classify_traffic_source
 
 logger = logging.getLogger(__name__)
@@ -66,8 +66,9 @@ class SquareCustomerAttributesGateway:
         """Idempotent one-time setup — safe to call on every process start."""
         try:
             existing_keys = {d.key for d in self._client.customers.custom_attribute_definitions.list()}
-        except ApiError as exc:
-            logger.error("Failed to list Square customer custom attribute definitions: %s", exc.body)
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
+            logger.error("Failed to list Square customer custom attribute definitions: %s", detail if detail is not None else exc)
             return
 
         for definition in _DEFINITIONS:
@@ -84,9 +85,11 @@ class SquareCustomerAttributesGateway:
                     }
                 )
                 logger.info("Created Square customer custom attribute definition '%s'", definition["key"])
-            except ApiError as exc:
+            except SQUARE_CALL_ERRORS as exc:
+                detail = square_error_detail(exc)
                 logger.error(
-                    "Failed to create Square customer custom attribute definition '%s': %s", definition["key"], exc.body
+                    "Failed to create Square customer custom attribute definition '%s': %s",
+                    definition["key"], detail if detail is not None else exc,
                 )
 
     def attach_tracking(self, customer_id: str, tracking: TrackingSnapshot | None) -> None:
@@ -102,9 +105,11 @@ class SquareCustomerAttributesGateway:
                 continue
             try:
                 self._client.customers.custom_attributes.upsert(customer_id, key, custom_attribute={"value": value})
-            except ApiError as exc:
+            except SQUARE_CALL_ERRORS as exc:
+                detail = square_error_detail(exc)
                 logger.error(
-                    "Failed to set Square customer custom attribute '%s' for customer %s: %s", key, customer_id, exc.body
+                    "Failed to set Square customer custom attribute '%s' for customer %s: %s",
+                    key, customer_id, detail if detail is not None else exc,
                 )
 
         self._attach_original_source_once(customer_id, tracking)
@@ -123,11 +128,12 @@ class SquareCustomerAttributesGateway:
             self._client.customers.custom_attributes.upsert(
                 customer_id, "original_organic_source", custom_attribute={"value": value}
             )
-        except ApiError as exc:
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
             logger.error(
                 "Failed to set Square customer custom attribute 'original_organic_source' for customer %s: %s",
                 customer_id,
-                exc.body,
+                detail if detail is not None else exc,
             )
 
     def attach_sms_consent(self, customer_id: str, consented: bool) -> None:
@@ -142,11 +148,12 @@ class SquareCustomerAttributesGateway:
             self._client.customers.custom_attributes.upsert(
                 customer_id, "sms_marketing_consent", custom_attribute={"value": value}
             )
-        except ApiError as exc:
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
             logger.error(
                 "Failed to set Square customer custom attribute 'sms_marketing_consent' for customer %s: %s",
                 customer_id,
-                exc.body,
+                detail if detail is not None else exc,
             )
 
     def attach_email_consent(self, customer_id: str) -> None:
@@ -159,23 +166,26 @@ class SquareCustomerAttributesGateway:
             self._client.customers.custom_attributes.upsert(
                 customer_id, "email_marketing_consent", custom_attribute={"value": "Opted In"}
             )
-        except ApiError as exc:
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
             logger.error(
                 "Failed to set Square customer custom attribute 'email_marketing_consent' for customer %s: %s",
                 customer_id,
-                exc.body,
+                detail if detail is not None else exc,
             )
 
     def _get_existing_original_source(self, customer_id: str) -> str | None:
         try:
             response = self._client.customers.custom_attributes.get(customer_id, "original_organic_source")
             return response.custom_attribute.value if response.custom_attribute else None
-        except ApiError as exc:
-            if exc.status_code == 404:
+        except SQUARE_CALL_ERRORS as exc:
+            if square_error_status_code(exc) == 404:
                 return None
-            # Ambiguous failure (rate limit, 5xx, etc.) — fail safe by treating
-            # it as "already set" so we never risk overwriting real first-touch data.
+            # Ambiguous failure (rate limit, 5xx, transport failure, etc.) — fail safe by
+            # treating it as "already set" so we never risk overwriting real first-touch data.
+            detail = square_error_detail(exc)
             logger.error(
-                "Failed to check existing 'original_organic_source' for customer %s: %s", customer_id, exc.body
+                "Failed to check existing 'original_organic_source' for customer %s: %s",
+                customer_id, detail if detail is not None else exc,
             )
             return "unknown"
