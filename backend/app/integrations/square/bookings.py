@@ -1,9 +1,9 @@
 import logging
 
 from square import Square
-from square.core.api_error import ApiError
 from square.types.booking import Booking
 
+from app.integrations.square.errors import SQUARE_CALL_ERRORS, square_error_detail
 from app.integrations.square.exceptions import SlotNoLongerAvailableError, SquareIntegrationError
 
 logger = logging.getLogger(__name__)
@@ -54,11 +54,12 @@ class SquareBookingGateway:
                     ],
                 },
             )
-        except ApiError as exc:
-            error_codes = {e.get("code") for e in (exc.body or {}).get("errors", [])} if isinstance(exc.body, dict) else set()
-            logger.error("Square booking create failed: %s", exc.body)
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
+            error_codes = {e.get("code") for e in (detail or {}).get("errors", [])} if isinstance(detail, dict) else set()
+            logger.error("Square booking create failed: %s", detail if detail is not None else exc)
             if error_codes & _CONFLICT_ERROR_CODES:
-                raise SlotNoLongerAvailableError(detail=exc.body) from exc
-            raise SquareIntegrationError("Unable to create appointment in Square", detail=exc.body) from exc
+                raise SlotNoLongerAvailableError(detail=detail) from exc
+            raise SquareIntegrationError("Unable to create appointment in Square", detail=detail) from exc
 
         return response.booking

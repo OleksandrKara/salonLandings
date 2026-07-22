@@ -1,9 +1,9 @@
 import logging
 
 from square import Square
-from square.core.api_error import ApiError
 from square.types.availability import Availability
 
+from app.integrations.square.errors import SQUARE_CALL_ERRORS, square_error_detail
 from app.integrations.square.exceptions import SquareIntegrationError
 
 logger = logging.getLogger(__name__)
@@ -53,10 +53,12 @@ class SquareAvailabilityGateway:
                     }
                 }
             )
-        except ApiError as exc:
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
             logger.error(
-                "Square availability search failed for variations %s: %s", service_variation_ids, exc.body
+                "Square availability search failed for variations %s: %s",
+                service_variation_ids, detail if detail is not None else exc,
             )
-            raise SquareIntegrationError("Unable to load available appointment times from Square", detail=exc.body) from exc
+            raise SquareIntegrationError("Unable to load available appointment times from Square", detail=detail) from exc
 
         return response.availabilities or []

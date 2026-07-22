@@ -1,10 +1,10 @@
 import logging
 
 from square import Square
-from square.core.api_error import ApiError
 from square.types.team_member import TeamMember
 
 from app.core.cache import TTLCache
+from app.integrations.square.errors import SQUARE_CALL_ERRORS, square_error_detail
 from app.integrations.square.exceptions import SquareIntegrationError
 
 logger = logging.getLogger(__name__)
@@ -24,9 +24,10 @@ class SquareTeamRepository:
             response = self._client.team_members.search(
                 query={"filter": {"location_ids": [self._location_id], "status": "ACTIVE"}}
             )
-        except ApiError as exc:
-            logger.error("Square team member search failed: %s", exc.body)
-            raise SquareIntegrationError("Unable to load artists from Square", detail=exc.body) from exc
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
+            logger.error("Square team member search failed: %s", detail if detail is not None else exc)
+            raise SquareIntegrationError("Unable to load artists from Square", detail=detail) from exc
 
         return {member.id: member for member in (response.team_members or [])}
 

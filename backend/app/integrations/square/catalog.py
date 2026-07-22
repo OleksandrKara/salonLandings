@@ -1,10 +1,10 @@
 import logging
 
 from square import Square
-from square.core.api_error import ApiError
 from square.types.catalog_object import CatalogObject
 
 from app.core.cache import TTLCache
+from app.integrations.square.errors import SQUARE_CALL_ERRORS, square_error_detail
 from app.integrations.square.exceptions import SquareIntegrationError
 
 logger = logging.getLogger(__name__)
@@ -22,9 +22,10 @@ class SquareCatalogRepository:
         try:
             pager = self._client.catalog.list(types="ITEM")
             return {obj.id: obj for obj in pager}
-        except ApiError as exc:
-            logger.error("Square catalog list failed: %s", exc.body)
-            raise SquareIntegrationError("Unable to load service catalog from Square", detail=exc.body) from exc
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
+            logger.error("Square catalog list failed: %s", detail if detail is not None else exc)
+            raise SquareIntegrationError("Unable to load service catalog from Square", detail=detail) from exc
 
     def get_item(self, item_id: str) -> CatalogObject:
         items = self._cache.get_or_fetch(self._fetch_items)
