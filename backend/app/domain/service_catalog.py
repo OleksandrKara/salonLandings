@@ -105,8 +105,7 @@ FOUR_HAND_REQUEST = FourHandRequestDefinition(
     ),
     item_id="HOQVAY5LVBH65RJHISMHLQVF",  # "Request for 4-Hands Manicure & Pedicure Gel Overlay"
     variation_id="NUEKRALUQ5TSZZGP346BCL4Y",
-    display_price=254.00,  # $299 - 15%, matching the same figure shown on akluxnails-home
-    display_compare_at_price=299.00,
+    display_price=249.00,  # flat, no discount — matching the same figure shown on akluxnails-home
 )
 
 
