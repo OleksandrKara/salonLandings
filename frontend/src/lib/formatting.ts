@@ -61,6 +61,22 @@ export function formatSlotTime(isoStart: string): string {
   return timeFormatter.format(new Date(isoStart));
 }
 
+/** "Today, 2:30 PM" / "Tomorrow, 10:00 AM" / "Thu, Jul 25, 2:30 PM" — for the ContactStep's
+ * next-available-slot teaser, compared against the salon's own Pacific "today" (not the
+ * visitor's device date, which can disagree near midnight). */
+export function formatNextAvailableLabel(isoStart: string): string {
+  const slotKey = toPacificDateKey(isoStart);
+  const now = new Date();
+  const todayKey = dateKeyFormatter.format(now);
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowKey = dateKeyFormatter.format(tomorrow);
+  const time = formatSlotTime(isoStart);
+  if (slotKey === todayKey) return `Today, ${time}`;
+  if (slotKey === tomorrowKey) return `Tomorrow, ${time}`;
+  return `${formatSlotDay(isoStart)}, ${time}`;
+}
+
 export function groupSlotsByDay<T extends { start_at: string }>(slots: T[]): Map<string, T[]> {
   const groups = new Map<string, T[]>();
   for (const slot of slots) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { fetchAvailability } from "@/api/availability";
 import { CancellationPolicyModal } from "@/features/booking/CancellationPolicyModal";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 import { isContactReady, kindAtStep, selectedServiceSlugs } from "@/features/booking/useBookingModal";
@@ -9,6 +10,7 @@ import { DoneStep } from "@/features/booking/steps/DoneStep";
 import { ServicesStep } from "@/features/booking/steps/ServicesStep";
 import { TurnstileWidget } from "@/features/booking/TurnstileWidget";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
+import { formatNextAvailableLabel } from "@/lib/formatting";
 import { BOOKING_FLOWS, type BookingFlowStep, type ContactStepPosition } from "@/lib/funnelFlow";
 import { recordBookingFunnelStep } from "@/lib/tracking";
 import type { LandingVariantContent } from "@/types/api";
@@ -43,6 +45,7 @@ export function BookingModal({
   } = useBookingModalContext();
   const { cartMenu } = useCartMenu();
   const [policyOpen, setPolicyOpen] = useState(false);
+  const [nextAvailableLabel, setNextAvailableLabel] = useState<string | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const trackedStepsRef = useRef<{ formOpenedAt: string; steps: Set<BookingFlowStep> }>({
     formOpenedAt: "",
@@ -67,6 +70,28 @@ export function BookingModal({
       recordBookingFunnelStep(currentKind, flow.flowKey, state.step - 1, flow.steps.length);
     }
   }, [state.isOpen, currentKind, state.formOpenedAt, flow, state.step]);
+
+  // Next-available-slot teaser on the contact step (see ContactStep's nextAvailableLabel) — only
+  // fetched for the contact-first variant, since by the time contact-last reaches this step the
+  // visitor has already seen real slots on DateTimeStep and this teaser adds nothing there. Fails
+  // open: no slots, or the request itself failing, just leaves the teaser hidden — it must never
+  // block or slow down the form.
+  useEffect(() => {
+    if (!state.isOpen || position !== "start") return;
+    setNextAvailableLabel(null);
+    let cancelled = false;
+    fetchAvailability({ services: ["manicure"], artist: "any", days: 7 })
+      .then((res) => {
+        if (cancelled || !res.slots.length) return;
+        setNextAvailableLabel(formatNextAvailableLabel(res.slots[0].start_at));
+      })
+      .catch(() => {
+        // teaser only — nothing to recover, nothing to surface to the visitor
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [state.isOpen, position]);
 
   // If the visitor hits the browser back button off the /thank-you URL, dismiss
   // the confirmation sheet too so the UI matches the address bar.
@@ -140,6 +165,11 @@ export function BookingModal({
             onContinue={advanceFromContact}
             canContinue={isContactReady(state)}
             onBack={state.step > 1 ? back : undefined}
+            nextAvailableLabel={nextAvailableLabel}
+            maniSelected={state.maniSelected}
+            pedicureSelected={state.pedicureSelected}
+            onToggleMani={toggleMani}
+            onTogglePedicure={togglePedicure}
           />
         ) : currentKind === "services" ? (
           <ServicesStep
