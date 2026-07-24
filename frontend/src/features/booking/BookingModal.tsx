@@ -166,10 +166,6 @@ export function BookingModal({
             canContinue={isContactReady(state)}
             onBack={state.step > 1 ? back : undefined}
             nextAvailableLabel={nextAvailableLabel}
-            maniSelected={state.maniSelected}
-            pedicureSelected={state.pedicureSelected}
-            onToggleMani={toggleMani}
-            onTogglePedicure={togglePedicure}
           />
         ) : currentKind === "services" ? (
           <ServicesStep
