@@ -1,5 +1,6 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { fetchAvailability } from "@/api/availability";
+import { StepProgress } from "@/features/booking/StepProgress";
 import { formatPrice, formatSlotTime, groupSlotsByDateKey, toPacificDateKey } from "@/lib/formatting";
 import { useAsync } from "@/lib/useAsync";
 import { Spinner } from "@/features/landing/Spinner";
@@ -14,12 +15,13 @@ const SEARCH_DAYS = 32; // Square's search_availability caps the query range at 
 
 interface DateTimeStepProps {
   serviceSlugs: string[];
-  stepLabel: string;
+  currentStep: number;
+  totalSteps: number;
   onSelectSlot: (slot: SlotOption) => void;
   onBack: () => void;
 }
 
-export function DateTimeStep({ serviceSlugs, stepLabel, onSelectSlot, onBack }: DateTimeStepProps) {
+export function DateTimeStep({ serviceSlugs, currentStep, totalSteps, onSelectSlot, onBack }: DateTimeStepProps) {
   const { status, data, error, retry } = useAsync(
     () => fetchAvailability({ services: serviceSlugs, artist: ANY_ARTIST, days: SEARCH_DAYS }),
     [serviceSlugs.join(",")],
@@ -76,22 +78,24 @@ export function DateTimeStep({ serviceSlugs, stepLabel, onSelectSlot, onBack }: 
     setSelectedDateKey(next);
   }
 
-  if (status === "loading") return <LoadingState stepLabel={stepLabel} />;
-  if (status === "error") return <ErrorState stepLabel={stepLabel} message={error} onRetry={retry} onBack={onBack} />;
+  if (status === "loading") return <LoadingState currentStep={currentStep} totalSteps={totalSteps} />;
+  if (status === "error") {
+    return <ErrorState currentStep={currentStep} totalSteps={totalSteps} message={error} onRetry={retry} onBack={onBack} />;
+  }
 
   const daySlots = selectedDateKey ? slotsByDate.get(selectedDateKey) ?? [] : [];
   const startPad = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
-  const cells: { key: string; day: number; dateKey: string; available: boolean }[] = [];
+  const cells: { key: string; day: number; dateKey: string; available: boolean; isToday: boolean }[] = [];
   for (let d = 1; d <= daysInMonth; d++) {
     const dateKey = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    cells.push({ key: dateKey, day: d, dateKey, available: slotsByDate.has(dateKey) });
+    cells.push({ key: dateKey, day: d, dateKey, available: slotsByDate.has(dateKey), isToday: dateKey === todayKey });
   }
 
   return (
     <div>
-      <div style={styles.stepLabel}>{stepLabel}</div>
+      <StepProgress current={currentStep} total={totalSteps} />
       <h3 style={styles.title}>Pick a date &amp; time</h3>
       <p style={styles.timezoneNote}>All times shown in Pacific Time (San Diego, CA)</p>
 
@@ -126,9 +130,10 @@ export function DateTimeStep({ serviceSlugs, stepLabel, onSelectSlot, onBack }: 
                 ...styles.dayCell,
                 background: isSelected ? "var(--color-accent)" : cell.available ? "#fff" : "transparent",
                 color: isSelected ? "#fff" : cell.available ? "var(--color-ink)" : "#d3c6bc",
-                border: `1px solid ${isSelected ? "var(--color-accent)" : cell.available ? "var(--color-border-2)" : "transparent"}`,
+                border: `1px solid ${isSelected ? "var(--color-accent)" : cell.isToday ? "var(--color-accent)" : cell.available ? "var(--color-border-2)" : "transparent"}`,
+                boxShadow: cell.isToday && !isSelected ? "inset 0 0 0 1px var(--color-accent)" : undefined,
                 cursor: cell.available ? "pointer" : "default",
-                fontWeight: isSelected ? 700 : cell.available ? 500 : 400,
+                fontWeight: isSelected || cell.isToday ? 700 : cell.available ? 500 : 400,
               }}
             >
               {cell.day}
@@ -174,10 +179,10 @@ export function DateTimeStep({ serviceSlugs, stepLabel, onSelectSlot, onBack }: 
   );
 }
 
-function LoadingState({ stepLabel }: { stepLabel: string }) {
+function LoadingState({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
   return (
     <div>
-      <div style={styles.stepLabel}>{stepLabel}</div>
+      <StepProgress current={currentStep} total={totalSteps} />
       <h3 style={styles.title}>Pick a date &amp; time</h3>
       <Spinner label="Finding available times…" />
     </div>
@@ -185,19 +190,21 @@ function LoadingState({ stepLabel }: { stepLabel: string }) {
 }
 
 function ErrorState({
-  stepLabel,
+  currentStep,
+  totalSteps,
   message,
   onRetry,
   onBack,
 }: {
-  stepLabel: string;
+  currentStep: number;
+  totalSteps: number;
   message: string;
   onRetry: () => void;
   onBack: () => void;
 }) {
   return (
     <div>
-      <div style={styles.stepLabel}>{stepLabel}</div>
+      <StepProgress current={currentStep} total={totalSteps} />
       <h3 style={styles.title}>Pick a date &amp; time</h3>
       <div style={styles.noSlotsBox}>{message}</div>
       <button onClick={onRetry} style={styles.findNextButton}>
@@ -211,7 +218,6 @@ function ErrorState({
 }
 
 const styles: Record<string, CSSProperties> = {
-  stepLabel: { fontSize: 11, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--color-accent)", fontWeight: 600, marginTop: 6 },
   title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 26, margin: "6px 0 4px" },
   timezoneNote: { fontSize: 12, color: "var(--color-muted-2)", margin: "0 0 14px" },
   monthNav: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },

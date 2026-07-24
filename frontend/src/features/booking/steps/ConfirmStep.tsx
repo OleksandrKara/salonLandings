@@ -1,13 +1,15 @@
 import { useState, type CSSProperties } from "react";
-import { SMS_CONSENT_TEXT, terminologize } from "@/data/designCopy";
+import { GUARANTEE_POINT, SMS_CONSENT_TEXT, terminologize } from "@/data/designCopy";
 import { BookingModalState } from "@/features/booking/types";
+import { StepProgress } from "@/features/booking/StepProgress";
 import { formatPrice, formatSlotDay, formatSlotTime } from "@/lib/formatting";
 import type { CartMenu, LandingVariantContent } from "@/types/api";
 
 interface ConfirmStepProps {
   state: BookingModalState;
   cartMenu: CartMenu;
-  stepLabel: string;
+  currentStep: number;
+  totalSteps: number;
   terminology?: LandingVariantContent["terminology"];
   onToggleSms: () => void;
   onToggleCancelAgree: () => void;
@@ -19,7 +21,8 @@ interface ConfirmStepProps {
 export function ConfirmStep({
   state,
   cartMenu,
-  stepLabel,
+  currentStep,
+  totalSteps,
   terminology,
   onToggleSms,
   onToggleCancelAgree,
@@ -35,7 +38,7 @@ export function ConfirmStep({
 
   return (
     <div>
-      <div style={styles.stepLabel}>{stepLabel}</div>
+      <StepProgress current={currentStep} total={totalSteps} />
       <h3 style={styles.title}>{isFourHand ? "Confirm your request" : "Confirm & hold your spot"}</h3>
 
       {isFourHand ? (
@@ -177,6 +180,10 @@ export function ConfirmStep({
 
       {state.submitError ? <div style={styles.errorBox}>{state.submitError}</div> : null}
 
+      <div style={styles.guarantee}>
+        <span aria-hidden="true">🛡️</span> {GUARANTEE_POINT.title} — {GUARANTEE_POINT.desc}
+      </div>
+
       <button
         onClick={onSubmit}
         disabled={submitDisabled}
@@ -247,7 +254,6 @@ function Checkbox({ checked, border, topAlign = false }: { checked: boolean; bor
 }
 
 const styles: Record<string, CSSProperties> = {
-  stepLabel: { fontSize: 11, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--color-accent)", fontWeight: 600, marginTop: 6 },
   title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 26, margin: "6px 0 14px" },
   callNotice: { display: "flex", alignItems: "flex-start", gap: 11, padding: "14px 15px", border: "1.5px solid var(--color-accent-border-soft)", borderRadius: 12, background: "var(--color-accent-tint-2)", marginBottom: 16 },
   smartMatchPill: { padding: "9px 12px", border: "1px solid var(--color-warm-gold-border)", borderRadius: 10, background: "var(--color-warm-gold-bg)", marginBottom: 16 },
@@ -265,6 +271,7 @@ const styles: Record<string, CSSProperties> = {
   smsCard: { display: "block", padding: "15px 16px", border: "2px solid", borderRadius: 14, cursor: "pointer", marginBottom: 16 },
   cancelCard: { display: "flex", alignItems: "flex-start", gap: 11, padding: "13px 14px", border: "1px solid", borderRadius: 12, cursor: "pointer", background: "var(--color-accent-tint-2)" },
   errorBox: { marginTop: 12, padding: 12, borderRadius: 10, background: "#fbeceb", color: "var(--color-danger)", fontSize: 13 },
+  guarantee: { fontSize: 11.5, color: "var(--color-muted-2)", textAlign: "center", marginTop: 14 },
   submitButton: { width: "100%", marginTop: 16, border: "none", color: "#fff7f3", fontSize: 16, fontWeight: 600, padding: 16, borderRadius: 12, cursor: "pointer" },
   backButton: { width: "100%", marginTop: 9, border: "none", background: "none", color: "var(--color-muted-2)", fontSize: 14, padding: 8, cursor: "pointer" },
   footnote: { fontSize: 10.5, color: "var(--color-muted-3)", textAlign: "center", marginTop: 10 },
