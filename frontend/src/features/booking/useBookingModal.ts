@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createBooking, submitFourHandRequest } from "@/api/bookings";
 import { captureContact } from "@/api/contacts";
 import { ApiError } from "@/api/client";
@@ -154,6 +154,27 @@ export function useBookingModal(position: ContactStepPosition = "start") {
       return { ...s, step: stepOfKind(steps, prevKind) };
     });
   }, [steps]);
+
+  // Previously, a lead was only captured once the visitor clicked Continue on the contact step
+  // (advanceFromContact, below) — anyone who typed a valid name+phone and then closed the modal
+  // without ever tapping Continue was never captured at all. Fires once per open() session, the
+  // moment isContactReady first becomes true, regardless of whether Continue is ever pressed.
+  // Safe to also fire again from advanceFromContact — /api/contacts upserts by phone_number.
+  const capturedContactRef = useRef(false);
+  useEffect(() => {
+    if (!state.isOpen) {
+      capturedContactRef.current = false;
+      return;
+    }
+    if (capturedContactRef.current || !isContactReady(state)) return;
+    capturedContactRef.current = true;
+    captureContact({
+      given_name: state.givenName.trim(),
+      phone_number: state.phone.trim(),
+      email_address: state.email.trim() || null,
+      tracking: getTrackingSnapshot(),
+    });
+  }, [state]);
 
   const toggleSms = useCallback(() => setState((s) => ({ ...s, smsOptIn: !s.smsOptIn })), []);
   const toggleCancelAgree = useCallback(() => setState((s) => ({ ...s, cancelAgree: !s.cancelAgree })), []);
