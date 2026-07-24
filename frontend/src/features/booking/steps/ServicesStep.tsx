@@ -1,14 +1,16 @@
 import type { CSSProperties } from "react";
-import { terminologize } from "@/data/designCopy";
+import { GUARANTEE_POINT, terminologize } from "@/data/designCopy";
 import { estimatedTotal } from "@/features/booking/useBookingModal";
 import { BookingModalState } from "@/features/booking/types";
+import { StepProgress } from "@/features/booking/StepProgress";
 import { formatPrice } from "@/lib/formatting";
 import type { CartMenu, LandingVariantContent } from "@/types/api";
 
 interface ServicesStepProps {
   cartMenu: CartMenu;
   state: BookingModalState;
-  stepLabel: string;
+  currentStep: number;
+  totalSteps: number;
   terminology?: LandingVariantContent["terminology"];
   onToggleMani: () => void;
   onTogglePedicure: () => void;
@@ -23,7 +25,8 @@ interface ServicesStepProps {
 export function ServicesStep({
   cartMenu,
   state,
-  stepLabel,
+  currentStep,
+  totalSteps,
   terminology,
   onToggleMani,
   onTogglePedicure,
@@ -43,9 +46,10 @@ export function ServicesStep({
 
   return (
     <div>
-      <div style={styles.stepLabel}>{stepLabel}</div>
+      <StepProgress current={currentStep} total={totalSteps} />
       <h3 style={styles.title}>Customize your visit</h3>
       <p style={styles.subtitle}>Choose your services — keep the signature manicure, add extras, or swap it out.</p>
+      <p style={styles.preselectHint}>✓ Manicure already selected below — tap Continue, or customize first.</p>
 
       <div
         style={{
@@ -108,13 +112,18 @@ export function ServicesStep({
         </span>
       </label>
 
+      <div style={styles.orDivider}>
+        <span style={styles.orDividerLine} />
+        <span style={styles.orDividerText}>or</span>
+        <span style={styles.orDividerLine} />
+      </div>
       <div style={styles.sectionLabel}>Short on time?</div>
       <label
         onClick={onToggleFourHand}
         style={{
           ...styles.fourHandCard,
-          borderColor: state.fourHandSelected ? "var(--color-accent)" : "var(--color-accent-border-soft)",
-          background: state.fourHandSelected ? "var(--color-accent-tint)" : "var(--color-accent-tint-2)",
+          borderColor: state.fourHandSelected ? "var(--color-accent)" : "var(--color-border-3)",
+          background: state.fourHandSelected ? "var(--color-accent-tint)" : "#fdfaf8",
         }}
       >
         <div style={styles.row}>
@@ -152,6 +161,9 @@ export function ServicesStep({
           <span style={styles.totalPrice}>{formatPrice(total)}</span>
         </div>
       ) : null}
+      <div style={styles.guarantee}>
+        <span aria-hidden="true">🛡️</span> {GUARANTEE_POINT.title} — {GUARANTEE_POINT.desc}
+      </div>
 
       <button
         onClick={onContinue}
@@ -198,9 +210,9 @@ function Checkbox({ checked, small = false }: { checked: boolean; small?: boolea
 }
 
 const styles: Record<string, CSSProperties> = {
-  stepLabel: { fontSize: 11, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--color-accent)", fontWeight: 600, marginTop: 6 },
   title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 26, margin: "6px 0 4px" },
-  subtitle: { fontSize: 13.5, color: "var(--color-muted-2)", margin: "0 0 16px" },
+  subtitle: { fontSize: 13.5, color: "var(--color-muted-2)", margin: "0 0 6px" },
+  preselectHint: { fontSize: 12, fontWeight: 600, color: "var(--color-accent)", margin: "0 0 16px" },
   maniCard: { border: "1.5px solid", borderRadius: 12, marginBottom: 12, overflow: "hidden" },
   row: { display: "flex", alignItems: "center", gap: 12 },
   itemName: { display: "block", fontWeight: 600, fontSize: 14.5, color: "var(--color-ink)" },
@@ -220,8 +232,14 @@ const styles: Record<string, CSSProperties> = {
   itemPrice: { display: "block", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 20, color: "var(--color-accent)" },
   discountLabel: { display: "block", fontSize: 9.5, fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase", color: "var(--color-accent)" },
   designRow: { display: "flex", alignItems: "center", gap: 10, padding: "11px 14px 13px 48px", borderTop: "1px dashed #e2cfc5", cursor: "pointer" },
-  sectionLabel: { fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", color: "var(--color-accent)", fontWeight: 600, margin: "18px 2px 8px" },
-  fourHandCard: { display: "block", padding: "15px 16px", border: "1.5px solid", borderRadius: 12, marginBottom: 6, cursor: "pointer" },
+  // A visual break before the 4-Hand section — it's a distinct, call-to-schedule product (see
+  // ConfirmStep's callNotice), not a third peer option alongside the simple mani/pedi checkboxes,
+  // so it reads as "an alternative path" rather than competing for the same attention.
+  orDivider: { display: "flex", alignItems: "center", gap: 10, margin: "20px 0 14px" },
+  orDividerLine: { flex: 1, height: 1, background: "var(--color-border-3)" },
+  orDividerText: { fontSize: 11, fontWeight: 600, letterSpacing: 0.6, textTransform: "uppercase", color: "var(--color-muted-3)" },
+  sectionLabel: { fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", color: "var(--color-muted-2)", fontWeight: 600, margin: "0 2px 8px" },
+  fourHandCard: { display: "block", padding: "13px 15px", border: "1.5px solid", borderRadius: 12, marginBottom: 6, cursor: "pointer" },
   byRequestBadge: {
     flex: "none",
     fontSize: 10,
@@ -236,6 +254,7 @@ const styles: Record<string, CSSProperties> = {
   },
   totalRow: { display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "18px 2px 14px" },
   totalPrice: { fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 24, color: "var(--color-ink)" },
+  guarantee: { fontSize: 11.5, color: "var(--color-muted-2)", textAlign: "center", margin: "0 0 12px" },
   continueButton: { width: "100%", border: "none", color: "#fff7f3", fontSize: 16, fontWeight: 600, padding: 16, borderRadius: 12, cursor: "pointer" },
   backButton: { width: "100%", marginTop: 9, border: "none", background: "none", color: "var(--color-muted-2)", fontSize: 14, padding: 8, cursor: "pointer" },
 };

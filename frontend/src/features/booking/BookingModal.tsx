@@ -125,7 +125,7 @@ export function BookingModal({
 
   // Four-hand now goes through the same steps as every other path (it picks a real preferred
   // slot too — see useBookingModal's shiftKind) so the count is simply the flow's length.
-  const stepLabel = `Step ${state.step} of ${flow.steps.length}`;
+  const totalSteps = flow.steps.length;
 
   return (
     <div onClick={close} style={styles.overlay}>
@@ -153,7 +153,8 @@ export function BookingModal({
         ) : currentKind === "contact" ? (
           <ContactStep
             manicure={cartMenu.manicure}
-            stepLabel={stepLabel}
+            currentStep={state.step}
+            totalSteps={totalSteps}
             givenName={state.givenName}
             phone={state.phone}
             email={state.email}
@@ -171,7 +172,8 @@ export function BookingModal({
           <ServicesStep
             cartMenu={cartMenu}
             state={state}
-            stepLabel={stepLabel}
+            currentStep={state.step}
+            totalSteps={totalSteps}
             terminology={terminology}
             onToggleMani={toggleMani}
             onTogglePedicure={togglePedicure}
@@ -183,7 +185,8 @@ export function BookingModal({
         ) : currentKind === "datetime" ? (
           <DateTimeStep
             serviceSlugs={selectedServiceSlugs(state)}
-            stepLabel={stepLabel}
+            currentStep={state.step}
+            totalSteps={totalSteps}
             onSelectSlot={selectSlot}
             onBack={back}
           />
@@ -193,7 +196,8 @@ export function BookingModal({
             <ConfirmStep
               state={state}
               cartMenu={cartMenu}
-              stepLabel={stepLabel}
+              currentStep={state.step}
+              totalSteps={totalSteps}
               terminology={terminology}
               onToggleSms={toggleSms}
               onToggleCancelAgree={toggleCancelAgree}

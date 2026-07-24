@@ -47,6 +47,11 @@ export const TRUST_POINTS = [
   { no: "04", title: "Clean & hygienic", desc: "Sanitized tools and careful standards every single visit." },
 ];
 
+/** The one TRUST_POINTS entry echoed across the booking modal (Contact, Services, Confirm
+ * steps) as a risk-reversal reminder — kept as a single derived export so all three stay in
+ * sync with whatever TRUST_POINTS itself says, rather than each hardcoding its own copy. */
+export const GUARANTEE_POINT = TRUST_POINTS.find((p) => p.title.includes("guarantee")) ?? TRUST_POINTS[2];
+
 export interface CarouselSlide {
   id: string;
   src: string;

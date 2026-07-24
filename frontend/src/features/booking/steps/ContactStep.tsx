@@ -1,13 +1,13 @@
 import type { CSSProperties } from "react";
 import { formatPrice } from "@/lib/formatting";
-import { CREDIBILITY_STATS, TRUST_POINTS } from "@/data/designCopy";
+import { CREDIBILITY_STATS, GUARANTEE_POINT } from "@/data/designCopy";
+import { StepProgress } from "@/features/booking/StepProgress";
 import type { ServiceOffer } from "@/types/api";
-
-const GUARANTEE = TRUST_POINTS.find((p) => p.title.includes("guarantee")) ?? TRUST_POINTS[2];
 
 interface ContactStepProps {
   manicure: ServiceOffer;
-  stepLabel: string;
+  currentStep: number;
+  totalSteps: number;
   givenName: string;
   phone: string;
   email: string;
@@ -28,7 +28,8 @@ interface ContactStepProps {
 
 export function ContactStep({
   manicure,
-  stepLabel,
+  currentStep,
+  totalSteps,
   givenName,
   phone,
   email,
@@ -47,7 +48,7 @@ export function ContactStep({
 
   return (
     <div>
-      <div style={styles.stepLabel}>{isFirstStep ? "Takes about 30 seconds" : stepLabel}</div>
+      <StepProgress current={currentStep} total={totalSteps} overrideLabel={isFirstStep ? "Takes about 30 seconds" : undefined} />
       <h3 style={styles.title}>Check today&apos;s open times</h3>
       <p style={styles.subtitle}>
         First-visit price locked:{" "}
@@ -131,7 +132,7 @@ export function ContactStep({
         Continue
       </button>
       <div style={styles.guarantee}>
-        <span aria-hidden="true">🛡️</span> {GUARANTEE.title} — {GUARANTEE.desc}
+        <span aria-hidden="true">🛡️</span> {GUARANTEE_POINT.title} — {GUARANTEE_POINT.desc}
       </div>
       {onBack ? (
         <button onClick={onBack} style={styles.backButton}>
@@ -143,14 +144,6 @@ export function ContactStep({
 }
 
 const styles: Record<string, CSSProperties> = {
-  stepLabel: {
-    fontSize: 11,
-    letterSpacing: 1.6,
-    textTransform: "uppercase",
-    color: "var(--color-accent)",
-    fontWeight: 600,
-    marginTop: 10,
-  },
   title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 26, margin: "6px 0 4px" },
   subtitle: { fontSize: 13.5, color: "var(--color-muted-2)", margin: "0 0 14px" },
   strike: { color: "var(--color-muted-3)", textDecoration: "line-through" },
