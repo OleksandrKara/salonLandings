@@ -51,23 +51,36 @@ class SquareCustomerGateway:
         find_or_create used to only check email, which could create a duplicate Square customer
         for someone find_existing had already matched by phone, silently overwriting the
         contact's correct square_customer_id with the new duplicate's id.
+
+        The email fallback only trusts its match when that Square record's own phone is either
+        blank or agrees with the phone just submitted. Two people can genuinely share an inbox
+        (or one person's old Square record predates a phone-number change), and reusing that
+        record's id in either case would silently attach this new lead/booking to a stale or
+        unrelated customer, with real appointments booked against the phone actually given never
+        showing up against it. When it disagrees, callers get None here — find_or_create then
+        creates a fresh Square customer under the current phone instead of reusing the stale one.
         """
-        if phone_number:
-            e164 = normalize_phone_e164(phone_number)
-            if e164:
-                match = self._search(field="phone_number", value=e164)
-                if match:
-                    return match
+        e164 = normalize_phone_e164(phone_number) if phone_number else None
+        if e164:
+            match = self._search(field="phone_number", value=e164)
+            if match:
+                return match.id
         if email_address:
             match = self._search(field="email_address", value=email_address)
+            if match and (e164 is None or match.phone_number is None or match.phone_number == e164):
+                return match.id
             if match:
-                return match
+                logger.info(
+                    "Email match %s has phone %s, which conflicts with %s just submitted — "
+                    "not reusing it, a fresh Square customer will be created instead.",
+                    match.id, match.phone_number, e164,
+                )
         return None
 
-    def _search(self, *, field: str, value: str) -> str | None:
+    def _search(self, *, field: str, value: str):
         response = self._client.customers.search(query={"filter": {field: {"exact": value}}}, limit=1)
         customers = response.customers or []
-        return customers[0].id if customers else None
+        return customers[0] if customers else None
 
     def find_or_create(
         self,
