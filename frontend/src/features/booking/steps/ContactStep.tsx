@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { formatPrice } from "@/lib/formatting";
 import { CREDIBILITY_STATS, GUARANTEE_POINT } from "@/data/designCopy";
 import { StepProgress } from "@/features/booking/StepProgress";
+import { GoogleLogo } from "@/features/landing/GoogleLogo";
 import type { ServiceOffer } from "@/types/api";
 
 interface ContactStepProps {
@@ -58,8 +59,11 @@ export function ContactStep({
       </p>
 
       <div style={styles.trustBar}>
-        <span>
-          {CREDIBILITY_STATS[0].value} {CREDIBILITY_STATS[0].label}
+        <span style={styles.googleGroup}>
+          <GoogleLogo size={14} />
+          <span style={styles.googleRating}>4.7</span>
+          <span style={styles.googleStar} aria-hidden="true">★</span>
+          {CREDIBILITY_STATS[0].label}
         </span>
         <span style={styles.trustDot}>•</span>
         <span>
@@ -169,6 +173,9 @@ const styles: Record<string, CSSProperties> = {
     marginBottom: 12,
   },
   trustDot: { color: "var(--color-muted-3)", fontWeight: 400 },
+  googleGroup: { display: "inline-flex", alignItems: "center", gap: 4 },
+  googleRating: { color: "var(--color-ink)" },
+  googleStar: { color: "var(--color-gold)", fontSize: 11 },
   availability: {
     fontSize: 13,
     color: "var(--color-ink-soft)",
