@@ -128,6 +128,11 @@ export interface LandingVariantContent {
    * lib/funnelFlow.ts's BOOKING_FLOWS. Absent means "start", so every variant that doesn't set
    * this explicitly keeps today's exact behavior. */
   contactStepPosition?: "start" | "end";
+  /** Which service starts pre-selected (checked) in the booking modal's Step 2 cart —
+   * absent/"manicure" is today's default. The other service is never hidden or forced off,
+   * just not pre-checked — a visitor can still add it (e.g. a pedicure-ad visitor who also
+   * wants a manicure combo isn't blocked from adding one). */
+  defaultService?: "manicure" | "pedicure";
 }
 
 export interface LandingVariant {

@@ -102,6 +102,8 @@ def _build_content(args: argparse.Namespace) -> dict:
         content["accentColor"] = args.accent_color
     if getattr(args, "terminology", None):
         content["terminology"] = args.terminology
+    if getattr(args, "default_service", None):
+        content["defaultService"] = args.default_service
     return content
 
 
@@ -358,6 +360,12 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["russian", "european"],
         default=None,
         help="'european' swaps every 'Russian manicure' branding mention across the page for 'European manicure' wording (same service, different terminology test)",
+    )
+    p_add.add_argument(
+        "--default-service",
+        choices=["manicure", "pedicure"],
+        default=None,
+        help="Which service starts pre-selected (checked) in the booking modal's cart step — absent means manicure (today's default). Neither is ever forced off; the visitor can still add the other.",
     )
     p_add.add_argument("--description", default=None, help="What this variant is testing and why, e.g. 'Urgency-focused headline + green accent vs. control'")
     p_add.set_defaults(func=cmd_add)
