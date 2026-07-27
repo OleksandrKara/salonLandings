@@ -3,18 +3,9 @@ import type { CSSProperties } from "react";
 interface StepProgressProps {
   current: number;
   total: number;
-  /** Overrides the whole indicator with plain text — used only for a flow's very first step,
-   * where a visible step count reads as "this'll take a while" before the visitor has seen any
-   * value yet. Every later step shows the real segmented bar instead: once someone's already
-   * invested a step, a visible "almost there" reads as encouraging, not discouraging (the
-   * goal-gradient effect — motivation rises as the finish line gets closer). */
-  overrideLabel?: string;
 }
 
-export function StepProgress({ current, total, overrideLabel }: StepProgressProps) {
-  if (overrideLabel) {
-    return <div style={styles.overrideLabel}>{overrideLabel}</div>;
-  }
+export function StepProgress({ current, total }: StepProgressProps) {
   return (
     <div style={styles.wrap} aria-label={`Step ${current} of ${total}`}>
       <div style={styles.segments}>
@@ -47,13 +38,5 @@ const styles: Record<string, CSSProperties> = {
     textTransform: "uppercase",
     color: "var(--color-accent)",
     whiteSpace: "nowrap",
-  },
-  overrideLabel: {
-    fontSize: 11,
-    letterSpacing: 1.6,
-    textTransform: "uppercase",
-    color: "var(--color-accent)",
-    fontWeight: 600,
-    marginTop: 10,
   },
 };

@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { fetchAvailability } from "@/api/availability";
 import { StepProgress } from "@/features/booking/StepProgress";
 import { formatPrice, formatSlotTime, groupSlotsByDateKey, toPacificDateKey } from "@/lib/formatting";
@@ -35,6 +35,17 @@ export function DateTimeStep({ serviceSlugs, currentStep, totalSteps, onSelectSl
 
   const slotsByDate = useMemo(() => (data ? groupSlotsByDateKey(data.slots) : new Map<string, SlotOption[]>()), [data]);
   const sortedAvailableDates = useMemo(() => Array.from(slotsByDate.keys()).sort(), [slotsByDate]);
+
+  // Land on the first open day with times already showing, rather than making every visitor
+  // tap a date first — the common case (today or the very next open day) needs zero taps.
+  useEffect(() => {
+    if (selectedDateKey !== null || sortedAvailableDates.length === 0) return;
+    const first = sortedAvailableDates[0];
+    const [y, m] = first.split("-").map(Number);
+    setViewYear(y);
+    setViewMonth(m - 1);
+    setSelectedDateKey(first);
+  }, [sortedAvailableDates, selectedDateKey]);
 
   // Calendar navigation can't outrun the actual search window, or the user
   // would page into empty months that look "fully booked" instead of just out of range.

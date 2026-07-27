@@ -45,11 +45,10 @@ export function ContactStep({
   nextAvailableLabel,
 }: ContactStepProps) {
   const top = manicure.pricing.find((p) => p.tier === "top") ?? manicure.pricing[0];
-  const isFirstStep = !onBack;
 
   return (
     <div>
-      <StepProgress current={currentStep} total={totalSteps} overrideLabel={isFirstStep ? "Takes about 30 seconds" : undefined} />
+      <StepProgress current={currentStep} total={totalSteps} />
       <h3 style={styles.title}>Check today&apos;s open times</h3>
       <p style={styles.subtitle}>
         First-visit price locked:{" "}
@@ -64,10 +63,6 @@ export function ContactStep({
           <span style={styles.googleRating}>4.7</span>
           <span style={styles.googleStar} aria-hidden="true">★</span>
           {CREDIBILITY_STATS[0].label}
-        </span>
-        <span style={styles.trustDot}>•</span>
-        <span>
-          {CREDIBILITY_STATS[2].value} {CREDIBILITY_STATS[2].label}
         </span>
       </div>
 
@@ -172,7 +167,6 @@ const styles: Record<string, CSSProperties> = {
     color: "var(--color-ink-soft)",
     marginBottom: 12,
   },
-  trustDot: { color: "var(--color-muted-3)", fontWeight: 400 },
   googleGroup: { display: "inline-flex", alignItems: "center", gap: 4 },
   googleRating: { color: "var(--color-ink)" },
   googleStar: { color: "var(--color-gold)", fontSize: 11 },
