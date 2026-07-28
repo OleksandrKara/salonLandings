@@ -9,11 +9,13 @@ const BookingModalContext = createContext<BookingModalContextValue | null>(null)
 export function BookingModalProvider({
   children,
   position = "start",
+  defaultService = "manicure",
 }: {
   children: ReactNode;
   position?: ContactStepPosition;
+  defaultService?: "manicure" | "pedicure";
 }) {
-  const value = useBookingModal(position);
+  const value = useBookingModal(position, defaultService);
   return <BookingModalContext.Provider value={value}>{children}</BookingModalContext.Provider>;
 }
 

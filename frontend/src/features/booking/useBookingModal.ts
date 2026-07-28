@@ -57,15 +57,24 @@ export function estimatedTotal(state: BookingModalState, cartMenu: CartMenu): nu
   return total;
 }
 
-export function useBookingModal(position: ContactStepPosition = "start") {
+export function useBookingModal(
+  position: ContactStepPosition = "start",
+  defaultService: "manicure" | "pedicure" = "manicure",
+) {
   const [state, setState] = useState<BookingModalState>(initialBookingModalState);
   const steps = BOOKING_FLOWS[position].steps;
 
   const open = useCallback(() => {
     const tracking = getTrackingSnapshot();
     logExperimentEvent("click", tracking.landing_page_id ?? null, tracking.variant_id ?? null, { target: "book_now" });
-    setState({ ...initialBookingModalState, isOpen: true, formOpenedAt: new Date().toISOString() });
-  }, []);
+    setState({
+      ...initialBookingModalState,
+      maniSelected: defaultService !== "pedicure",
+      pedicureSelected: defaultService === "pedicure",
+      isOpen: true,
+      formOpenedAt: new Date().toISOString(),
+    });
+  }, [defaultService]);
   const close = useCallback(() => {
     exitThankYouUrl();
     setState((s) => ({ ...s, isOpen: false }));

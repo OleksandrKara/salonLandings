@@ -61,7 +61,10 @@ export function LandingPage() {
 
   return (
     <CartMenuProvider>
-      <BookingModalProvider position={overrides.contactStepPosition ?? "start"}>
+      <BookingModalProvider
+        position={overrides.contactStepPosition ?? "start"}
+        defaultService={overrides.defaultService ?? "manicure"}
+      >
         <div style={styles.page}>
           <Header />
           <Hero overrides={overrides} />
