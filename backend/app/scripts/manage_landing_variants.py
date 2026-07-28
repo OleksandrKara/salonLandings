@@ -161,9 +161,20 @@ async def cmd_add(args: argparse.Namespace) -> None:
 
 
 async def cmd_set_active(args: argparse.Namespace, active: bool) -> None:
+    """Deactivating also zeroes the weight — active=false alone already fully excludes a variant
+    from list_active_variants (see ExperimentService), but a dashboard/report that displays the raw
+    weight column without checking active would otherwise still show its old nonzero share, which
+    reads as "still in rotation" even though it isn't. Reactivating leaves weight untouched (0) —
+    there's no way to know what share it should get back; use set-weight for that.
+    """
     pool = get_pool()
-    result = await pool.execute("UPDATE marketing.landing_variants SET active = $1 WHERE key = $2", active, args.key)
-    print(f"{result} — variant(s) with key '{args.key}' set to active={active}")
+    if active:
+        result = await pool.execute("UPDATE marketing.landing_variants SET active = $1 WHERE key = $2", active, args.key)
+    else:
+        result = await pool.execute(
+            "UPDATE marketing.landing_variants SET active = $1, weight = 0 WHERE key = $2", active, args.key
+        )
+    print(f"{result} — variant(s) with key '{args.key}' set to active={active}" + ("" if active else " (weight reset to 0)"))
 
 
 async def cmd_delete(args: argparse.Namespace) -> None:
