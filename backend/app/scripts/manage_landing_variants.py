@@ -104,6 +104,19 @@ def _build_content(args: argparse.Namespace) -> dict:
         content["terminology"] = args.terminology
     if getattr(args, "default_service", None):
         content["defaultService"] = args.default_service
+
+    pedicure_override = {}
+    if getattr(args, "pedi_headline", None):
+        pedicure_override["heroHeadline"] = args.pedi_headline
+    if getattr(args, "pedi_subheadline", None):
+        pedicure_override["heroSubheadline"] = args.pedi_subheadline
+    if getattr(args, "pedi_cta", None):
+        pedicure_override["ctaText"] = args.pedi_cta
+    if getattr(args, "pedi_hero_image_url", None):
+        pedicure_override["heroImageUrl"] = args.pedi_hero_image_url
+    if pedicure_override:
+        content["pedicureOverride"] = pedicure_override
+
     return content
 
 
@@ -367,6 +380,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Which service starts pre-selected (checked) in the booking modal's cart step — absent means manicure (today's default). Neither is ever forced off; the visitor can still add the other.",
     )
+    p_add.add_argument(
+        "--pedi-headline",
+        default=None,
+        help="heroHeadline shown instead of --headline only when the visitor's utm_campaign looks pedicure-tagged "
+        "(case-insensitive 'pedi' substring, matches 'pedi' and 'pedicure' campaign names) — see LandingVariantContent.pedicureOverride",
+    )
+    p_add.add_argument("--pedi-subheadline", default=None, help="heroSubheadline override for pedicure-tagged traffic")
+    p_add.add_argument("--pedi-cta", default=None, help="Button text override for pedicure-tagged traffic")
+    p_add.add_argument("--pedi-hero-image-url", default=None, help="Hero image override for pedicure-tagged traffic")
     p_add.add_argument("--description", default=None, help="What this variant is testing and why, e.g. 'Urgency-focused headline + green accent vs. control'")
     p_add.set_defaults(func=cmd_add)
 

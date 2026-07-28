@@ -38,6 +38,36 @@ function pickWeighted(variants: LandingVariant[]): LandingVariant {
   return variants[variants.length - 1];
 }
 
+const PEDICURE_CAMPAIGN_PATTERN = /pedi/i;
+
+/** Matches both "...pedi" and "...pedicure" ad-campaign naming conventions (confirmed against
+ * real marketing.contacts/visits history, e.g. "Сайт 14.07pedi" and "27.07pedicure video") —
+ * "pedi" is a substring of "pedicure", so one case-insensitive check covers both spellings.
+ * Reads the fresh URL first, falling back to the persisted snapshot for a same-session visit
+ * that no longer carries the ad's query params — mirrors lib/tracking.ts's own snapshot logic,
+ * duplicated (not imported) to avoid a circular import: tracking.ts already imports
+ * getPersistedVariantAssignment from this file. */
+function isPedicureTraffic(): boolean {
+  const fresh = new URLSearchParams(window.location.search).get("utm_campaign");
+  if (fresh) return PEDICURE_CAMPAIGN_PATTERN.test(fresh);
+  try {
+    const stored = JSON.parse(localStorage.getItem("mani_tracking_snapshot") ?? "null") as {
+      utm_campaign?: string | null;
+    } | null;
+    return PEDICURE_CAMPAIGN_PATTERN.test(stored?.utm_campaign ?? "");
+  } catch {
+    return false;
+  }
+}
+
+/** A variant with `pedicureOverride` set otherwise renders as its own plain content (e.g. an
+ * exact copy of the control variant) — this is what swaps it to the pedicure-focused pitch,
+ * and only for visitors whose traffic actually looks pedicure-tagged. */
+function applyPedicureOverride(content: LandingVariantContent): LandingVariantContent {
+  if (!content.pedicureOverride || !isPedicureTraffic()) return content;
+  return { ...content, ...content.pedicureOverride, defaultService: "pedicure" };
+}
+
 function logEvent(
   eventType: TrackingEventType,
   landingPageId: string | null,
@@ -94,7 +124,11 @@ export async function resolveExperiment(slug: string): Promise<{
 
   logEvent("page_view", resolution.landing_page_id, chosen.id);
 
-  return { landingPageId: resolution.landing_page_id, variantId: chosen.id, content: chosen.content };
+  return {
+    landingPageId: resolution.landing_page_id,
+    variantId: chosen.id,
+    content: applyPedicureOverride(chosen.content),
+  };
 }
 
 export { logEvent as logExperimentEvent };

@@ -133,6 +133,19 @@ export interface LandingVariantContent {
    * just not pre-checked — a visitor can still add it (e.g. a pedicure-ad visitor who also
    * wants a manicure combo isn't blocked from adding one). */
   defaultService?: "manicure" | "pedicure";
+  /** When present, and the visitor's utm_campaign looks pedicure-targeted (case-insensitive
+   * "pedi" substring — matches both "...pedi" and "...pedicure" ad-naming conventions seen in
+   * real campaigns, e.g. "Сайт 14.07pedi" and "27.07pedicure video"), these fields are merged
+   * over this variant's own content and defaultService is forced to "pedicure" — purely
+   * client-side, see lib/experiments.ts's isPedicureTraffic(). Lets one variant serve as a
+   * manicure-default control for regular traffic and a pedicure-focused pitch for pedi-tagged
+   * ad traffic, without needing a separate ?v= deep link per campaign. */
+  pedicureOverride?: {
+    heroHeadline?: string;
+    heroSubheadline?: string;
+    ctaText?: string;
+    heroImageUrl?: string;
+  };
 }
 
 export interface LandingVariant {
