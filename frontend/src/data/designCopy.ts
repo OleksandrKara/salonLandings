@@ -179,4 +179,4 @@ Warmly,
 AK.LUX.NAILS`;
 
 export const SMS_CONSENT_TEXT =
-  "By checking this box, I agree to receive recurring automated marketing & appointment text messages (offers, promotions & reminders) from AK.LUX.NAILS at the number I provided. Consent is not a condition of purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help.";
+  "By checking this box, I agree to receive recurring automated marketing text messages from AK.LUX.NAILS — occasional discounts and first access to newly opened appointment slots — at the number provided. Consent is not a condition of purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help.";
