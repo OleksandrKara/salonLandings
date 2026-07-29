@@ -123,10 +123,10 @@ export function ConfirmStep({
           <Checkbox checked={state.smsOptIn} border="var(--color-accent-border-soft)" />
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "block", fontWeight: 600, fontSize: 14.5, color: "var(--color-ink)" }}>
-              Text me reminders &amp; exclusive offers
+              Text me discounts &amp; first dibs
             </span>
             <span style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--color-accent)", marginTop: 2 }}>
-              {state.smsOptIn ? "You're in — enjoy VIP offers & booking updates." : "Never miss your slot + first dibs on last-minute openings"}
+              {state.smsOptIn ? "You're in — discounts & early access headed your way." : "Occasional savings + first access when new slots open — a few texts a month, tops"}
             </span>
           </span>
           <span
