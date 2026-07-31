@@ -379,6 +379,13 @@ class MarketingRepository:
         first-touch capture context both untouched on conflict) — also handles the edge case
         where a booking happens without a prior Step-1 capture (e.g. a network hiccup dropped
         that call), inserting a fresh contact row instead of erroring.
+
+        sms_marketing_consent is OR-merged on conflict, not overwritten: a customer who opted in
+        on an earlier booking and later books again without re-checking the box keeps their
+        consent — a blank checkbox on a later visit isn't a revocation, and previously
+        overwriting it here silently erased real opt-ins (confirmed against a real customer whose
+        Square note recorded an opt-in that this upsert had since wiped back to false). Only an
+        explicit STOP reply revokes consent.
         """
         # asyncpg validates the Python type against the column type itself — an explicit SQL
         # cast doesn't help; it needs a real datetime.datetime, not a string, for timestamptz.
@@ -413,7 +420,9 @@ class MarketingRepository:
                 os_version = EXCLUDED.os_version,
                 browser_name = EXCLUDED.browser_name,
                 browser_version = EXCLUDED.browser_version,
-                sms_marketing_consent = EXCLUDED.sms_marketing_consent,
+                sms_marketing_consent = (
+                    COALESCE(marketing.contacts.sms_marketing_consent, false) OR EXCLUDED.sms_marketing_consent
+                ),
                 email_marketing_consent = EXCLUDED.email_marketing_consent,
                 square_customer_id = EXCLUDED.square_customer_id,
                 square_booking_id = EXCLUDED.square_booking_id,
