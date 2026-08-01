@@ -5,7 +5,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.api.deps import get_customer_gateway, get_tracking_service
 from app.domain.schemas import ContactCaptureRequest, ContactCaptureResponse
-from app.integrations.square.customers import SquareCustomerGateway
+from app.integrations.square.customers import SquareCustomerGateway, normalize_phone_for_storage
 from app.services.identity import resolve_tracking_snapshot
 from app.services.request_context import derive_client_context
 from app.services.tracking_service import TrackingService
@@ -23,13 +23,19 @@ async def capture_contact(
     customer_gateway: SquareCustomerGateway = Depends(get_customer_gateway),
 ) -> ContactCaptureResponse:
     tracking = resolve_tracking_snapshot(http_request, http_response, request.tracking)
+    # Normalized once, up front, and reused for every downstream call (Square lookup, the
+    # marketing.contacts/submissions write) — marketing.contacts is unique on phone_number and
+    # used as the upsert dedup key, so the same physical number typed differently across visits
+    # must always normalize to the same string here, or it silently becomes two separate "leads"
+    # that never merge. See normalize_phone_for_storage's own doc comment.
+    phone_number = normalize_phone_for_storage(request.phone_number)
 
     # Read-only lookup — never creates a Square customer here. A failure must never block
     # Step 1, so it's wrapped independently of record_step1_contact_safely's own guarantee.
     try:
         square_customer_id = await run_in_threadpool(
             customer_gateway.find_existing,
-            phone_number=request.phone_number,
+            phone_number=phone_number,
             email_address=request.email_address,
         )
     except Exception:
@@ -38,7 +44,7 @@ async def capture_contact(
 
     await tracking_service.record_step1_contact_safely(
         given_name=request.given_name,
-        phone_number=request.phone_number,
+        phone_number=phone_number,
         email_address=request.email_address,
         tracking=tracking,
         client_context=derive_client_context(http_request),

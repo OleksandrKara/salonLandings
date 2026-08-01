@@ -10,6 +10,7 @@ from app.domain.schemas import (
     FourHandRequestConfirmation,
     FourHandRequestSubmission,
 )
+from app.integrations.square.customers import normalize_phone_for_storage
 from app.integrations.square.exceptions import SlotNoLongerAvailableError, SquareIntegrationError
 from app.services.abuse_guard import AbuseGuard, AbuseGuardError
 from app.services.artist_service import ArtistNotFoundError
@@ -38,10 +39,18 @@ async def create_booking(
 ) -> BookingConfirmation:
     tracking = resolve_tracking_snapshot(http_request, http_response, request.tracking)
     client_context = derive_client_context(http_request)
+    # Normalized once, up front, and reused for the abuse guard's own rate-limit lookup plus every
+    # marketing write below — marketing.contacts is unique on phone_number and used as the upsert
+    # dedup key, so the same physical number typed differently across visits must always
+    # normalize to the same string, or it silently becomes two separate "leads" that never merge
+    # (and the abuse guard's count_recent_submissions_by_phone would miss half their history too).
+    # See normalize_phone_for_storage's own doc comment. booking_service.create_booking below still
+    # gets the raw request object — Square-side lookup/creation already normalizes internally.
+    phone_number = normalize_phone_for_storage(request.customer.phone_number)
     try:
         await abuse_guard.check(
             endpoint="booking",
-            phone_number=request.customer.phone_number,
+            phone_number=phone_number,
             ip_address=client_context["ip_address"],
             honeypot_value=request.website,
             form_rendered_at=request.form_rendered_at,
@@ -68,14 +77,14 @@ async def create_booking(
         service_name=confirmation.service_name,
         price=confirmation.price,
         customer_email=request.customer.email_address,
-        customer_phone=request.customer.phone_number,
+        customer_phone=phone_number,
     )
     await tracking_service.record_attribution_safely(
         tracking=tracking,
         booking_id=confirmation.booking_id,
     )
     await tracking_service.record_sms_consent_safely(
-        phone_number=request.customer.phone_number,
+        phone_number=phone_number,
         consented=request.customer.marketing_opt_in,
         source="booking",
         visitor_id=tracking.visitor_id if tracking else None,
@@ -90,7 +99,7 @@ async def create_booking(
         )
     await tracking_service.link_contact_to_booking_safely(
         given_name=request.customer.given_name,
-        phone_number=request.customer.phone_number,
+        phone_number=phone_number,
         email_address=request.customer.email_address,
         tracking=tracking,
         client_context=client_context,
@@ -118,10 +127,13 @@ async def submit_four_hand_request(
 ) -> FourHandRequestConfirmation:
     tracking = resolve_tracking_snapshot(http_request, http_response, submission.tracking)
     client_context = derive_client_context(http_request)
+    # See create_booking's own comment above — same reasoning, same normalize-once-reuse-everywhere
+    # pattern.
+    phone_number = normalize_phone_for_storage(submission.customer.phone_number)
     try:
         await abuse_guard.check(
             endpoint="four_hand_request",
-            phone_number=submission.customer.phone_number,
+            phone_number=phone_number,
             ip_address=client_context["ip_address"],
             honeypot_value=submission.website,
             form_rendered_at=submission.form_rendered_at,
@@ -144,14 +156,14 @@ async def submit_four_hand_request(
         service_name=confirmation.service_name,
         price=None,
         customer_email=submission.customer.email_address,
-        customer_phone=submission.customer.phone_number,
+        customer_phone=phone_number,
     )
     await tracking_service.record_attribution_safely(
         tracking=tracking,
         booking_id=confirmation.booking_id,
     )
     await tracking_service.record_sms_consent_safely(
-        phone_number=submission.customer.phone_number,
+        phone_number=phone_number,
         consented=submission.customer.marketing_opt_in,
         source="four_hand_request",
         visitor_id=tracking.visitor_id if tracking else None,
@@ -166,7 +178,7 @@ async def submit_four_hand_request(
         )
     await tracking_service.link_contact_to_booking_safely(
         given_name=submission.customer.given_name,
-        phone_number=submission.customer.phone_number,
+        phone_number=phone_number,
         email_address=submission.customer.email_address,
         tracking=tracking,
         client_context=client_context,
