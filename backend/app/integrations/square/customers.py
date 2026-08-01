@@ -24,6 +24,29 @@ def normalize_phone_e164(phone_number: str) -> str | None:
     return None
 
 
+def normalize_phone_for_storage(phone_number: str) -> str:
+    """Like normalize_phone_e164, but for the marketing.contacts/marketing.submissions writes in
+    tracking_service.py and the abuse-guard rate-limit check, all of which need one consistent
+    string to key on — unlike Square search (which is fine skipping a number it can't confidently
+    call US), a write path can't just decline to store something. marketing.contacts is unique on
+    phone_number and used as the upsert dedup key, so the same physical number must always
+    normalize to the same value here, or a customer who's typed their number differently across
+    visits ends up as two separate "leads" that never merge, and — since lead_followup_send is
+    itself keyed off the resulting contact_id — silently stops getting the lead-follow-up nudge
+    entirely on whichever duplicate row the automation never touched. Confirmed live against a
+    real customer who ended up with exactly this split (two contacts rows, "(858) 337-2974" and
+    "+18583372974", the latter never once picked up by the follow-up poll). Falls back to a
+    best-effort +-prefixed digit string (never the original raw form) for anything
+    normalize_phone_e164 can't confidently call a US number, so even that stays internally
+    consistent across repeat writes rather than passing through whatever was typed that time.
+    """
+    e164 = normalize_phone_e164(phone_number)
+    if e164:
+        return e164
+    digits = re.sub(r"\D", "", phone_number)
+    return f"+{digits}" if digits else phone_number
+
+
 class SquareCustomerGateway:
     """Finds or creates the Square Customer record backing a booking."""
 
