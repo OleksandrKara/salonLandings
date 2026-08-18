@@ -1,8 +1,9 @@
 import datetime as dt
+import itertools
 import logging
 from dataclasses import dataclass
 
-from app.domain.schemas import ArtistTier, AvailabilityResponse, CartMenu, SegmentOption, SlotOption
+from app.domain.schemas import ArtistTier, AvailabilityResponse, CartMenu, SegmentOption, SlotOption, TierPricing
 from app.domain.service_catalog import FOUR_HAND_REQUEST
 from app.integrations.square.availability import SquareAvailabilityGateway
 from app.services.artist_service import ArtistService
@@ -184,32 +185,50 @@ class AvailabilityService:
 
         combos: list[_ComboOption] = []
         for tier in (ArtistTier.TOP, ArtistTier.REGULAR):
-            segments: list[_SegmentSpec] = []
-            eligible: set[str] | None = None
+            # Every pricing entry matching this tier, per selected service — usually one, but not
+            # always: two technicians can share a price tier while sitting on two separate Square
+            # variations with their own duration (found 2026-08-18: manicure's "regular" tier has
+            # a 120-minute technician and a 150-minute technician, both $85). A single next(...)
+            # pick here used to take only the first and silently drop the second technician's
+            # entire calendar from every search, forever — not just a "no slot today" gap.
+            per_service_options: list[list[TierPricing]] = []
             feasible = True
-
             for slug in tiered_slugs:
                 offer = tiered_offers[slug]
-                tier_pricing = next((p for p in offer.pricing if p.tier == tier), None)
-                if tier_pricing is None:
+                options = [p for p in offer.pricing if p.tier == tier]
+                if not options:
                     feasible = False
                     break
-                team_ids = set(tier_pricing.team_member_ids)
-                eligible = team_ids if eligible is None else eligible & team_ids
-                segments.append(
-                    _SegmentSpec(
-                        service_slug=offer.slug,
-                        name=offer.name,
-                        variation_id=tier_pricing.variation_id,
-                        variation_version=tier_pricing.variation_version,
-                        price=tier_pricing.price,
-                        compare_at_price=tier_pricing.compare_at_price,
-                        duration_minutes=tier_pricing.duration_minutes,
-                        team_member_ids=team_ids,
-                    )
-                )
+                per_service_options.append(options)
+            if not feasible:
+                continue
 
-            if feasible:
+            # One combo per combination of (this service's tier-matching entry, that service's
+            # tier-matching entry, ...) — for the common single-service case this is just one
+            # combo per entry; a multi-service cart gets the full cross-product, each a genuinely
+            # distinct technician/duration pairing that needs its own Square search.
+            for combination in itertools.product(*per_service_options):
+                segments: list[_SegmentSpec] = []
+                eligible: set[str] | None = None
+                # combination preserves per_service_options' order, which was built by iterating
+                # tiered_slugs in order — zip pairs each pricing entry back with its own service.
+                for slug, tier_pricing in zip(tiered_slugs, combination):
+                    offer = tiered_offers[slug]
+                    team_ids = set(tier_pricing.team_member_ids)
+                    eligible = team_ids if eligible is None else eligible & team_ids
+                    segments.append(
+                        _SegmentSpec(
+                            service_slug=offer.slug,
+                            name=offer.name,
+                            variation_id=tier_pricing.variation_id,
+                            variation_version=tier_pricing.variation_version,
+                            price=tier_pricing.price,
+                            compare_at_price=tier_pricing.compare_at_price,
+                            duration_minutes=tier_pricing.duration_minutes,
+                            team_member_ids=team_ids,
+                        )
+                    )
+
                 for slug in flat_slugs:
                     team_ids = set(design.team_member_ids)
                     eligible = team_ids if eligible is None else eligible & team_ids
@@ -226,8 +245,8 @@ class AvailabilityService:
                         )
                     )
 
-            if feasible and eligible:
-                combos.append(_ComboOption(tier=tier, segments=segments, eligible_team_member_ids=eligible))
+                if eligible:
+                    combos.append(_ComboOption(tier=tier, segments=segments, eligible_team_member_ids=eligible))
 
         return combos
 
