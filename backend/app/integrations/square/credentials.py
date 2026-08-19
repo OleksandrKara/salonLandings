@@ -23,6 +23,11 @@ class SquareCredentials:
     access_token: str
     location_id: str
     environment: str  # "SANDBOX" | "PRODUCTION"
+    # Public, non-secret — used to initialize the Square Web Payments SDK client-side for the PMU
+    # deposit flow (see app.services.pmu_service.PmuCatalogService). None for a business that's
+    # never set one (e.g. business 1/mani, which doesn't need it — nothing in mani's own flow
+    # collects a card payment).
+    application_id: str | None = None
 
 
 class SquareCredentialsUnavailable(RuntimeError):
@@ -59,7 +64,10 @@ def get_square_credentials(business_id: int) -> SquareCredentials:
     response.raise_for_status()
     data = response.json()
     creds = SquareCredentials(
-        access_token=data["accessToken"], location_id=data["locationId"], environment=data["environment"]
+        access_token=data["accessToken"],
+        location_id=data["locationId"],
+        environment=data["environment"],
+        application_id=data.get("applicationId"),
     )
     _credentials_cache[business_id] = (creds, time.monotonic() + _CREDENTIALS_CACHE_TTL_SECONDS)
     return creds

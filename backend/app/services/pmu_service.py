@@ -25,6 +25,7 @@ from app.domain.schemas import (
 from app.integrations.square.availability import SquareAvailabilityGateway
 from app.integrations.square.bookings import BookingSegment, SquareBookingGateway
 from app.integrations.square.catalog import SquareCatalogRepository
+from app.integrations.square.credentials import get_square_credentials
 from app.integrations.square.customer_attributes import SquareCustomerAttributesGateway
 from app.integrations.square.customers import SquareCustomerGateway
 from app.integrations.square.exceptions import SquareIntegrationError
@@ -53,15 +54,23 @@ class PmuCatalogService:
     """Live prices/durations for the AK PMU landing page — same "structural mapping only,
     everything else read live from Square" convention as CatalogService (nails)."""
 
-    def __init__(self, catalog_repo: SquareCatalogRepository):
+    def __init__(self, catalog_repo: SquareCatalogRepository, business_id: int):
         self._catalog_repo = catalog_repo
+        self._business_id = business_id
 
     def get_catalog(self) -> PmuCatalogResponse:
         techniques = [self._build_technique(t) for t in PMU_TECHNIQUES]
         consultations = [self._build_consultation(c) for c in PMU_CONSULTATIONS]
         deposit_variation = self._find_variation(PMU_DEPOSIT.item_id, PMU_DEPOSIT.variation_id)
         deposit_amount = (deposit_variation.item_variation_data.price_money.amount or 0) / 100
-        return PmuCatalogResponse(techniques=techniques, consultations=consultations, deposit_amount=deposit_amount)
+        creds = get_square_credentials(self._business_id)
+        return PmuCatalogResponse(
+            techniques=techniques,
+            consultations=consultations,
+            deposit_amount=deposit_amount,
+            square_application_id=creds.application_id,
+            square_location_id=creds.location_id,
+        )
 
     def _build_technique(self, definition: PmuTechniqueDefinition) -> PmuTechniqueOffer:
         variation = self._find_variation(definition.item_id, definition.variation_id)

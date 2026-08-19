@@ -314,6 +314,12 @@ class PmuCatalogResponse(BaseModel):
     techniques: list[PmuTechniqueOffer]
     consultations: list[PmuConsultationOffer]
     deposit_amount: float
+    # Public identifiers for the Square Web Payments SDK's client-side card form — never the
+    # access token, which stays server-side only (see SquarePaymentGateway). Served here rather
+    # than baked into the frontend build since one static bundle serves both mani and PMU domains
+    # (see business_context.get_current_business) — there's no per-domain build to bake it into.
+    square_application_id: str
+    square_location_id: str
 
 
 class PmuConsultationRequest(BaseModel):

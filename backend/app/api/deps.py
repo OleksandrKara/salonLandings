@@ -188,7 +188,7 @@ def get_booking_service(
 
 @lru_cache
 def _pmu_catalog_service_for(business_id: int, catalog_repository: SquareCatalogRepository) -> PmuCatalogService:
-    return PmuCatalogService(catalog_repository)
+    return PmuCatalogService(catalog_repository, business_id)
 
 
 def get_pmu_catalog_service(
