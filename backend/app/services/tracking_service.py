@@ -17,12 +17,13 @@ class TrackingService:
     def __init__(self, repository: MarketingRepository):
         self._repository = repository
 
-    async def record_visit(self, snapshot: TrackingSnapshot, client_context: dict) -> None:
+    async def record_visit(self, business_id: int, snapshot: TrackingSnapshot, client_context: dict) -> None:
         fields = {**snapshot.model_dump(exclude={"visitor_id"}), **client_context}
-        await self._repository.insert_visit(visitor_id=snapshot.visitor_id, fields=fields)
+        await self._repository.insert_visit(business_id=business_id, visitor_id=snapshot.visitor_id, fields=fields)
 
-    async def record_event(self, event: TrackingEvent) -> None:
+    async def record_event(self, business_id: int, event: TrackingEvent) -> None:
         await self._repository.insert_event(
+            business_id=business_id,
             session_id=event.session_id,
             landing_page_id=event.landing_page_id,
             variant_id=event.variant_id,
@@ -30,15 +31,16 @@ class TrackingService:
             metadata=event.metadata,
         )
 
-    async def record_event_safely(self, event: TrackingEvent) -> None:
+    async def record_event_safely(self, business_id: int, event: TrackingEvent) -> None:
         """Funnel events are analytics only — a failure here must never affect the visitor."""
         try:
-            await self.record_event(event)
+            await self.record_event(business_id, event)
         except Exception:
             logger.exception("Failed to record tracking event (event_type=%s)", event.event_type)
 
-    async def record_booking_funnel_step(self, event: BookingFunnelStepEvent) -> None:
+    async def record_booking_funnel_step(self, business_id: int, event: BookingFunnelStepEvent) -> None:
         await self._repository.insert_funnel_event(
+            business_id=business_id,
             session_id=event.session_id,
             landing_page_id=event.landing_page_id,
             variant_id=event.variant_id,
@@ -49,11 +51,11 @@ class TrackingService:
             metadata=event.metadata,
         )
 
-    async def record_booking_funnel_step_safely(self, event: BookingFunnelStepEvent) -> None:
+    async def record_booking_funnel_step_safely(self, business_id: int, event: BookingFunnelStepEvent) -> None:
         """Booking-funnel step tracking is analytics only — a failure here must never affect
         the visitor's actual booking flow."""
         try:
-            await self.record_booking_funnel_step(event)
+            await self.record_booking_funnel_step(business_id, event)
         except Exception:
             logger.exception(
                 "Failed to record booking funnel step (flow_key=%s, step_key=%s)",
@@ -64,6 +66,7 @@ class TrackingService:
     async def record_submission(
         self,
         *,
+        business_id: int,
         submission_type: str,
         tracking: TrackingSnapshot | None,
         client_context: dict,
@@ -89,6 +92,7 @@ class TrackingService:
         fields["traffic_source"] = classify_traffic_source(tracking)
 
         await self._repository.insert_submission(
+            business_id=business_id,
             visitor_id=tracking.visitor_id if tracking else None,
             submission_type=submission_type,
             fields=fields,
@@ -103,10 +107,11 @@ class TrackingService:
         except Exception:
             logger.exception("Failed to record marketing submission (booking itself was unaffected)")
 
-    async def record_attribution(self, *, tracking: TrackingSnapshot | None, booking_id: str) -> None:
+    async def record_attribution(self, *, business_id: int, tracking: TrackingSnapshot | None, booking_id: str) -> None:
         if tracking is None or tracking.landing_page_id is None or tracking.variant_id is None:
             return  # no active experiment at visit time — nothing to attribute
         await self._repository.insert_attribution(
+            business_id=business_id,
             booking_id=booking_id,
             landing_page_id=tracking.landing_page_id,
             variant_id=tracking.variant_id,
@@ -126,6 +131,7 @@ class TrackingService:
     async def record_sms_consent(
         self,
         *,
+        business_id: int,
         phone_number: str,
         consented: bool,
         source: str,
@@ -137,6 +143,7 @@ class TrackingService:
         erase the record that consent was given in the first place.
         """
         await self._repository.insert_sms_consent(
+            business_id=business_id,
             phone_number=phone_number,
             consented=consented,
             consent_text=SMS_CONSENT_TEXT,
@@ -158,6 +165,7 @@ class TrackingService:
     async def record_email_consent(
         self,
         *,
+        business_id: int,
         email_address: str,
         source: str,
         visitor_id: str | None,
@@ -168,6 +176,7 @@ class TrackingService:
         checkbox exists). See EMAIL_CONSENT_TEXT for why this is legally distinct from SMS.
         """
         await self._repository.insert_email_consent(
+            business_id=business_id,
             email_address=email_address,
             consented=True,
             consent_text=EMAIL_CONSENT_TEXT,
@@ -189,6 +198,7 @@ class TrackingService:
     async def record_step1_contact(
         self,
         *,
+        business_id: int,
         given_name: str,
         phone_number: str,
         email_address: str | None,
@@ -211,6 +221,7 @@ class TrackingService:
         )
         traffic_source = classify_traffic_source(tracking)
         await self._repository.upsert_contact_step1(
+            business_id=business_id,
             phone_number=phone_number,
             given_name=given_name,
             email_address=email_address,
@@ -239,6 +250,7 @@ class TrackingService:
         fields["variant_name"] = variant_name
         fields["traffic_source"] = traffic_source
         await self._repository.insert_submission(
+            business_id=business_id,
             visitor_id=tracking.visitor_id if tracking else None,
             submission_type="step1",
             fields=fields,
@@ -254,6 +266,7 @@ class TrackingService:
     async def link_contact_to_booking(
         self,
         *,
+        business_id: int,
         given_name: str,
         phone_number: str,
         email_address: str | None,
@@ -279,6 +292,7 @@ class TrackingService:
             variant_id=tracking.variant_id if tracking else None,
         )
         await self._repository.update_contact_after_booking(
+            business_id=business_id,
             phone_number=phone_number,
             given_name=given_name,
             email_address=email_address,

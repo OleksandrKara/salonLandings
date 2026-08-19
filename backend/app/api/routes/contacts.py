@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from starlette.concurrency import run_in_threadpool
 
 from app.api.deps import get_customer_gateway, get_tracking_service
+from app.core.business_context import BusinessContext, get_current_business
 from app.domain.schemas import ContactCaptureRequest, ContactCaptureResponse
 from app.integrations.square.customers import SquareCustomerGateway, normalize_phone_for_storage
 from app.services.identity import resolve_tracking_snapshot
@@ -21,6 +22,7 @@ async def capture_contact(
     http_response: Response,
     tracking_service: TrackingService = Depends(get_tracking_service),
     customer_gateway: SquareCustomerGateway = Depends(get_customer_gateway),
+    business: BusinessContext = Depends(get_current_business),
 ) -> ContactCaptureResponse:
     tracking = resolve_tracking_snapshot(http_request, http_response, request.tracking)
     # Normalized once, up front, and reused for every downstream call (Square lookup, the
@@ -43,6 +45,7 @@ async def capture_contact(
         square_customer_id = None
 
     await tracking_service.record_step1_contact_safely(
+        business_id=business.id,
         given_name=request.given_name,
         phone_number=phone_number,
         email_address=request.email_address,
