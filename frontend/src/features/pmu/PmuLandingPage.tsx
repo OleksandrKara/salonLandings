@@ -8,9 +8,32 @@ import { PmuReviews } from "@/features/pmu/PmuReviews";
 import { PmuTechniques } from "@/features/pmu/PmuTechniques";
 import { recordVisit } from "@/lib/tracking";
 
+const PAGE_TITLE = "Permanent Brows by Anna Kara | Anna Kara's Beauty PMU Studio";
+const PAGE_DESCRIPTION =
+  "Hand-drawn, realistic brow techniques by Anna Kara in San Diego. Start with a free online consultation — no cost, no commitment.";
+
 export function PmuLandingPage() {
   useEffect(() => {
     recordVisit();
+  }, []);
+
+  // index.html's <title>/meta description/OG tags are static and shared with mani's own build
+  // (one bundle serves both domains, see App.tsx) — same runtime-patch approach LandingPage.tsx
+  // already uses for its own terminology overrides, just applied unconditionally here since this
+  // page is never mani's.
+  useEffect(() => {
+    document.title = PAGE_TITLE;
+    const setMeta = (selector: string, attr: string, value: string) => {
+      const el = document.querySelector(selector);
+      if (el) el.setAttribute(attr, value);
+    };
+    setMeta('meta[name="description"]', "content", PAGE_DESCRIPTION);
+    setMeta('meta[property="og:title"]', "content", PAGE_TITLE);
+    setMeta('meta[property="og:description"]', "content", PAGE_DESCRIPTION);
+    setMeta('meta[property="og:url"]', "content", "https://book.pmu-annakara.com/");
+    setMeta('meta[property="og:site_name"]', "content", "Anna Kara's Beauty PMU Studio");
+    setMeta('meta[name="twitter:title"]', "content", PAGE_TITLE);
+    setMeta('meta[name="twitter:description"]', "content", PAGE_DESCRIPTION);
   }, []);
 
   return (
