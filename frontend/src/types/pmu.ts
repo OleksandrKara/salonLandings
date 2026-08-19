@@ -62,6 +62,7 @@ export interface PmuConsultationConfirmation {
 
 export interface PmuDepositBookingRequest {
   technique_slug: string;
+  team_member_id: string;
   start_at: string;
   customer: CustomerContact;
   source_id: string;

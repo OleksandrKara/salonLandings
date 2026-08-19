@@ -122,6 +122,7 @@ export function PmuBookingModal() {
       const sourceId = await tokenizeRef.current();
       const confirmation = await bookPmuDeposit({
         technique_slug: mode.techniqueSlug,
+        team_member_id: selectedSlot.team_member_id,
         start_at: selectedSlot.start_at,
         customer: {
           given_name: givenName,

@@ -345,6 +345,7 @@ class PmuConsultationConfirmation(BaseModel):
 
 class PmuDepositBookingRequest(BaseModel):
     technique_slug: str
+    team_member_id: str
     start_at: str
     customer: CustomerContact
     # Square Web Payments SDK card nonce — see PMU_DEPOSIT / DepositBookingService. Never a raw

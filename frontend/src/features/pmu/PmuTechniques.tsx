@@ -60,9 +60,7 @@ function TechniqueCard({
       <div style={{ flex: 1 }}>
         <div style={styles.cardName}>{technique.name}</div>
         <p style={styles.cardDescription}>{technique.description}</p>
-        <div style={styles.cardMeta}>
-          {technique.duration_minutes} min · by Anna Kara
-        </div>
+        <div style={styles.cardMeta}>{technique.duration_minutes} min</div>
       </div>
       <div style={styles.cardPriceCol}>
         <div style={styles.cardPrice}>{formatPrice(technique.price)}</div>
