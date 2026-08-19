@@ -56,6 +56,7 @@ class MarketingRepository:
     async def insert_event(
         self,
         *,
+        business_id: int,
         session_id: str,
         landing_page_id: str | None,
         variant_id: str | None,
@@ -65,9 +66,10 @@ class MarketingRepository:
         pool = get_pool()
         await pool.execute(
             """
-            INSERT INTO marketing.events (session_id, landing_page_id, variant_id, event_type, metadata)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO marketing.events (business_id, session_id, landing_page_id, variant_id, event_type, metadata)
+            VALUES ($1, $2, $3, $4, $5, $6)
             """,
+            business_id,
             session_id,
             landing_page_id,
             variant_id,
@@ -78,6 +80,7 @@ class MarketingRepository:
     async def insert_funnel_event(
         self,
         *,
+        business_id: int,
         session_id: str,
         landing_page_id: str | None,
         variant_id: str | None,
@@ -91,9 +94,10 @@ class MarketingRepository:
         await pool.execute(
             """
             INSERT INTO marketing.funnel_events
-                (session_id, landing_page_id, variant_id, flow_key, step_key, step_index, step_count_total, metadata)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                (business_id, session_id, landing_page_id, variant_id, flow_key, step_key, step_index, step_count_total, metadata)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             """,
+            business_id,
             session_id,
             landing_page_id,
             variant_id,
@@ -107,6 +111,7 @@ class MarketingRepository:
     async def insert_attribution(
         self,
         *,
+        business_id: int,
         booking_id: str,
         landing_page_id: str | None,
         variant_id: str | None,
@@ -115,27 +120,29 @@ class MarketingRepository:
         pool = get_pool()
         await pool.execute(
             """
-            INSERT INTO marketing.attribution (booking_id, landing_page_id, variant_id, source)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO marketing.attribution (business_id, booking_id, landing_page_id, variant_id, source)
+            VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT (booking_id) DO NOTHING
             """,
+            business_id,
             booking_id,
             landing_page_id,
             variant_id,
             source,
         )
 
-    async def insert_visit(self, *, visitor_id: str, fields: dict) -> None:
+    async def insert_visit(self, *, business_id: int, visitor_id: str, fields: dict) -> None:
         pool = get_pool()
         await pool.execute(
             """
             INSERT INTO marketing.visits (
-                visitor_id, landing_path, referrer,
+                business_id, visitor_id, landing_path, referrer,
                 utm_source, utm_medium, utm_campaign, utm_term, utm_content,
                 fbclid, gclid, user_agent, device_type, os_name, os_version,
                 browser_name, browser_version, ip_address
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
             """,
+            business_id,
             visitor_id,
             fields.get("landing_path"),
             fields.get("referrer"),
@@ -155,18 +162,21 @@ class MarketingRepository:
             fields.get("ip_address"),
         )
 
-    async def insert_submission(self, *, visitor_id: str | None, submission_type: str, fields: dict) -> None:
+    async def insert_submission(
+        self, *, business_id: int, visitor_id: str | None, submission_type: str, fields: dict
+    ) -> None:
         pool = get_pool()
         await pool.execute(
             """
             INSERT INTO marketing.submissions (
-                visitor_id, submission_type, square_booking_id, service_name, price,
+                business_id, visitor_id, submission_type, square_booking_id, service_name, price,
                 customer_email, customer_phone, landing_path, referrer,
                 utm_source, utm_medium, utm_campaign, utm_term, utm_content,
                 fbclid, gclid, user_agent, device_type, os_name, os_version,
                 browser_name, browser_version, ip_address, landing_page_slug, variant_name, traffic_source
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
             """,
+            business_id,
             visitor_id,
             submission_type,
             fields.get("square_booking_id"),
@@ -198,6 +208,7 @@ class MarketingRepository:
     async def insert_sms_consent(
         self,
         *,
+        business_id: int,
         phone_number: str,
         consented: bool,
         consent_text: str,
@@ -210,9 +221,10 @@ class MarketingRepository:
         await pool.execute(
             """
             INSERT INTO marketing.sms_consent
-                (phone_number, consented, consent_text, consent_version, source, visitor_id, ip_address)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+                (business_id, phone_number, consented, consent_text, consent_version, source, visitor_id, ip_address)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             """,
+            business_id,
             phone_number,
             consented,
             consent_text,
@@ -225,6 +237,7 @@ class MarketingRepository:
     async def insert_email_consent(
         self,
         *,
+        business_id: int,
         email_address: str,
         consented: bool,
         consent_text: str,
@@ -237,9 +250,10 @@ class MarketingRepository:
         await pool.execute(
             """
             INSERT INTO marketing.email_consent
-                (email_address, consented, consent_text, consent_version, source, visitor_id, ip_address)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+                (business_id, email_address, consented, consent_text, consent_version, source, visitor_id, ip_address)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             """,
+            business_id,
             email_address,
             consented,
             consent_text,
@@ -272,6 +286,7 @@ class MarketingRepository:
     async def upsert_contact_step1(
         self,
         *,
+        business_id: int,
         phone_number: str,
         given_name: str,
         email_address: str | None,
@@ -305,13 +320,13 @@ class MarketingRepository:
         await pool.execute(
             """
             INSERT INTO marketing.contacts (
-                phone_number, given_name, email_address,
+                business_id, phone_number, given_name, email_address,
                 original_traffic_source, marketing_traffic_source,
                 utm_source, utm_medium, utm_campaign, referrer,
                 landing_page_slug, variant_name,
                 device_type, os_name, os_version, browser_name, browser_version,
                 square_customer_id, updated_at
-            ) VALUES ($1, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, now())
+            ) VALUES ($1, $2, $3, $4, $5, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, now())
             ON CONFLICT (phone_number) DO UPDATE SET
                 given_name = EXCLUDED.given_name,
                 email_address = COALESCE(EXCLUDED.email_address, marketing.contacts.email_address),
@@ -328,6 +343,7 @@ class MarketingRepository:
                 square_customer_id = COALESCE(EXCLUDED.square_customer_id, marketing.contacts.square_customer_id),
                 updated_at = now()
             """,
+            business_id,
             phone_number,
             given_name,
             email_address,
@@ -349,6 +365,7 @@ class MarketingRepository:
     async def update_contact_after_booking(
         self,
         *,
+        business_id: int,
         phone_number: str,
         given_name: str,
         email_address: str | None,
@@ -395,7 +412,7 @@ class MarketingRepository:
         await pool.execute(
             """
             INSERT INTO marketing.contacts (
-                phone_number, given_name, email_address,
+                business_id, phone_number, given_name, email_address,
                 original_traffic_source, marketing_traffic_source,
                 utm_source, utm_medium, utm_campaign, referrer,
                 landing_page_slug, variant_name,
@@ -404,8 +421,8 @@ class MarketingRepository:
                 square_customer_id, square_booking_id, booking_status, booking_start_at,
                 booking_service_name, booking_price, booking_artist_name, updated_at
             ) VALUES (
-                $1, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
-                $16, $17, $18, $19, $20, $21, $22, $23, $24, now()
+                $1, $2, $3, $4, $5, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
+                $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, now()
             )
             ON CONFLICT (phone_number) DO UPDATE SET
                 given_name = EXCLUDED.given_name,
@@ -433,6 +450,7 @@ class MarketingRepository:
                 booking_artist_name = EXCLUDED.booking_artist_name,
                 updated_at = now()
             """,
+            business_id,
             phone_number,
             given_name,
             email_address,
@@ -460,14 +478,15 @@ class MarketingRepository:
         )
 
     async def insert_abuse_block(
-        self, *, endpoint: str, reason: str, phone_number: str | None, ip_address: str | None
+        self, *, business_id: int, endpoint: str, reason: str, phone_number: str | None, ip_address: str | None
     ) -> None:
         pool = get_pool()
         await pool.execute(
             """
-            INSERT INTO marketing.abuse_blocks (endpoint, reason, phone_number, ip_address)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO marketing.abuse_blocks (business_id, endpoint, reason, phone_number, ip_address)
+            VALUES ($1, $2, $3, $4, $5)
             """,
+            business_id,
             endpoint,
             reason,
             phone_number,

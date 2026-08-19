@@ -42,6 +42,7 @@ class AbuseGuard:
     async def check(
         self,
         *,
+        business_id: int,
         endpoint: str,
         phone_number: str,
         ip_address: str | None,
@@ -50,12 +51,12 @@ class AbuseGuard:
         turnstile_token: str | None,
     ) -> None:
         if honeypot_value:
-            await self._reject(endpoint, "honeypot", phone_number, ip_address)
+            await self._reject(business_id, endpoint, "honeypot", phone_number, ip_address)
 
         if form_rendered_at:
             elapsed = self._seconds_since(form_rendered_at)
             if elapsed is not None and elapsed < MIN_HUMAN_FILL_SECONDS:
-                await self._reject(endpoint, "too_fast", phone_number, ip_address)
+                await self._reject(business_id, endpoint, "too_fast", phone_number, ip_address)
 
         if phone_number:
             since_day = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)
@@ -63,7 +64,7 @@ class AbuseGuard:
                 phone_number=phone_number, submission_types=_RATE_LIMITED_SUBMISSION_TYPES, since=since_day
             )
             if phone_count >= MAX_BOOKING_ATTEMPTS_PER_PHONE_PER_DAY:
-                await self._reject(endpoint, "rate_limit_phone", phone_number, ip_address)
+                await self._reject(business_id, endpoint, "rate_limit_phone", phone_number, ip_address)
 
         if ip_address:
             since_hour = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)
@@ -71,12 +72,12 @@ class AbuseGuard:
                 ip_address=ip_address, submission_types=_RATE_LIMITED_SUBMISSION_TYPES, since=since_hour
             )
             if ip_count >= MAX_BOOKING_ATTEMPTS_PER_IP_PER_HOUR:
-                await self._reject(endpoint, "rate_limit_ip", phone_number, ip_address)
+                await self._reject(business_id, endpoint, "rate_limit_ip", phone_number, ip_address)
 
         # Last and most expensive (network call to Cloudflare) — cheap checks above already
         # catch naive bots without paying for it.
         if not await verify_turnstile(turnstile_token, ip_address):
-            await self._reject(endpoint, "turnstile_failed", phone_number, ip_address)
+            await self._reject(business_id, endpoint, "turnstile_failed", phone_number, ip_address)
 
     @staticmethod
     def _seconds_since(iso_timestamp: str) -> float | None:
@@ -86,10 +87,12 @@ class AbuseGuard:
             return None  # malformed timestamp isn't itself a reason to block — other checks still apply
         return (dt.datetime.now(dt.timezone.utc) - rendered_at).total_seconds()
 
-    async def _reject(self, endpoint: str, reason: str, phone_number: str | None, ip_address: str | None) -> None:
+    async def _reject(
+        self, business_id: int, endpoint: str, reason: str, phone_number: str | None, ip_address: str | None
+    ) -> None:
         try:
             await self._repository.insert_abuse_block(
-                endpoint=endpoint, reason=reason, phone_number=phone_number, ip_address=ip_address
+                business_id=business_id, endpoint=endpoint, reason=reason, phone_number=phone_number, ip_address=ip_address
             )
         except Exception:
             logger.exception("Failed to log abuse block (rejection still enforced)")
