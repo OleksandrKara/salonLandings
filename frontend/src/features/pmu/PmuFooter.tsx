@@ -7,7 +7,7 @@ export function PmuFooter() {
     <footer style={styles.footer}>
       <img src={logo} alt={PMU_LOCATION.name} style={styles.logo} />
       <div style={{ marginTop: 6 }}>{PMU_LOCATION.address}</div>
-      <div>{PMU_LOCATION.phone} · By appointment</div>
+      <div>By appointment</div>
       <div>
         ★ {PMU_RATING.score} · {PMU_RATING.count} Google reviews
       </div>

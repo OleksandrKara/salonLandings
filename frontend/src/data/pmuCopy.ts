@@ -1,10 +1,11 @@
-// Real data, sourced 2026-08-19: reviews pasted from Google by the business owner, address/phone
-// scraped from pmu-annakara.com's own JSON-LD. See docs/multi-tenant-akpmu-design.md.
+// Real data, sourced 2026-08-19: reviews pasted from Google by the business owner. Address
+// corrected by the owner 2026-08-19 (studio operates from the same location as AK.LUX.NAILS, not
+// pmu-annakara.com's own listed University Ave address); no phone number shown on this page per
+// the owner's own request. See docs/multi-tenant-akpmu-design.md.
 
 export const PMU_LOCATION = {
   name: "Anna Kara's Beauty PMU Studio",
-  address: "2527 University Ave, San Diego, CA 92104",
-  phone: "(858) 337-2987",
+  address: "1357 Seventh Ave, Ste C, San Diego, CA 92101",
 };
 
 export const PMU_RATING = {
