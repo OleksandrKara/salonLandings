@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { bookPmuConsultation, bookPmuDeposit, getPmuCatalog, getPmuConsultationAvailability, getPmuTechniqueAvailability } from "@/api/pmu";
 import { ApiError } from "@/api/client";
 import { PMU_SMS_CONSENT_TEXT } from "@/data/pmuCopy";
@@ -7,7 +7,7 @@ import { Spinner } from "@/features/landing/Spinner";
 import { TurnstileWidget } from "@/features/booking/TurnstileWidget";
 import { PmuCardField } from "@/features/pmu/PmuCardField";
 import { usePmuBookingModalContext } from "@/features/pmu/PmuBookingModalContext";
-import { formatPrice, formatSlotDay, formatSlotTime, groupSlotsByDateKey } from "@/lib/formatting";
+import { formatPrice, formatSlotDay, formatSlotTime, groupSlotsByDateKey, pacificTodayKey, slotHour, toPacificDateKey } from "@/lib/formatting";
 import { getTrackingSnapshot } from "@/lib/tracking";
 import type { PmuCatalogResponse, PmuConsultationConfirmation, PmuDepositBookingConfirmation, PmuSlotOption } from "@/types/pmu";
 
@@ -219,6 +219,33 @@ export function PmuBookingModal() {
   );
 }
 
+// Buckets a day's slots into three time-of-day sections instead of one long flat list — reading
+// three short headed groups of ~4-8 large buttons is far faster to scan on a phone than scrolling
+// past 20-30 same-size 15-minute slots for two artists mixed together.
+const TIME_BUCKETS = [
+  { key: "morning", label: "Morning", test: (h: number) => h < 12 },
+  { key: "afternoon", label: "Afternoon", test: (h: number) => h >= 12 && h < 17 },
+  { key: "evening", label: "Evening", test: (h: number) => h >= 17 },
+] as const;
+
+function bucketSlotsByTimeOfDay(daySlots: PmuSlotOption[]): { key: string; label: string; slots: PmuSlotOption[] }[] {
+  return TIME_BUCKETS.map((b) => ({ key: b.key, label: b.label, slots: daySlots.filter((s) => b.test(slotHour(s.start_at))) })).filter(
+    (b) => b.slots.length > 0,
+  );
+}
+
+function dayChipLabel(dateKey: string): { top: string; bottom: string } {
+  const todayKey = pacificTodayKey();
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowKey = toPacificDateKey(tomorrow.toISOString());
+  if (dateKey === todayKey) return { top: "Today", bottom: String(d) };
+  if (dateKey === tomorrowKey) return { top: "Tmrw", bottom: String(d) };
+  const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date(y, m - 1, d));
+  return { top: weekday, bottom: String(d) };
+}
+
 function SlotStep({
   slots,
   error,
@@ -230,6 +257,30 @@ function SlotStep({
   selectedSlot: PmuSlotOption | null;
   onSelect: (slot: PmuSlotOption) => void;
 }) {
+  const [providerId, setProviderId] = useState<string | null>(null); // null = any artist
+  const [dateKey, setDateKey] = useState<string | null>(null);
+
+  // Every artist who has at least one open slot, in first-seen (i.e. earliest-availability) order.
+  const providers = useMemo(() => {
+    if (!slots) return [];
+    const seen = new Map<string, string>();
+    for (const s of slots) {
+      if (s.team_member_id && !seen.has(s.team_member_id)) seen.set(s.team_member_id, s.artist_name ?? "Artist");
+    }
+    return Array.from(seen, ([id, name]) => ({ id, name }));
+  }, [slots]);
+
+  const filteredSlots = useMemo(
+    () => (providerId ? (slots ?? []).filter((s) => s.team_member_id === providerId) : slots ?? []),
+    [slots, providerId],
+  );
+  const groups = useMemo(() => groupSlotsByDateKey(filteredSlots), [filteredSlots]);
+  const dateKeys = useMemo(() => Array.from(groups.keys()).sort(), [groups]);
+  const activeDateKey = dateKey && groups.has(dateKey) ? dateKey : dateKeys[0] ?? null;
+  const daySlots = activeDateKey ? groups.get(activeDateKey) ?? [] : [];
+  const buckets = bucketSlotsByTimeOfDay(daySlots);
+  const showArtistOnButton = providerId === null && providers.length > 1;
+
   if (error) return <ErrorNotice message={error} />;
   if (!slots) return <Spinner label="Loading available times…" />;
   if (slots.length === 0) {
@@ -240,33 +291,81 @@ function SlotStep({
     );
   }
 
-  const groups = groupSlotsByDateKey(slots);
-
   return (
     <div>
       <p style={styles.stepSubtitle}>Pick a day and time that works for you.</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, maxHeight: "55vh", overflowY: "auto" }}>
-        {Array.from(groups.entries()).map(([dateKey, daySlots]) => (
-          <div key={dateKey}>
-            <div style={styles.dayLabel}>{formatSlotDay(daySlots[0].start_at)}</div>
-            <div style={styles.slotGrid}>
-              {daySlots.map((slot) => (
-                <button
-                  key={slot.start_at + slot.team_member_id}
-                  onClick={() => onSelect(slot)}
-                  style={{
-                    ...styles.slotButton,
-                    ...(selectedSlot?.start_at === slot.start_at ? styles.slotButtonSelected : {}),
-                  }}
-                >
-                  <span>{formatSlotTime(slot.start_at)}</span>
-                  {slot.artist_name ? <span style={styles.slotArtist}>{slot.artist_name}</span> : null}
+
+      {providers.length > 1 ? (
+        <div style={styles.chipRow}>
+          <button
+            onClick={() => {
+              setProviderId(null);
+              setDateKey(null);
+            }}
+            style={{ ...styles.providerChip, ...(providerId === null ? styles.chipSelected : {}) }}
+          >
+            Any artist
+          </button>
+          {providers.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => {
+                setProviderId(p.id);
+                setDateKey(null);
+              }}
+              style={{ ...styles.providerChip, ...(providerId === p.id ? styles.chipSelected : {}) }}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {dateKeys.length === 0 ? (
+        <div style={styles.emptyState}>No open times with this artist — try "Any artist" above.</div>
+      ) : (
+        <>
+          <div style={styles.dayStrip}>
+            {dateKeys.map((k) => {
+              const label = dayChipLabel(k);
+              const active = k === activeDateKey;
+              return (
+                <button key={k} onClick={() => setDateKey(k)} style={{ ...styles.dayChip, ...(active ? styles.chipSelected : {}) }}>
+                  <span style={styles.dayChipTop}>{label.top}</span>
+                  <span style={styles.dayChipBottom}>{label.bottom}</span>
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
+
+          {activeDateKey ? <div style={styles.dayFullLabel}>{formatSlotDay(daySlots[0]?.start_at ?? `${activeDateKey}T12:00:00Z`)}</div> : null}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, maxHeight: "42vh", overflowY: "auto" }}>
+            {buckets.map((bucket) => (
+              <div key={bucket.key}>
+                <div style={styles.timeSectionLabel}>{bucket.label}</div>
+                <div style={styles.slotGrid}>
+                  {bucket.slots.map((slot) => (
+                    <button
+                      key={slot.start_at + slot.team_member_id}
+                      onClick={() => onSelect(slot)}
+                      style={{
+                        ...styles.slotButton,
+                        ...(selectedSlot?.start_at === slot.start_at && selectedSlot?.team_member_id === slot.team_member_id
+                          ? styles.slotButtonSelected
+                          : {}),
+                      }}
+                    >
+                      <span>{formatSlotTime(slot.start_at)}</span>
+                      {showArtistOnButton && slot.artist_name ? <span style={styles.slotArtist}>{slot.artist_name}</span> : null}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -552,8 +651,44 @@ const styles: Record<string, CSSProperties> = {
   title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 24, margin: "6px 0 4px" },
   stepSubtitle: { fontSize: 13.5, color: "var(--color-muted-2)", margin: "0 0 14px", lineHeight: 1.5 },
   emptyState: { fontSize: 14, color: "var(--color-muted)", lineHeight: 1.6, padding: "20px 0" },
-  dayLabel: { fontSize: 12.5, fontWeight: 600, color: "var(--color-ink-soft)", marginBottom: 8 },
-  slotGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 },
+  // Artist filter chips — shown only when the technique/consultation has more than one artist
+  // available, so a solo-provider offer never displays a redundant single choice.
+  chipRow: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" },
+  providerChip: {
+    border: "1px solid #e0cfc6",
+    background: "#fff",
+    borderRadius: 20,
+    padding: "9px 16px",
+    fontSize: 13.5,
+    fontWeight: 600,
+    color: "var(--color-ink)",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+  },
+  chipSelected: { border: "1.5px solid var(--color-accent)", background: "var(--color-accent)", color: "#fff" },
+  // Horizontal-scrolling day strip: one row instead of a stacked section per day, so only the
+  // selected day's times take up vertical space — the actual fix for "too many choices at once".
+  dayStrip: { display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 4, WebkitOverflowScrolling: "touch" },
+  dayChip: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 1,
+    flex: "none",
+    width: 52,
+    border: "1px solid #e0cfc6",
+    background: "#fff",
+    borderRadius: 12,
+    padding: "8px 4px",
+    cursor: "pointer",
+    color: "var(--color-ink)",
+  },
+  dayChipTop: { fontSize: 10.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3, opacity: 0.75 },
+  dayChipBottom: { fontSize: 17, fontWeight: 700, lineHeight: 1.2 },
+  dayFullLabel: { fontSize: 12.5, fontWeight: 600, color: "var(--color-ink-soft)", margin: "12px 0 8px" },
+  timeSectionLabel: { fontSize: 11.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, color: "var(--color-muted-3)", marginBottom: 7 },
+  // Two large columns, not three cramped ones — bigger touch targets are the other half of the fix.
+  slotGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 },
   slotButton: {
     display: "flex",
     flexDirection: "column",
@@ -561,15 +696,15 @@ const styles: Record<string, CSSProperties> = {
     gap: 2,
     border: "1px solid #e0cfc6",
     background: "#fff",
-    borderRadius: 10,
-    padding: "10px 6px",
-    fontSize: 13,
-    fontWeight: 500,
+    borderRadius: 12,
+    padding: "13px 8px",
+    fontSize: 15,
+    fontWeight: 600,
     color: "var(--color-ink)",
     cursor: "pointer",
   },
   slotButtonSelected: { border: "1.5px solid var(--color-accent)", background: "var(--color-accent-tint-2)" },
-  slotArtist: { fontSize: 10.5, color: "var(--color-muted-3)" },
+  slotArtist: { fontSize: 11, fontWeight: 500, color: "var(--color-muted-3)" },
   selectedSlotBanner: { fontSize: 13, color: "var(--color-ink-soft)", background: "var(--color-accent-tint)", borderRadius: 10, padding: "8px 12px", marginBottom: 14 },
   label: { fontSize: 13, fontWeight: 500, color: "var(--color-ink-soft)" },
   input: { width: "100%", minWidth: 0, margin: "6px 0 14px", padding: 14, fontSize: 16, border: "1px solid #e0cfc6", borderRadius: 11, background: "#fff" },
