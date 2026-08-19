@@ -4,6 +4,7 @@ import { PmuBookingModalProvider } from "@/features/pmu/PmuBookingModalContext";
 import { PmuFooter } from "@/features/pmu/PmuFooter";
 import { PmuHeader } from "@/features/pmu/PmuHeader";
 import { PmuHero } from "@/features/pmu/PmuHero";
+import { PmuResultsCarousel } from "@/features/pmu/PmuResultsCarousel";
 import { PmuReviews } from "@/features/pmu/PmuReviews";
 import { PmuTechniques } from "@/features/pmu/PmuTechniques";
 import { recordVisit } from "@/lib/tracking";
@@ -42,6 +43,7 @@ export function PmuLandingPage() {
         <PmuHeader />
         <PmuHero />
         <PmuTechniques />
+        <PmuResultsCarousel />
         <PmuReviews />
         <PmuFooter />
       </div>

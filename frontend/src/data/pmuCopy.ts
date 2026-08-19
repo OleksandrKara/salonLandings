@@ -3,6 +3,14 @@
 // pmu-annakara.com's own listed University Ave address); no phone number shown on this page per
 // the owner's own request. See docs/multi-tenant-akpmu-design.md.
 
+import gallery1 from "@/assets/pmu/gallery/gallery-1.jpg";
+import gallery2 from "@/assets/pmu/gallery/gallery-2.jpg";
+import gallery3 from "@/assets/pmu/gallery/gallery-3.jpg";
+import gallery4 from "@/assets/pmu/gallery/gallery-4.jpg";
+import gallery5 from "@/assets/pmu/gallery/gallery-5.jpg";
+import gallery6 from "@/assets/pmu/gallery/gallery-6.jpg";
+import gallery7 from "@/assets/pmu/gallery/gallery-7.jpg";
+
 export const PMU_LOCATION = {
   name: "Anna Kara's Beauty PMU Studio",
   address: "1357 Seventh Ave, Ste C, San Diego, CA 92101",
@@ -47,3 +55,31 @@ export const PMU_REVIEWS: PmuReview[] = [
     text: "Wow! Just wow! The most incredible experience from start to finish! Anna is an absolute perfectionist, and she took her time with my procedures. There is no way to convey the time, focus and effort that Anna put in to achieving the perfect result and making sure I was happy. 10/10 I will be returning and 10/10 I recommend Anna.",
   },
 ];
+
+export interface PmuGallerySlide {
+  id: string;
+  src: string;
+  badge: string;
+  caption: string;
+  sub: string;
+}
+
+// Sourced 2026-08-19 from pmu-annakara.com/realistic-nano-hairstrokes/ as placeholder gallery
+// content — real client photos, but a temporary set until the owner supplies a curated batch.
+export const PMU_GALLERY_SLIDES: PmuGallerySlide[] = [
+  { id: "pgNanoSplit", src: gallery1, badge: "Nano Hairstrokes", caption: "Before & After — Healed Result", sub: "Hand-drawn, hair-like strokes" },
+  { id: "pgNaturalArch", src: gallery2, badge: "Nano Hairstrokes", caption: "Natural Hairstroke Brows", sub: "Soft, symmetrical arch" },
+  { id: "pgFullFace", src: gallery3, badge: "Nano Hairstrokes", caption: "Fuller, Defined Brows", sub: "Healed result, natural finish" },
+  { id: "pgBrandedSplit1", src: gallery4, badge: "Nano Hairstrokes", caption: "Before & After", sub: "Anna Kara's Beauty PMU Studio" },
+  { id: "pgBrandedSplit2", src: gallery5, badge: "Nano Hairstrokes", caption: "Before & After — Healed", sub: "Anna Kara's Beauty PMU Studio" },
+  { id: "pgMacroDetail1", src: gallery6, badge: "Detail", caption: "Hair-by-Hair Detail", sub: "Anna Kara's Beauty PMU Studio" },
+  { id: "pgMacroDetail2", src: gallery7, badge: "Detail", caption: "Stroke-by-Stroke Precision", sub: "Close-up of the hairstroke technique" },
+];
+
+export const PMU_GALLERY_INITIAL_COUNT = 5;
+
+// Same legal shape as designCopy.ts's SMS_CONSENT_TEXT, business name swapped for PMU. No
+// cancellation-policy step exists on this page (or its equivalent consent card) — the owner
+// asked to drop it for PMU, so ConfirmStep.tsx's cancelCard pattern is intentionally not mirrored.
+export const PMU_SMS_CONSENT_TEXT =
+  "By checking this box, I agree to receive recurring automated marketing & appointment text messages (offers, promotions & reminders) from Anna Kara's Beauty PMU Studio at the number I provided. Consent is not a condition of purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help.";
