@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.deps import get_customer_attributes_gateway
+from app.api.deps import _customer_attributes_gateway_for
 from app.api.routes import artists, availability, bookings, contacts, experiments, services, tracking
 from app.core.config import get_settings
 from app.core.logging import configure_logging
@@ -24,7 +24,15 @@ async def lifespan(app: FastAPI):
     await init_pool()
     await run_migrations()
     try:
-        get_customer_attributes_gateway().ensure_definitions()
+        # No request context at startup, so the usual `Depends(get_current_business)` chain can't
+        # resolve here (2026-08-19 regression: calling the FastAPI-dependency wrapper directly
+        # passed the raw Depends object through as "business", crashing on business.id) — call the
+        # business_id-keyed cache helper directly instead. Square custom attribute definitions are
+        # inherently per-business, so this only ensures them for business 1 (the only business this
+        # process actually serves today); once a second business is live, this needs to loop over
+        # every connected business instead, same "Phase 3 replace this" shape as salaryReview's own
+        # BusinessRepository#sole()/#legacySmsBusiness().
+        _customer_attributes_gateway_for(business_id=1).ensure_definitions()
     except Exception:
         # Non-fatal: Square custom attribute definitions self-heal on the next
         # restart, and bookings still succeed without them (attach_tracking
