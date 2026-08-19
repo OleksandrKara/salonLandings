@@ -27,7 +27,9 @@ export function PmuBookingModal() {
   const [familyName, setFamilyName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [smsOptIn, setSmsOptIn] = useState(true);
+  // Off by default, unlike mani's own checkbox — California requires marketing SMS consent to be
+  // an affirmative, unchecked-by-default action, not pre-ticked.
+  const [smsOptIn, setSmsOptIn] = useState(false);
   const [website, setWebsite] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [formRenderedAt, setFormRenderedAt] = useState("");
