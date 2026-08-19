@@ -21,11 +21,11 @@ export function PmuHero({ overrides }: { overrides?: LandingVariantContent }) {
         </div>
       </div>
 
-      <div style={styles.eyebrow}>San Diego · Brow Specialist</div>
+      <div style={styles.eyebrow}>San Diego · Brow Studio</div>
       <h1 style={styles.headline}>{overrides?.heroHeadline ?? "Wake Up With Perfect Brows, Every Day"}</h1>
       <p style={styles.subhead}>
-        Anna Kara's signature hairstroke and combo techniques — hand-drawn, realistic, and made to fit your natural
-        shape. Start with a free conversation about your goals, no commitment required.
+        Anna Kara's team of skilled brow artists — hand-drawn, realistic hairstroke and combo techniques made to fit
+        your natural shape. Start with a free conversation about your goals, no commitment required.
       </p>
 
       <button onClick={() => openConsultation()} style={styles.primaryButton}>

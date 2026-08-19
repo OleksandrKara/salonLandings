@@ -471,7 +471,7 @@ function DoneStep({
         <div style={styles.doneCheck}>✓</div>
         <h3 style={styles.doneTitle}>You're Booked!</h3>
         <p style={styles.doneSubtitle}>
-          {depositConfirmation.service_name} with {depositConfirmation.artist_name ?? "Anna"} —{" "}
+          {depositConfirmation.service_name} with {depositConfirmation.artist_name ?? "your artist"} —{" "}
           {formatSlotDay(depositConfirmation.start_at)}, {formatSlotTime(depositConfirmation.start_at)}
         </p>
         <div style={styles.doneSummary}>
