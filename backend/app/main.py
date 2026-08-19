@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.deps import _customer_attributes_gateway_for
-from app.api.routes import artists, availability, bookings, contacts, experiments, services, tracking
+from app.api.routes import artists, availability, bookings, contacts, experiments, pmu, services, tracking
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.integrations.marketing_db.migrations import run_migrations
@@ -66,6 +66,7 @@ app.include_router(bookings.router)
 app.include_router(tracking.router)
 app.include_router(experiments.router)
 app.include_router(contacts.router)
+app.include_router(pmu.router)
 
 
 @app.get("/api/health")

@@ -13,6 +13,7 @@ from app.integrations.square.client import get_square_client
 from app.integrations.square.credentials import get_square_credentials
 from app.integrations.square.customer_attributes import SquareCustomerAttributesGateway
 from app.integrations.square.customers import SquareCustomerGateway
+from app.integrations.square.payments import SquarePaymentGateway
 from app.integrations.square.team import SquareTeamRepository
 from app.services.abuse_guard import AbuseGuard
 from app.services.artist_service import ArtistService
@@ -20,6 +21,7 @@ from app.services.availability_service import AvailabilityService
 from app.services.booking_service import BookingService
 from app.services.catalog_service import CatalogService
 from app.services.experiment_service import ExperimentService
+from app.services.pmu_service import PmuAvailabilityService, PmuBookingService, PmuCatalogService
 from app.services.tracking_service import TrackingService
 
 # Every factory below used to be a single process-wide @lru_cache singleton, built once from the
@@ -177,6 +179,81 @@ def get_booking_service(
         catalog_service,
         artist_service,
         business_repository,
+        customer_attributes_gateway,
+    )
+
+
+# --- AK PMU (see app.domain.pmu_catalog / app.services.pmu_service) ---
+
+
+@lru_cache
+def _pmu_catalog_service_for(business_id: int, catalog_repository: SquareCatalogRepository) -> PmuCatalogService:
+    return PmuCatalogService(catalog_repository)
+
+
+def get_pmu_catalog_service(
+    business: BusinessContext = Depends(get_current_business),
+    catalog_repository: SquareCatalogRepository = Depends(get_catalog_repository),
+) -> PmuCatalogService:
+    return _pmu_catalog_service_for(business.id, catalog_repository)
+
+
+@lru_cache
+def _pmu_availability_service_for(
+    business_id: int, availability_gateway: SquareAvailabilityGateway, team_repository: SquareTeamRepository
+) -> PmuAvailabilityService:
+    return PmuAvailabilityService(availability_gateway, team_repository)
+
+
+def get_pmu_availability_service(
+    business: BusinessContext = Depends(get_current_business),
+    availability_gateway: SquareAvailabilityGateway = Depends(get_availability_gateway),
+    team_repository: SquareTeamRepository = Depends(get_team_repository),
+) -> PmuAvailabilityService:
+    return _pmu_availability_service_for(business.id, availability_gateway, team_repository)
+
+
+@lru_cache
+def _payment_gateway_for(business_id: int, location_id: str) -> SquarePaymentGateway:
+    return SquarePaymentGateway(get_square_client(business_id), location_id=location_id)
+
+
+def get_payment_gateway(business: BusinessContext = Depends(get_current_business)) -> SquarePaymentGateway:
+    creds = get_square_credentials(business.id)
+    return _payment_gateway_for(business.id, creds.location_id)
+
+
+@lru_cache
+def _pmu_booking_service_for(
+    business_id: int,
+    customer_gateway: SquareCustomerGateway,
+    booking_gateway: SquareBookingGateway,
+    payment_gateway: SquarePaymentGateway,
+    catalog_repository: SquareCatalogRepository,
+    team_repository: SquareTeamRepository,
+    customer_attributes_gateway: SquareCustomerAttributesGateway,
+) -> PmuBookingService:
+    return PmuBookingService(
+        customer_gateway, booking_gateway, payment_gateway, catalog_repository, team_repository, customer_attributes_gateway
+    )
+
+
+def get_pmu_booking_service(
+    business: BusinessContext = Depends(get_current_business),
+    customer_gateway: SquareCustomerGateway = Depends(get_customer_gateway),
+    booking_gateway: SquareBookingGateway = Depends(get_booking_gateway),
+    payment_gateway: SquarePaymentGateway = Depends(get_payment_gateway),
+    catalog_repository: SquareCatalogRepository = Depends(get_catalog_repository),
+    team_repository: SquareTeamRepository = Depends(get_team_repository),
+    customer_attributes_gateway: SquareCustomerAttributesGateway = Depends(get_customer_attributes_gateway),
+) -> PmuBookingService:
+    return _pmu_booking_service_for(
+        business.id,
+        customer_gateway,
+        booking_gateway,
+        payment_gateway,
+        catalog_repository,
+        team_repository,
         customer_attributes_gateway,
     )
 

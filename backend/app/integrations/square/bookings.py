@@ -63,3 +63,18 @@ class SquareBookingGateway:
             raise SquareIntegrationError("Unable to create appointment in Square", detail=detail) from exc
 
         return response.booking
+
+    def cancel_booking(self, booking_id: str) -> None:
+        """Best-effort rollback for the deposit-first flow (see app.services.deposit_service) —
+        used when a real appointment was reserved but the deposit charge that's supposed to
+        confirm it then fails, so the slot doesn't sit held for nothing. Never raises: if the
+        cancel itself fails, the booking is orphaned but harmless (a real slot the salon can just
+        see went uncollected and follow up on), which is a far better failure mode than raising
+        here and hiding the original charge failure from the caller.
+        """
+        try:
+            self._client.bookings.cancel(booking_id)
+        except SQUARE_CALL_ERRORS as exc:
+            detail = square_error_detail(exc)
+            logger.error("Failed to cancel booking %s after a deposit charge failure: %s",
+                         booking_id, detail if detail is not None else exc)
