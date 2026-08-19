@@ -33,8 +33,10 @@ export function PmuLandingPage() {
     setMeta('meta[property="og:description"]', "content", PAGE_DESCRIPTION);
     setMeta('meta[property="og:url"]', "content", "https://book.pmu-annakara.com/");
     setMeta('meta[property="og:site_name"]', "content", "Anna Kara's Beauty PMU Studio");
+    setMeta('meta[property="og:image"]', "content", "https://book.pmu-annakara.com/pmu-og-image.png");
     setMeta('meta[name="twitter:title"]', "content", PAGE_TITLE);
     setMeta('meta[name="twitter:description"]', "content", PAGE_DESCRIPTION);
+    setMeta('meta[name="twitter:image"]', "content", "https://book.pmu-annakara.com/pmu-og-image.png");
   }, []);
 
   return (
