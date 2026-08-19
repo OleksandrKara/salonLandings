@@ -3,8 +3,9 @@ import heroBrows from "@/assets/pmu/hero-brows.jpg";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
 import { PMU_RATING } from "@/data/pmuCopy";
 import { usePmuBookingModalContext } from "@/features/pmu/PmuBookingModalContext";
+import type { LandingVariantContent } from "@/types/api";
 
-export function PmuHero() {
+export function PmuHero({ overrides }: { overrides?: LandingVariantContent }) {
   const { openConsultation } = usePmuBookingModalContext();
 
   return (
@@ -21,7 +22,7 @@ export function PmuHero() {
       </div>
 
       <div style={styles.eyebrow}>San Diego · Brow Specialist</div>
-      <h1 style={styles.headline}>Wake Up With Perfect Brows, Every Day</h1>
+      <h1 style={styles.headline}>{overrides?.heroHeadline ?? "Wake Up With Perfect Brows, Every Day"}</h1>
       <p style={styles.subhead}>
         Anna Kara's signature hairstroke and combo techniques — hand-drawn, realistic, and made to fit your natural
         shape. Start with a free conversation about your goals, no commitment required.
