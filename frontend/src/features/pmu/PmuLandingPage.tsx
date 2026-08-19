@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { PmuBookingModal } from "@/features/pmu/PmuBookingModal";
 import { PmuBookingModalProvider } from "@/features/pmu/PmuBookingModalContext";
 import { PmuFooter } from "@/features/pmu/PmuFooter";
@@ -8,15 +8,28 @@ import { PmuResultsCarousel } from "@/features/pmu/PmuResultsCarousel";
 import { PmuReviews } from "@/features/pmu/PmuReviews";
 import { PmuStickyBottomBar } from "@/features/pmu/PmuStickyBottomBar";
 import { PmuTechniques } from "@/features/pmu/PmuTechniques";
+import { resolveExperiment } from "@/lib/experiments";
 import { recordVisit } from "@/lib/tracking";
+import type { LandingVariantContent } from "@/types/api";
 
 const PAGE_TITLE = "Permanent Brows by Anna Kara | Anna Kara's Beauty PMU Studio";
 const PAGE_DESCRIPTION =
   "Hand-drawn, realistic brow techniques by Anna Kara in San Diego. Start with a free online consultation — no cost, no commitment.";
 
 export function PmuLandingPage() {
+  const [overrides, setOverrides] = useState<LandingVariantContent>({});
+
   useEffect(() => {
     recordVisit();
+    // Not gated on first paint (protects LCP) — the hardcoded default headline renders
+    // immediately and briefly flashes to the assigned variant's copy once resolved. Also what
+    // makes future visits/contacts/attribution tag themselves with the "pmu" landing_page_id —
+    // see lib/tracking.ts's withVariantAssignment, which reads the assignment this persists.
+    resolveExperiment("pmu")
+      .then(({ content }) => setOverrides(content))
+      .catch(() => {
+        // experiment resolution only — nothing to recover, nothing to surface to the visitor
+      });
   }, []);
 
   // index.html's <title>/meta description/OG tags are static and shared with mani's own build
@@ -44,7 +57,7 @@ export function PmuLandingPage() {
     <PmuBookingModalProvider>
       <div style={styles.page}>
         <PmuHeader />
-        <PmuHero />
+        <PmuHero overrides={overrides} />
         <PmuTechniques />
         <PmuResultsCarousel />
         <PmuReviews />
