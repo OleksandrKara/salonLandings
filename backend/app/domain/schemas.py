@@ -273,3 +273,93 @@ class ContactCaptureRequest(BaseModel):
 
 class ContactCaptureResponse(BaseModel):
     recorded: bool
+
+
+# --- AK PMU (Anna Kara Permanent Makeup) — see app.domain.pmu_catalog ---
+
+
+class PmuSlotOption(BaseModel):
+    start_at: str
+    end_at: str
+    team_member_id: str
+    artist_name: str | None
+
+
+class PmuAvailabilityResponse(BaseModel):
+    slots: list[PmuSlotOption]
+
+
+class PmuTechniqueOffer(BaseModel):
+    slug: str
+    name: str
+    description: str
+    price: float
+    duration_minutes: int
+    variation_id: str
+    variation_version: int
+
+
+class PmuConsultationOffer(BaseModel):
+    slug: str
+    name: str
+    description: str
+    price: float
+    duration_minutes: int
+    variation_id: str
+    variation_version: int
+    team_member_ids: list[str]
+
+
+class PmuCatalogResponse(BaseModel):
+    techniques: list[PmuTechniqueOffer]
+    consultations: list[PmuConsultationOffer]
+    deposit_amount: float
+
+
+class PmuConsultationRequest(BaseModel):
+    consultation_slug: str
+    team_member_id: str
+    start_at: str
+    customer: CustomerContact
+    note: str | None = Field(default=None, max_length=500)
+    tracking: TrackingSnapshot | None = None
+    website: str | None = None
+    form_rendered_at: str | None = None
+    turnstile_token: str | None = None
+
+
+class PmuConsultationConfirmation(BaseModel):
+    booking_id: str
+    status: str
+    start_at: str
+    service_name: str
+    artist_name: str | None
+    square_customer_id: str = Field(exclude=True)
+
+
+class PmuDepositBookingRequest(BaseModel):
+    technique_slug: str
+    start_at: str
+    customer: CustomerContact
+    # Square Web Payments SDK card nonce — see PMU_DEPOSIT / DepositBookingService. Never a raw
+    # card number; this backend never sees card details at all, only Square's own tokenized source.
+    source_id: str = Field(min_length=1, max_length=200)
+    note: str | None = Field(default=None, max_length=500)
+    tracking: TrackingSnapshot | None = None
+    website: str | None = None
+    form_rendered_at: str | None = None
+    turnstile_token: str | None = None
+
+
+class PmuDepositBookingConfirmation(BaseModel):
+    booking_id: str
+    status: str
+    start_at: str
+    duration_minutes: int
+    service_name: str
+    full_price: float
+    deposit_amount: float
+    remaining_balance: float
+    artist_name: str | None
+    payment_id: str
+    square_customer_id: str = Field(exclude=True)
