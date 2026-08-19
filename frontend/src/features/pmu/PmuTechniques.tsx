@@ -16,7 +16,7 @@ export function PmuTechniques() {
       <div style={styles.eyebrow}>Not Sure Which Technique Is Right?</div>
       <h2 style={styles.heading}>Talk It Through First — Free</h2>
       <p style={styles.lead}>
-        Every brow is different. A free video consultation with Anna is the easiest way to figure out which
+        Every brow is different. A free video consultation with our team is the easiest way to figure out which
         technique fits your face shape, skin type, and goals — before you spend a cent.
       </p>
       <button onClick={() => openConsultation()} style={styles.primaryButton}>

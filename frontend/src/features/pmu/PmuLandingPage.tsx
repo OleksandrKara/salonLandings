@@ -12,9 +12,9 @@ import { resolveExperiment } from "@/lib/experiments";
 import { recordVisit } from "@/lib/tracking";
 import type { LandingVariantContent } from "@/types/api";
 
-const PAGE_TITLE = "Permanent Brows by Anna Kara | Anna Kara's Beauty PMU Studio";
+const PAGE_TITLE = "Permanent Brows in San Diego | Anna Kara's Beauty PMU Studio";
 const PAGE_DESCRIPTION =
-  "Hand-drawn, realistic brow techniques by Anna Kara in San Diego. Start with a free online consultation — no cost, no commitment.";
+  "Hand-drawn, realistic brow techniques by Anna Kara's team in San Diego. Start with a free online consultation — no cost, no commitment.";
 
 export function PmuLandingPage() {
   const [overrides, setOverrides] = useState<LandingVariantContent>({});
