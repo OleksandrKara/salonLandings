@@ -6,6 +6,7 @@ import { PmuHeader } from "@/features/pmu/PmuHeader";
 import { PmuHero } from "@/features/pmu/PmuHero";
 import { PmuResultsCarousel } from "@/features/pmu/PmuResultsCarousel";
 import { PmuReviews } from "@/features/pmu/PmuReviews";
+import { PmuStickyBottomBar } from "@/features/pmu/PmuStickyBottomBar";
 import { PmuTechniques } from "@/features/pmu/PmuTechniques";
 import { recordVisit } from "@/lib/tracking";
 
@@ -49,6 +50,7 @@ export function PmuLandingPage() {
         <PmuReviews />
         <PmuFooter />
       </div>
+      <PmuStickyBottomBar />
       <PmuBookingModal />
     </PmuBookingModalProvider>
   );
@@ -61,7 +63,7 @@ const styles: Record<string, CSSProperties> = {
     background: "var(--color-card)",
     boxShadow: "0 0 80px rgba(90,50,40,0.10)",
     minHeight: "100vh",
-    paddingBottom: 40,
+    paddingBottom: 118,
     overflow: "hidden",
   },
 };

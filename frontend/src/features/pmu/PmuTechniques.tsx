@@ -22,8 +22,8 @@ export function PmuTechniques() {
       <button onClick={() => openConsultation()} style={styles.primaryButton}>
         Book a Free Online Consultation
       </button>
-      <button onClick={() => openConsultation("in-person-consultation")} style={styles.secondaryLink}>
-        Prefer to meet in person? In-studio consultation — $50
+      <button onClick={() => openConsultation("in-person-consultation")} style={styles.secondaryButton}>
+        Prefer to meet in person? Book an in-studio consultation — $50
       </button>
 
       {status === "loading" ? <Spinner label="Loading techniques…" /> : null}
@@ -90,17 +90,18 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 12,
     cursor: "pointer",
   },
-  secondaryLink: {
+  secondaryButton: {
     display: "block",
     width: "100%",
     marginTop: 10,
-    border: "none",
-    background: "none",
-    color: "var(--color-muted)",
-    fontSize: 12.5,
-    padding: 6,
+    border: "1px solid var(--color-accent-border-soft)",
+    background: "var(--color-accent-tint-2)",
+    color: "var(--color-accent)",
+    fontSize: 13,
+    fontWeight: 600,
+    padding: 13,
+    borderRadius: 11,
     cursor: "pointer",
-    textDecoration: "underline",
   },
   divider: { marginTop: 30, paddingTop: 22, borderTop: "1px solid var(--color-border)" },
   dividerLabel: { fontSize: 12.5, fontWeight: 600, color: "var(--color-muted-2)", textAlign: "center" },
