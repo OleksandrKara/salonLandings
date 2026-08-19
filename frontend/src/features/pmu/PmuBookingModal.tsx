@@ -234,6 +234,10 @@ function bucketSlotsByTimeOfDay(daySlots: PmuSlotOption[]): { key: string; label
   );
 }
 
+function isAnastasiia(slot: PmuSlotOption): boolean {
+  return (slot.artist_name ?? "").toLowerCase().includes("anastasiia");
+}
+
 function dayChipLabel(dateKey: string): { top: string; bottom: string } {
   const todayKey = pacificTodayKey();
   const [y, m, d] = dateKey.split("-").map(Number);
@@ -244,6 +248,70 @@ function dayChipLabel(dateKey: string): { top: string; bottom: string } {
   if (dateKey === tomorrowKey) return { top: "Tmrw", bottom: String(d) };
   const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date(y, m - 1, d));
   return { top: weekday, bottom: String(d) };
+}
+
+// Horizontal-scrolling day strip with click/tap arrows and edge fades. Swipe alone is enough on a
+// phone, but a mouse-only desktop visitor has no way to reveal days scrolled off-screen without
+// them — arrows make every available day reachable there too, and the fade (only shown on the
+// side that actually has more content) is what signals there's more to see in the first place,
+// rather than the strip silently looking like the whole list of available days.
+function DayStrip({
+  dateKeys,
+  activeDateKey,
+  onSelect,
+}: {
+  dateKeys: string[];
+  activeDateKey: string | null;
+  onSelect: (dateKey: string) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  function updateScrollState() {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }
+
+  useEffect(() => {
+    // New filter/data can change whether the strip overflows at all — recheck once laid out.
+    updateScrollState();
+  }, [dateKeys]);
+
+  function scrollByChips(direction: 1 | -1) {
+    scrollRef.current?.scrollBy({ left: direction * 168, behavior: "smooth" });
+  }
+
+  return (
+    <div style={styles.dayStripWrap}>
+      <div ref={scrollRef} onScroll={updateScrollState} style={styles.dayStrip}>
+        {dateKeys.map((k) => {
+          const label = dayChipLabel(k);
+          const active = k === activeDateKey;
+          return (
+            <button key={k} onClick={() => onSelect(k)} style={{ ...styles.dayChip, ...(active ? styles.chipSelected : {}) }}>
+              <span style={styles.dayChipTop}>{label.top}</span>
+              <span style={styles.dayChipBottom}>{label.bottom}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ ...styles.dayStripFade, left: 0, background: "linear-gradient(to right, var(--color-card), transparent)", opacity: canScrollLeft ? 1 : 0 }} />
+      <div style={{ ...styles.dayStripFade, right: 0, background: "linear-gradient(to left, var(--color-card), transparent)", opacity: canScrollRight ? 1 : 0 }} />
+      {canScrollLeft ? (
+        <button aria-label="Earlier days" onClick={() => scrollByChips(-1)} style={{ ...styles.dayStripArrow, left: 2 }}>
+          ‹
+        </button>
+      ) : null}
+      {canScrollRight ? (
+        <button aria-label="Later days" onClick={() => scrollByChips(1)} style={{ ...styles.dayStripArrow, right: 2 }}>
+          ›
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
 function SlotStep({
@@ -270,10 +338,19 @@ function SlotStep({
     return Array.from(seen, ([id, name]) => ({ id, name }));
   }, [slots]);
 
-  const filteredSlots = useMemo(
-    () => (providerId ? (slots ?? []).filter((s) => s.team_member_id === providerId) : slots ?? []),
-    [slots, providerId],
-  );
+  const filteredSlots = useMemo(() => {
+    if (providerId) return (slots ?? []).filter((s) => s.team_member_id === providerId);
+    // "Any artist": when two artists are both open at the exact same start time, show one button
+    // for it, not two — Anastasiia is the salon's primary provider (does the large majority of
+    // appointments), so she's the one kept on a tie rather than whichever artist's slot happened
+    // to come back first from Square. Times where only one artist is open are unaffected.
+    const bySlot = new Map<string, PmuSlotOption>();
+    for (const s of slots ?? []) {
+      const existing = bySlot.get(s.start_at);
+      bySlot.set(s.start_at, !existing || isAnastasiia(s) ? s : existing);
+    }
+    return Array.from(bySlot.values());
+  }, [slots, providerId]);
   const groups = useMemo(() => groupSlotsByDateKey(filteredSlots), [filteredSlots]);
   const dateKeys = useMemo(() => Array.from(groups.keys()).sort(), [groups]);
   const activeDateKey = dateKey && groups.has(dateKey) ? dateKey : dateKeys[0] ?? null;
@@ -325,18 +402,7 @@ function SlotStep({
         <div style={styles.emptyState}>No open times with this artist — try "Any artist" above.</div>
       ) : (
         <>
-          <div style={styles.dayStrip}>
-            {dateKeys.map((k) => {
-              const label = dayChipLabel(k);
-              const active = k === activeDateKey;
-              return (
-                <button key={k} onClick={() => setDateKey(k)} style={{ ...styles.dayChip, ...(active ? styles.chipSelected : {}) }}>
-                  <span style={styles.dayChipTop}>{label.top}</span>
-                  <span style={styles.dayChipBottom}>{label.bottom}</span>
-                </button>
-              );
-            })}
-          </div>
+          <DayStrip dateKeys={dateKeys} activeDateKey={activeDateKey} onSelect={setDateKey} />
 
           {activeDateKey ? <div style={styles.dayFullLabel}>{formatSlotDay(daySlots[0]?.start_at ?? `${activeDateKey}T12:00:00Z`)}</div> : null}
 
@@ -668,7 +734,28 @@ const styles: Record<string, CSSProperties> = {
   chipSelected: { border: "1.5px solid var(--color-accent)", background: "var(--color-accent)", color: "#fff" },
   // Horizontal-scrolling day strip: one row instead of a stacked section per day, so only the
   // selected day's times take up vertical space — the actual fix for "too many choices at once".
-  dayStrip: { display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 4, WebkitOverflowScrolling: "touch" },
+  dayStripWrap: { position: "relative", marginBottom: 4 },
+  dayStrip: { display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, WebkitOverflowScrolling: "touch" },
+  dayStripFade: { position: "absolute", top: 0, bottom: 4, width: 30, pointerEvents: "none", transition: "opacity 0.15s ease" },
+  dayStripArrow: {
+    position: "absolute",
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: 26,
+    height: 26,
+    borderRadius: "50%",
+    border: "1px solid #e0cfc6",
+    background: "#fff",
+    color: "var(--color-ink)",
+    fontSize: 15,
+    lineHeight: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+    padding: 0,
+  },
   dayChip: {
     display: "flex",
     flexDirection: "column",
