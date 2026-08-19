@@ -231,7 +231,7 @@ function SlotStep({
   if (slots.length === 0) {
     return (
       <div style={styles.emptyState}>
-        No open times in the next few weeks — please text {"("}858{")"} 337-2987 and we'll find a time together.
+        No open times in the next few weeks — book a free online consultation instead and we'll find a time together.
       </div>
     );
   }

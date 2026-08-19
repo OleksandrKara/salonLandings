@@ -7,7 +7,7 @@ export function PmuFooter() {
     <footer style={styles.footer}>
       <img src={logo} alt={PMU_LOCATION.name} style={styles.logo} />
       <div style={{ marginTop: 6 }}>{PMU_LOCATION.address}</div>
-      <div>{PMU_LOCATION.phone} · By appointment</div>
+      <div>By appointment</div>
       <div>
         ★ {PMU_RATING.score} · {PMU_RATING.count} Google reviews
       </div>
@@ -18,6 +18,6 @@ export function PmuFooter() {
 
 const styles: Record<string, CSSProperties> = {
   footer: { padding: "24px 22px 34px", textAlign: "center", color: "#9a8b81", fontSize: 12.5, lineHeight: 1.7 },
-  logo: { height: 38, width: "auto", display: "inline-block", marginBottom: 4 },
+  logo: { height: 56, width: "auto", display: "inline-block", marginBottom: 4 },
   disclaimer: { marginTop: 12, fontSize: 11, color: "#b3a49a" },
 };
