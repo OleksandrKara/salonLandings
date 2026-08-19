@@ -18,6 +18,6 @@ export function PmuFooter() {
 
 const styles: Record<string, CSSProperties> = {
   footer: { padding: "24px 22px 34px", textAlign: "center", color: "#9a8b81", fontSize: 12.5, lineHeight: 1.7 },
-  logo: { height: 38, width: "auto", display: "inline-block", marginBottom: 4 },
+  logo: { height: 56, width: "auto", display: "inline-block", marginBottom: 4 },
   disclaimer: { marginTop: 12, fontSize: 11, color: "#b3a49a" },
 };

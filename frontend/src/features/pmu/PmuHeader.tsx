@@ -27,7 +27,7 @@ const styles: Record<string, CSSProperties> = {
     backdropFilter: "blur(10px)",
     borderBottom: "1px solid var(--color-border)",
   },
-  logo: { height: 34, width: "auto", display: "block" },
+  logo: { height: 46, width: "auto", display: "block" },
   bookButton: {
     border: "none",
     background: "var(--color-accent)",
