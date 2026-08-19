@@ -61,6 +61,24 @@ export function formatSlotTime(isoStart: string): string {
   return timeFormatter.format(new Date(isoStart));
 }
 
+const hour24Formatter = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  hourCycle: "h23",
+  timeZone: SALON_TIME_ZONE,
+});
+
+/** The salon-local (Pacific) hour, 0-23 — for bucketing slots into morning/afternoon/evening
+ * without re-deriving timezone-correct hours at every call site. */
+export function slotHour(isoStart: string): number {
+  return Number(hour24Formatter.format(new Date(isoStart)));
+}
+
+/** Today's date key in the salon's own Pacific timezone — the same "today" every slot/day-key
+ * comparison in this codebase is implicitly measured against, not the visitor's device date. */
+export function pacificTodayKey(): string {
+  return toPacificDateKey(new Date().toISOString());
+}
+
 /** "Today, 2:30 PM" / "Tomorrow, 10:00 AM" / "Thu, Jul 25, 2:30 PM" — for the ContactStep's
  * next-available-slot teaser, compared against the salon's own Pacific "today" (not the
  * visitor's device date, which can disagree near midnight). */
