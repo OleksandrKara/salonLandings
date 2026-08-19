@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import heroBrows from "@/assets/pmu/hero-brows.jpg";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
 import { PMU_RATING } from "@/data/pmuCopy";
 import { usePmuBookingModalContext } from "@/features/pmu/PmuBookingModalContext";
@@ -8,11 +9,15 @@ export function PmuHero() {
 
   return (
     <section style={styles.section}>
-      <div style={styles.ratingBadge}>
-        <GoogleLogo size={20} />
-        <span style={{ fontWeight: 700, fontSize: 14, color: "var(--color-ink)" }}>{PMU_RATING.score}</span>
-        <span style={{ color: "var(--color-gold)", fontSize: 13, letterSpacing: 1 }}>★★★★★</span>
-        <span style={{ fontSize: 12, color: "var(--color-muted-2)", fontWeight: 500 }}>{PMU_RATING.count} reviews</span>
+      <div style={styles.imageWrap}>
+        <img src={heroBrows} alt="Close-up of hand-drawn hairstroke brow tattooing" style={styles.image} fetchPriority="high" />
+        <div style={styles.imageGradient} />
+        <div style={styles.ratingBadge}>
+          <GoogleLogo size={20} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--color-ink)" }}>{PMU_RATING.score}</span>
+          <span style={{ color: "var(--color-gold)", fontSize: 13, letterSpacing: 1 }}>★★★★★</span>
+          <span style={{ fontSize: 12, color: "var(--color-muted-2)", fontWeight: 500 }}>{PMU_RATING.count} reviews</span>
+        </div>
       </div>
 
       <div style={styles.eyebrow}>San Diego · Brow Specialist</div>
@@ -32,17 +37,11 @@ export function PmuHero() {
 
 const styles: Record<string, CSSProperties> = {
   section: { padding: "22px 22px 8px" },
-  ratingBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 9,
-    background: "var(--color-card)",
-    border: "1px solid var(--color-border)",
-    borderRadius: 11,
-    padding: "8px 11px",
-    marginBottom: 16,
-  },
-  eyebrow: { fontSize: 11.5, letterSpacing: 2.4, textTransform: "uppercase", color: "var(--color-accent)", fontWeight: 600 },
+  imageWrap: { position: "relative", borderRadius: 18, overflow: "hidden" },
+  image: { display: "block", width: "100%", height: "420px", objectFit: "cover", objectPosition: "50% 40%" },
+  imageGradient: { position: "absolute", left: 0, right: 0, bottom: 0, height: "56%", background: "linear-gradient(to top, rgba(38,24,20,0.68), rgba(38,24,20,0))", pointerEvents: "none" },
+  ratingBadge: { position: "absolute", left: 12, bottom: 12, display: "flex", alignItems: "center", gap: 9, background: "rgba(255,255,255,0.96)", borderRadius: 11, padding: "8px 11px", boxShadow: "0 4px 14px rgba(38,24,20,0.28)" },
+  eyebrow: { fontSize: 11.5, letterSpacing: 2.4, textTransform: "uppercase", color: "var(--color-accent)", fontWeight: 600, marginTop: 20 },
   headline: {
     fontFamily: "var(--font-heading)",
     fontWeight: 600,
