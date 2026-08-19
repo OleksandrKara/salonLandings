@@ -304,6 +304,71 @@ CREATE INDEX IF NOT EXISTS idx_marketing_funnel_events_created_at ON marketing.f
 """
 
 
+# Multi-tenant support (AK PMU as the second business) — see
+# ~/salonLandings/docs/multi-tenant-akpmu-design.md. business_id is a plain trusted integer
+# (resolved via salaryReview's internal API, see app/integrations/salaryreview_internal — not yet
+# added), not a foreign key: salaryReview owns the `business` table in a different schema this
+# service only ever reads, same no-cross-schema-FK precedent salaryReview's own V88 already set.
+# Backfilled to 1 (AK.LUX.NAILS/mani, the only business today) on every startup until every row
+# has a value, then made NOT NULL — safe to run against the live schema repeatedly since every
+# statement is idempotent and the backfill only ever touches rows that still need it.
+# Phase 1 only: adds the column everywhere, changes no application behavior yet — nothing reads or
+# writes business_id until Phase 2 threads it through the request/repository layer.
+_DDL_BUSINESS_ID = """
+ALTER TABLE marketing.visits ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.submissions ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.landing_pages ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.landing_variants ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.experiments ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.events ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.attribution ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.sms_consent ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.email_consent ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.contacts ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.abuse_blocks ADD COLUMN IF NOT EXISTS business_id BIGINT;
+ALTER TABLE marketing.funnel_events ADD COLUMN IF NOT EXISTS business_id BIGINT;
+
+UPDATE marketing.visits SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.submissions SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.landing_pages SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.landing_variants SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.experiments SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.events SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.attribution SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.sms_consent SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.email_consent SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.contacts SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.abuse_blocks SET business_id = 1 WHERE business_id IS NULL;
+UPDATE marketing.funnel_events SET business_id = 1 WHERE business_id IS NULL;
+
+ALTER TABLE marketing.visits ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.submissions ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.landing_pages ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.landing_variants ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.experiments ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.events ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.attribution ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.sms_consent ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.email_consent ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.contacts ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.abuse_blocks ALTER COLUMN business_id SET NOT NULL;
+ALTER TABLE marketing.funnel_events ALTER COLUMN business_id SET NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_marketing_visits_business_id ON marketing.visits (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_submissions_business_id ON marketing.submissions (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_landing_pages_business_id ON marketing.landing_pages (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_landing_variants_business_id ON marketing.landing_variants (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_experiments_business_id ON marketing.experiments (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_events_business_id ON marketing.events (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_attribution_business_id ON marketing.attribution (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_sms_consent_business_id ON marketing.sms_consent (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_email_consent_business_id ON marketing.email_consent (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_contacts_business_id ON marketing.contacts (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_abuse_blocks_business_id ON marketing.abuse_blocks (business_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_funnel_events_business_id ON marketing.funnel_events (business_id);
+"""
+
+
 async def run_migrations() -> None:
     pool = get_pool()
     async with pool.acquire() as conn:
@@ -317,4 +382,5 @@ async def run_migrations() -> None:
         await conn.execute(_DDL_SUBMISSIONS_TRAFFIC_SOURCE)
         await conn.execute(_DDL_ABUSE_BLOCKS)
         await conn.execute(_DDL_FUNNEL_EVENTS)
+        await conn.execute(_DDL_BUSINESS_ID)
     logger.info("Marketing schema migrations applied")
