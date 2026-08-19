@@ -496,14 +496,23 @@ function ContactFields({
         <p style={styles.stepSubtitle}>Almost done — just your contact info.</p>
       )}
 
-      <label style={styles.label}>First name</label>
-      <input value={givenName} onChange={(e) => onGivenNameChange(e.target.value)} name="fname" autoComplete="given-name" style={styles.input} />
-      <label style={styles.label}>Last name</label>
-      <input value={familyName} onChange={(e) => onFamilyNameChange(e.target.value)} name="lname" autoComplete="family-name" style={styles.input} />
+      {/* First/last share one row on every screen size — two short fields side by side instead of
+          stacked saves a whole field's worth of vertical space, the biggest single contributor to
+          this step not fitting on a phone screen without scrolling. */}
+      <div style={styles.nameRow}>
+        <div>
+          <label style={styles.label}>First name</label>
+          <input value={givenName} onChange={(e) => onGivenNameChange(e.target.value)} name="fname" autoComplete="given-name" style={styles.input} />
+        </div>
+        <div>
+          <label style={styles.label}>Last name</label>
+          <input value={familyName} onChange={(e) => onFamilyNameChange(e.target.value)} name="lname" autoComplete="family-name" style={styles.input} />
+        </div>
+      </div>
       <label style={styles.label}>Mobile number</label>
       <input value={phone} onChange={(e) => onPhoneChange(e.target.value)} type="tel" name="phone" autoComplete="tel" inputMode="numeric" maxLength={14} placeholder="(619) 000-0000" style={styles.input} />
       <label style={styles.label}>Email (optional)</label>
-      <input value={email} onChange={(e) => onEmailChange(e.target.value)} type="email" name="email" autoComplete="email" style={{ ...styles.input, marginBottom: 10 }} />
+      <input value={email} onChange={(e) => onEmailChange(e.target.value)} type="email" name="email" autoComplete="email" style={{ ...styles.input, marginBottom: 8 }} />
       <label
         onClick={() => onSmsOptInChange(!smsOptIn)}
         style={{
@@ -539,7 +548,7 @@ function ContactFields({
             {smsOptIn ? "On" : "Recommended"}
           </span>
         </div>
-        <span style={{ display: "block", fontSize: 10.5, lineHeight: 1.45, color: "var(--color-muted-3)", marginTop: 10 }}>
+        <span style={{ display: "block", fontSize: 10.5, lineHeight: 1.4, color: "var(--color-muted-3)", marginTop: 8 }}>
           {PMU_SMS_CONSENT_TEXT}
         </span>
       </label>
@@ -706,16 +715,20 @@ const styles: Record<string, CSSProperties> = {
     maxWidth: 480,
     background: "var(--color-card)",
     borderRadius: "22px 22px 0 0",
-    padding: "20px 22px 30px",
+    padding: "18px 20px calc(18px + env(safe-area-inset-bottom, 0px))",
     animation: "sheetUp 0.32s cubic-bezier(0.22,1,0.36,1)",
-    maxHeight: "95vh",
+    // dvh, not vh: iOS Safari's vh is sized against the viewport with the address bar collapsed,
+    // which overshoots the actually-visible area while it's showing — the modal would compute
+    // itself taller than what's on screen and hide the Continue button below the fold, forcing a
+    // scroll to find it every time. dvh tracks the real, current visible viewport instead.
+    maxHeight: "94dvh",
     overflowY: "auto",
   },
-  grabberRow: { position: "relative", display: "flex", alignItems: "center", justifyContent: "center", height: 24, marginBottom: 8 },
+  grabberRow: { position: "relative", display: "flex", alignItems: "center", justifyContent: "center", height: 22, marginBottom: 4 },
   grabber: { width: 38, height: 4, borderRadius: 2, background: "#e3d3ca" },
   closeButton: { position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: "#f4ece7", border: "none", borderRadius: "50%", fontSize: 20, color: "var(--color-muted-2)", cursor: "pointer", lineHeight: 1, padding: 0 },
-  title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 24, margin: "6px 0 4px" },
-  stepSubtitle: { fontSize: 13.5, color: "var(--color-muted-2)", margin: "0 0 14px", lineHeight: 1.5 },
+  title: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 22, margin: "2px 0 3px" },
+  stepSubtitle: { fontSize: 13, color: "var(--color-muted-2)", margin: "0 0 10px", lineHeight: 1.45 },
   emptyState: { fontSize: 14, color: "var(--color-muted)", lineHeight: 1.6, padding: "20px 0" },
   // Artist filter chips — shown only when the technique/consultation has more than one artist
   // available, so a solo-provider offer never displays a redundant single choice.
@@ -792,13 +805,15 @@ const styles: Record<string, CSSProperties> = {
   },
   slotButtonSelected: { border: "1.5px solid var(--color-accent)", background: "var(--color-accent-tint-2)" },
   slotArtist: { fontSize: 11, fontWeight: 500, color: "var(--color-muted-3)" },
-  selectedSlotBanner: { fontSize: 13, color: "var(--color-ink-soft)", background: "var(--color-accent-tint)", borderRadius: 10, padding: "8px 12px", marginBottom: 14 },
-  label: { fontSize: 13, fontWeight: 500, color: "var(--color-ink-soft)" },
-  input: { width: "100%", minWidth: 0, margin: "6px 0 14px", padding: 14, fontSize: 16, border: "1px solid #e0cfc6", borderRadius: 11, background: "#fff" },
-  smsCard: { display: "block", padding: "15px 16px", border: "2px solid", borderRadius: 14, cursor: "pointer", marginBottom: 16 },
+  selectedSlotBanner: { fontSize: 12.5, color: "var(--color-ink-soft)", background: "var(--color-accent-tint)", borderRadius: 10, padding: "7px 12px", marginBottom: 10 },
+  label: { fontSize: 12.5, fontWeight: 500, color: "var(--color-ink-soft)" },
+  input: { width: "100%", minWidth: 0, margin: "4px 0 10px", padding: 12, fontSize: 16, border: "1px solid #e0cfc6", borderRadius: 11, background: "#fff" },
+  // Two equal columns for first/last name — see the ContactFields comment for why.
+  nameRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
+  smsCard: { display: "block", padding: "12px 14px", border: "2px solid", borderRadius: 14, cursor: "pointer", marginBottom: 12 },
   honeypot: { position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0, pointerEvents: "none" },
-  continueButton: { width: "100%", marginTop: 6, border: "none", color: "#fff7f3", background: "var(--color-accent)", fontSize: 16, fontWeight: 600, padding: 16, borderRadius: 12, cursor: "pointer" },
-  backButton: { width: "100%", marginTop: 9, border: "none", background: "none", color: "var(--color-muted-2)", fontSize: 14, padding: 8, cursor: "pointer" },
+  continueButton: { width: "100%", marginTop: 4, border: "none", color: "#fff7f3", background: "var(--color-accent)", fontSize: 16, fontWeight: 600, padding: 14, borderRadius: 12, cursor: "pointer" },
+  backButton: { width: "100%", marginTop: 4, border: "none", background: "none", color: "var(--color-muted-2)", fontSize: 14, padding: 6, cursor: "pointer" },
   securityNote: { fontSize: 11.5, color: "var(--color-muted-3)", textAlign: "center", marginTop: 12 },
   doneWrap: { textAlign: "center", padding: "12px 0" },
   doneCheck: { width: 56, height: 56, borderRadius: "50%", background: "var(--color-success-bg)", color: "var(--color-success)", fontSize: 28, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" },
