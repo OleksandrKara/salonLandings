@@ -7,9 +7,17 @@ appointment, no payment collected — matches mani's existing model), or a real 
 deposit-first (the slot is reserved, then a real $100 card charge is collected via Square's
 Payments API — see app.services.deposit_service — before the booking is treated as confirmed).
 
-Landing page currently features Anna Kara's brow techniques only (two of her three Square catalog
-items — "Powder&Ombre by Anna Kara" has no team_member assigned in Square yet, so it's excluded
-here until that's fixed in the Square Dashboard; adding it back is a one-line addition once it is).
+Landing page features both active providers' brow techniques (2026-08-19: originally Anna-only,
+expanded after finding live that Anna's Square calendar has zero configured availability for any
+service — see the owner's own report — while Anastasiia's does). Where Square has genuinely
+separate catalog items per provider at different prices (Nano Hairstrokes), each provider's
+version is its own technique entry; where Square already has one shared item both can perform
+(Combo — the plain "Eyebrows Combo Technique - Hairstrokes&Shading" item, not the "...by Anna Kara"
+-suffixed one, which is Anna-exclusive and was dropped in favor of this shared, actually-bookable
+one), team_member_ids lists both and the chosen slot itself carries which provider it's with —
+same pattern PmuConsultationDefinition already uses. Anna's own "Powder&Ombre by Anna Kara" still
+has no team_member assigned in Square (a real data gap there, not fixed by this expansion) so it
+stays excluded; Anastasiia's separate "Powder&Ombre by Anastasiia" item is included instead.
 Only Anna Kara and Anastasiia Makarenko are active providers today — every team_member_id below is
 one of the two.
 """
@@ -26,7 +34,10 @@ ACTIVE_PROVIDER_IDS = [ANNA_KARA_TEAM_MEMBER_ID, ANASTASIIA_TEAM_MEMBER_ID]
 class PmuTechniqueDefinition:
     """A real procedure, booked deposit-first. duration_minutes/price are read live from Square
     (see PmuCatalogService), not hardcoded here — same "only structural mapping lives in code"
-    convention as service_catalog.py.
+    convention as service_catalog.py. team_member_ids lists every provider who can perform this
+    specific catalog item/variation — usually one (Square prices this provider's own variation
+    differently from the others'), sometimes more than one where Square already has a single
+    shared item. The selected availability slot carries which provider it's actually with.
     """
 
     slug: str
@@ -34,7 +45,7 @@ class PmuTechniqueDefinition:
     description: str
     item_id: str
     variation_id: str
-    team_member_id: str
+    team_member_ids: list[str]
 
 
 @dataclass(frozen=True)
@@ -64,20 +75,36 @@ class PmuDepositDefinition:
 
 PMU_TECHNIQUES: list[PmuTechniqueDefinition] = [
     PmuTechniqueDefinition(
-        slug="nano-hairstrokes",
-        name="Realistic Nano Hairstrokes",
+        slug="nano-hairstrokes-anna",
+        name="Realistic Nano Hairstrokes — Anna Kara",
         description="Ultra-fine, hair-like strokes for the most natural, realistic brow look — Anna's signature technique.",
         item_id="PNYBHJH3NKLLKHE2S7PRT3XD",
         variation_id="DKKDXNTXZ7URX76M4IUM3KOM",
-        team_member_id=ANNA_KARA_TEAM_MEMBER_ID,
+        team_member_ids=[ANNA_KARA_TEAM_MEMBER_ID],
+    ),
+    PmuTechniqueDefinition(
+        slug="nano-hairstrokes-anastasiia",
+        name="Realistic Nano Hairstrokes — Anastasiia",
+        description="The same ultra-fine, hair-like stroke technique, by Anastasiia.",
+        item_id="3NXKMI2RHESZHQQQK6JIMR7C",
+        variation_id="J5R6SKNOYPCNFBZOZQOZGSNC",
+        team_member_ids=[ANASTASIIA_TEAM_MEMBER_ID],
     ),
     PmuTechniqueDefinition(
         slug="combo",
         name="Combo — Hairstrokes & Shading",
-        description="Hairstrokes at the front, soft shading through the body and tail for extra depth and fullness.",
-        item_id="YUZPUA2RPNJGSLIZTMTGIV6C",
-        variation_id="PIFYSXT2I7ZCN2BBLCDF6PAH",
-        team_member_id=ANNA_KARA_TEAM_MEMBER_ID,
+        description="Hairstrokes at the front, soft shading through the body and tail for extra depth and fullness. By Anna or Anastasiia — whichever slot you pick.",
+        item_id="3EC565HBKF7WZHJ7EMABT2JQ",
+        variation_id="DGBRMKMTWOV5C5HF2C7LBQHZ",
+        team_member_ids=ACTIVE_PROVIDER_IDS,
+    ),
+    PmuTechniqueDefinition(
+        slug="powder-ombre-anastasiia",
+        name="Powder & Ombré — Anastasiia",
+        description="A soft, gradient powder-fill look, fuller toward the tail — by Anastasiia.",
+        item_id="XXPME2PPA4GATCMWMWJO4QU3",
+        variation_id="6O2A66K6KCGUILZDO7NTLW5Z",
+        team_member_ids=[ANASTASIIA_TEAM_MEMBER_ID],
     ),
 ]
 

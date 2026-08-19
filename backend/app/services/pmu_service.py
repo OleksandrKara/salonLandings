@@ -120,7 +120,7 @@ class PmuAvailabilityService:
         definition = find_technique(technique_slug)
         if definition is None:
             raise PmuServiceNotFoundError(f"Unknown technique '{technique_slug}'")
-        return self._search([definition.variation_id], [definition.team_member_id], days)
+        return self._search([definition.variation_id], definition.team_member_ids, days)
 
     def search_consultation(self, consultation_slug: str, days: int) -> PmuAvailabilityResponse:
         definition = find_consultation(consultation_slug)
@@ -230,6 +230,8 @@ class PmuBookingService:
         definition = find_technique(request.technique_slug)
         if definition is None:
             raise PmuServiceNotFoundError(f"Unknown technique '{request.technique_slug}'")
+        if request.team_member_id not in definition.team_member_ids:
+            raise InvalidProviderError(f"'{request.team_member_id}' doesn't offer this technique")
 
         variation = self._find_variation(definition.item_id, definition.variation_id)
         vd = variation.item_variation_data
@@ -253,7 +255,7 @@ class PmuBookingService:
             idempotency_key=str(uuid.uuid4()),
             customer_id=customer_id,
             start_at=request.start_at,
-            team_member_id=definition.team_member_id,
+            team_member_id=request.team_member_id,
             segments=[
                 BookingSegment(
                     service_variation_id=variation.id,
@@ -286,7 +288,7 @@ class PmuBookingService:
             full_price=full_price,
             deposit_amount=deposit_amount,
             remaining_balance=full_price - deposit_amount,
-            artist_name=self._artist_display_name(definition.team_member_id),
+            artist_name=self._artist_display_name(request.team_member_id),
             payment_id=payment.id,
             square_customer_id=customer_id,
         )
