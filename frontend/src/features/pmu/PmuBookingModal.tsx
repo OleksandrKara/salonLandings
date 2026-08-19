@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { bookPmuConsultation, bookPmuDeposit, getPmuCatalog, getPmuConsultationAvailability, getPmuTechniqueAvailability } from "@/api/pmu";
 import { ApiError } from "@/api/client";
+import { PMU_SMS_CONSENT_TEXT } from "@/data/pmuCopy";
 import { ErrorNotice } from "@/features/landing/ErrorNotice";
 import { Spinner } from "@/features/landing/Spinner";
 import { TurnstileWidget } from "@/features/booking/TurnstileWidget";
@@ -336,9 +337,44 @@ function ContactFields({
       <input value={phone} onChange={(e) => onPhoneChange(e.target.value)} type="tel" name="phone" autoComplete="tel" inputMode="numeric" maxLength={14} placeholder="(619) 000-0000" style={styles.input} />
       <label style={styles.label}>Email (optional)</label>
       <input value={email} onChange={(e) => onEmailChange(e.target.value)} type="email" name="email" autoComplete="email" style={{ ...styles.input, marginBottom: 10 }} />
-      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: "var(--color-muted-2)", marginBottom: 16 }}>
-        <input type="checkbox" checked={smsOptIn} onChange={(e) => onSmsOptInChange(e.target.checked)} />
-        Text me appointment reminders and updates
+      <label
+        onClick={() => onSmsOptInChange(!smsOptIn)}
+        style={{
+          ...styles.smsCard,
+          borderColor: smsOptIn ? "var(--color-accent)" : "var(--color-accent-border-soft)",
+          background: smsOptIn ? "var(--color-accent-tint)" : "var(--color-accent-tint-2)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <SmsCheckbox checked={smsOptIn} />
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", fontWeight: 600, fontSize: 14.5, color: "var(--color-ink)" }}>
+              Text me reminders &amp; exclusive offers
+            </span>
+            <span style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--color-accent)", marginTop: 2 }}>
+              {smsOptIn ? "You're in — enjoy VIP offers & booking updates." : "Never miss your slot + first dibs on last-minute openings"}
+            </span>
+          </span>
+          <span
+            style={{
+              flex: "none",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: 0.5,
+              textTransform: "uppercase",
+              color: smsOptIn ? "#fff" : "var(--color-accent)",
+              background: smsOptIn ? "var(--color-accent)" : "var(--color-accent-tint)",
+              padding: "4px 8px",
+              borderRadius: 20,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {smsOptIn ? "On" : "Recommended"}
+          </span>
+        </div>
+        <span style={{ display: "block", fontSize: 10.5, lineHeight: 1.45, color: "var(--color-muted-3)", marginTop: 10 }}>
+          {PMU_SMS_CONSENT_TEXT}
+        </span>
       </label>
 
       <input value={website} onChange={(e) => onWebsiteChange(e.target.value)} name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={styles.honeypot} />
@@ -464,6 +500,28 @@ function DoneStep({
   return null;
 }
 
+function SmsCheckbox({ checked }: { checked: boolean }) {
+  return (
+    <span
+      style={{
+        flex: "none",
+        width: 22,
+        height: 22,
+        borderRadius: 6,
+        border: `2px solid ${checked ? "var(--color-accent)" : "var(--color-accent-border-soft)"}`,
+        background: checked ? "var(--color-accent)" : "#fff",
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 14,
+      }}
+    >
+      {checked ? "✓" : ""}
+    </span>
+  );
+}
+
 const styles: Record<string, CSSProperties> = {
   overlay: {
     position: "fixed",
@@ -513,6 +571,7 @@ const styles: Record<string, CSSProperties> = {
   selectedSlotBanner: { fontSize: 13, color: "var(--color-ink-soft)", background: "var(--color-accent-tint)", borderRadius: 10, padding: "8px 12px", marginBottom: 14 },
   label: { fontSize: 13, fontWeight: 500, color: "var(--color-ink-soft)" },
   input: { width: "100%", minWidth: 0, margin: "6px 0 14px", padding: 14, fontSize: 16, border: "1px solid #e0cfc6", borderRadius: 11, background: "#fff" },
+  smsCard: { display: "block", padding: "15px 16px", border: "2px solid", borderRadius: 14, cursor: "pointer", marginBottom: 16 },
   honeypot: { position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0, pointerEvents: "none" },
   continueButton: { width: "100%", marginTop: 6, border: "none", color: "#fff7f3", background: "var(--color-accent)", fontSize: 16, fontWeight: 600, padding: 16, borderRadius: 12, cursor: "pointer" },
   backButton: { width: "100%", marginTop: 9, border: "none", background: "none", color: "var(--color-muted-2)", fontSize: 14, padding: 8, cursor: "pointer" },
