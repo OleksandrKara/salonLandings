@@ -43,12 +43,12 @@ def slugify(name: str) -> str:
 
 async def cmd_list_pages(_args: argparse.Namespace) -> None:
     pool = get_pool()
-    rows = await pool.fetch("SELECT id, name, slug FROM marketing.landing_pages ORDER BY created_at ASC")
+    rows = await pool.fetch("SELECT id, name, slug, business_id FROM marketing.landing_pages ORDER BY created_at ASC")
     if not rows:
         print("No landing pages yet.")
         return
     for row in rows:
-        print(f"{row['slug']:20s} {row['name']:30s} {row['id']}")
+        print(f"{row['slug']:20s} {row['name']:30s} business_id={row['business_id']:<3} {row['id']}")
 
 
 async def cmd_add_page(args: argparse.Namespace) -> None:
@@ -58,11 +58,12 @@ async def cmd_add_page(args: argparse.Namespace) -> None:
         print(f"Landing page '{args.slug}' already exists ({existing['id']}).")
         return
     row = await pool.fetchrow(
-        "INSERT INTO marketing.landing_pages (name, slug) VALUES ($1, $2) RETURNING id",
+        "INSERT INTO marketing.landing_pages (name, slug, business_id) VALUES ($1, $2, $3) RETURNING id",
         args.name,
         args.slug,
+        args.business_id,
     )
-    print(f"Created landing page '{args.slug}' ({row['id']}).")
+    print(f"Created landing page '{args.slug}' for business {args.business_id} ({row['id']}).")
 
 
 async def cmd_list(args: argparse.Namespace) -> None:
@@ -122,7 +123,7 @@ def _build_content(args: argparse.Namespace) -> dict:
 
 async def cmd_add(args: argparse.Namespace) -> None:
     pool = get_pool()
-    page = await pool.fetchrow("SELECT id FROM marketing.landing_pages WHERE slug = $1", args.slug)
+    page = await pool.fetchrow("SELECT id, business_id FROM marketing.landing_pages WHERE slug = $1", args.slug)
     if page is None:
         print(f"No landing page with slug '{args.slug}'. Create it first with 'add-page'.", file=sys.stderr)
         return
@@ -137,8 +138,8 @@ async def cmd_add(args: argparse.Namespace) -> None:
     try:
         row = await pool.fetchrow(
             """
-            INSERT INTO marketing.landing_variants (landing_page_id, name, weight, content, active, key, description)
-            VALUES ($1, $2, $3, $4::jsonb, true, $5, $6)
+            INSERT INTO marketing.landing_variants (landing_page_id, name, weight, content, active, key, description, business_id)
+            VALUES ($1, $2, $3, $4::jsonb, true, $5, $6, $7)
             RETURNING id
             """,
             page["id"],
@@ -147,6 +148,7 @@ async def cmd_add(args: argparse.Namespace) -> None:
             json.dumps(content),
             key,
             args.description,
+            page["business_id"],
         )
     except asyncpg.exceptions.UniqueViolationError:
         print(f"Key '{key}' is already used by another variant on '{args.slug}'. Pass --key to choose a different one.", file=sys.stderr)
@@ -362,6 +364,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_add_page = sub.add_parser("add-page", help="Create a genuinely new landing page/template (not just a variant)")
     p_add_page.add_argument("--slug", required=True)
     p_add_page.add_argument("--name", required=True)
+    p_add_page.add_argument(
+        "--business-id", required=True, type=int,
+        help="Which business this page belongs to (1=AK.LUX.NAILS, 2=AK PMU, ...) — see marketing.landing_pages.business_id",
+    )
     p_add_page.set_defaults(func=cmd_add_page)
 
     p_list = sub.add_parser("list", help="List variants for a landing page")
