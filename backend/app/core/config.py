@@ -16,8 +16,14 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     cors_allow_origins: str = "http://localhost:5173"
 
-    # Booking behaviour
-    availability_search_days: int = 14
+    # Booking behaviour. Square's SearchAvailability API hard-caps a single query's date range at
+    # 32 days (INVALID_TIME_RANGE past that) — 30 leaves a small margin rather than sitting right
+    # on the boundary. Confirmed live 2026-08-20: PMU's real availability was consistently sparse
+    # in just the first 14 days but picked up substantially in days 15-30 (e.g. online-consultation
+    # went from 7 visible days to 18 within 30), so this was genuinely hiding real open slots, not
+    # reflecting an actually-empty calendar. Going further than 32 days needs chaining multiple
+    # queries — not done here, revisit if 30 still isn't enough.
+    availability_search_days: int = 30
     availability_cache_seconds: int = 30
     catalog_cache_seconds: int = 300
 
