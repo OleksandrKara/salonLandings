@@ -32,7 +32,7 @@ from app.services.pmu_service import (
     PmuCatalogService,
     PmuServiceNotFoundError,
 )
-from app.services.rebooking_promo import enroll_rebooking_promo_safely, verify_rebooking_promo_signature
+from app.services.rebooking_promo import enroll_rebooking_promo_safely
 from app.services.request_context import derive_client_context
 from app.services.tracking_service import TrackingService
 
@@ -182,13 +182,12 @@ async def book_with_deposit(
         logger.error("PMU deposit booking failed: %s", exc.detail)
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
-    if request.promo is not None and verify_rebooking_promo_signature(
-        request.promo.code, request.promo.exp_epoch_seconds, request.promo.signature
-    ):
-        # Best-effort, doesn't block the booking response either way — see
-        # enroll_rebooking_promo_safely's own doc. Only the deposit flow (a real paid booking)
-        # enrolls — a free consultation isn't the kind of commercial transaction this discount is
-        # meant to reward a rebooking off of.
+    if request.promo is not None:
+        # Best-effort, doesn't block the booking response either way, and never trusted on its
+        # own — salaryReview-dev independently re-verifies the signature before enrolling
+        # anything, see enroll_rebooking_promo_safely's own doc. Only the deposit flow (a real
+        # paid booking) enrolls — a free consultation isn't the kind of commercial transaction
+        # this discount is meant to reward a rebooking off of.
         await run_in_threadpool(
             enroll_rebooking_promo_safely,
             square_customer_id=confirmation.square_customer_id,

@@ -18,7 +18,7 @@ from app.services.artist_service import ArtistNotFoundError
 from app.services.booking_service import BookingService, InvalidSlotError
 from app.services.catalog_service import ServiceNotFoundError
 from app.services.identity import resolve_tracking_snapshot
-from app.services.rebooking_promo import enroll_rebooking_promo_safely, verify_rebooking_promo_signature
+from app.services.rebooking_promo import enroll_rebooking_promo_safely
 from app.services.request_context import derive_client_context
 from app.services.tracking_service import TrackingService
 
@@ -73,11 +73,10 @@ async def create_booking(
         logger.error("Booking failed: %s", exc.detail)
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
-    if request.promo is not None and verify_rebooking_promo_signature(
-        request.promo.code, request.promo.exp_epoch_seconds, request.promo.signature
-    ):
-        # Best-effort, doesn't block the booking response either way — see
-        # enroll_rebooking_promo_safely's own doc.
+    if request.promo is not None:
+        # Best-effort, doesn't block the booking response either way, and never trusted on its
+        # own — salaryReview-dev independently re-verifies the signature before enrolling
+        # anything, see enroll_rebooking_promo_safely's own doc.
         await run_in_threadpool(
             enroll_rebooking_promo_safely,
             square_customer_id=confirmation.square_customer_id,
