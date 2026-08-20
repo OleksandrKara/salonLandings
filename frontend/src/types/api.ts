@@ -175,12 +175,27 @@ export interface BookingSlotSelection {
   segments: BookingSegmentSelection[];
 }
 
+// The promo/exp/sig query params the page loaded with — see useRebookingPromo. Passed through
+// verbatim on booking submission; the backend re-verifies the signature independently.
+export interface PromoAttempt {
+  code: string;
+  exp_epoch_seconds: number;
+  signature: string;
+}
+
+export interface PromoVerifyResponse {
+  valid: boolean;
+  discount_amount: number | null;
+  min_spend: number | null;
+}
+
 export interface BookingRequest {
   slot: BookingSlotSelection;
   customer: CustomerContact;
   note?: string | null;
   sms_opt_in: boolean;
   tracking?: TrackingSnapshot | null;
+  promo?: PromoAttempt | null;
   // Abuse-guard fields — see the booking modal's honeypot field / form-open timestamp / Turnstile widget.
   website?: string | null;
   form_rendered_at?: string | null;

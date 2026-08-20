@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
+import { RebookingPromoBanner } from "@/components/RebookingPromoBanner";
 import { PmuBookingModal } from "@/features/pmu/PmuBookingModal";
 import { PmuBookingModalProvider } from "@/features/pmu/PmuBookingModalContext";
 import { PmuFooter } from "@/features/pmu/PmuFooter";
@@ -10,6 +11,7 @@ import { PmuStickyBottomBar } from "@/features/pmu/PmuStickyBottomBar";
 import { PmuTechniques } from "@/features/pmu/PmuTechniques";
 import { resolveExperiment } from "@/lib/experiments";
 import { recordVisit } from "@/lib/tracking";
+import { useRebookingPromo } from "@/lib/useRebookingPromo";
 import type { LandingVariantContent } from "@/types/api";
 
 const PAGE_TITLE = "Permanent Brows in San Diego | Anna Kara's Beauty PMU Studio";
@@ -18,6 +20,7 @@ const PAGE_DESCRIPTION =
 
 export function PmuLandingPage() {
   const [overrides, setOverrides] = useState<LandingVariantContent>({});
+  const { banner, promoAttempt } = useRebookingPromo();
 
   useEffect(() => {
     recordVisit();
@@ -54,7 +57,8 @@ export function PmuLandingPage() {
   }, []);
 
   return (
-    <PmuBookingModalProvider>
+    <PmuBookingModalProvider promoAttempt={promoAttempt}>
+      {banner && <RebookingPromoBanner {...banner} />}
       <div style={styles.page}>
         <PmuHeader />
         <PmuHero overrides={overrides} />

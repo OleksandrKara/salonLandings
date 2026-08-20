@@ -15,7 +15,7 @@ import type { PmuCatalogResponse, PmuConsultationConfirmation, PmuDepositBooking
 type Step = "slot" | "contact" | "card" | "done";
 
 export function PmuBookingModal() {
-  const { mode, close } = usePmuBookingModalContext();
+  const { mode, close, promoAttempt } = usePmuBookingModalContext();
   const isOpen = mode !== null;
 
   const [step, setStep] = useState<Step>("slot");
@@ -137,6 +137,7 @@ export function PmuBookingModal() {
         },
         source_id: sourceId,
         tracking: getTrackingSnapshot(),
+        promo: promoAttempt,
         website: website || null,
         form_rendered_at: formRenderedAt,
         turnstile_token: turnstileToken,
