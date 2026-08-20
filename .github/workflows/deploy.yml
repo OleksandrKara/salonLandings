@@ -25,18 +25,18 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
 
-      # No test suite exists yet for this service (backend/tests/ is empty) — this at least
-      # catches import-time errors (bad syntax, broken imports, Pydantic settings misconfig)
-      # until real tests are added. Dummy Square credentials satisfy the required Settings fields.
-      - name: Backend — install deps and import sanity-check
+      # Dummy Square credentials satisfy the required Settings fields for both the import
+      # sanity-check and the real pytest suite under backend/tests/.
+      - name: Backend — install deps, import sanity-check, and run tests
         working-directory: backend
         env:
           SQUARE_ACCESS_TOKEN: ci-dummy-token
           SQUARE_LOCATION_ID: ci-dummy-location
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
           python -m compileall app
           python -c "from app.main import app"
+          pytest
 
       - name: Set up Node 20
         uses: actions/setup-node@v4

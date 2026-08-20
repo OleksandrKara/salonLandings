@@ -203,12 +203,23 @@ class BookingFunnelStepEvent(BaseModel):
     metadata: dict = Field(default_factory=dict)
 
 
+class PromoAttempt(BaseModel):
+    """The promo/exp/sig query params the customer's page loaded with, passed through verbatim
+    on booking submission — see app.services.rebooking_promo. Re-verified server-side before
+    enrollment; the frontend's own earlier verify-on-load check proves nothing on its own."""
+
+    code: str
+    exp_epoch_seconds: int
+    signature: str
+
+
 class BookingRequest(BaseModel):
     slot: BookingSlotSelection
     customer: CustomerContact
     note: str | None = Field(default=None, max_length=500)
     sms_opt_in: bool = False
     tracking: TrackingSnapshot | None = None
+    promo: PromoAttempt | None = None
     # Abuse-guard fields — see app.services.abuse_guard. All optional so older/cached frontend
     # bundles without them still submit successfully; a missing honeypot/timestamp just skips
     # that specific check rather than failing the request.
@@ -234,6 +245,16 @@ class BookingConfirmation(BaseModel):
     # Internal-only (excluded from the API response): lets the route layer link this booking
     # to the local contacts record without exposing Square's internal id to the frontend.
     square_customer_id: str = Field(exclude=True)
+
+
+class PromoVerifyResponse(BaseModel):
+    """valid=False covers every failure mode the same way (bad/missing signature, expired,
+    or the business simply hasn't set this promo up in Square yet) — the frontend shows no
+    banner and passes no promo through on booking either way, no need to distinguish why."""
+
+    valid: bool
+    discount_amount: float | None = None
+    min_spend: float | None = None
 
 
 class FourHandRequestSubmission(BaseModel):
@@ -353,6 +374,7 @@ class PmuDepositBookingRequest(BaseModel):
     source_id: str = Field(min_length=1, max_length=200)
     note: str | None = Field(default=None, max_length=500)
     tracking: TrackingSnapshot | None = None
+    promo: PromoAttempt | None = None
     website: str | None = None
     form_rendered_at: str | None = None
     turnstile_token: str | None = None

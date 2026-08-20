@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     internal_api_base_url: str | None = None  # e.g. "http://backend:8080"
     internal_api_key: str | None = None
 
+    # Same-day-rebooking-discount / customer-winback SMS coupon links — shared secret with
+    # salaryReview's RebookingPromoSigner (HMAC-SHA256 over "{code}.{expEpochSeconds}"). Blank =
+    # every promo link on this domain verifies as invalid, same fail-closed convention as
+    # turnstile_secret_key above.
+    rebooking_promo_secret: str | None = None
+
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]

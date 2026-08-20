@@ -1,4 +1,4 @@
-import type { CustomerContact, TrackingSnapshot } from "@/types/api";
+import type { CustomerContact, PromoAttempt, TrackingSnapshot } from "@/types/api";
 
 export interface PmuTechniqueOffer {
   slug: string;
@@ -68,6 +68,7 @@ export interface PmuDepositBookingRequest {
   source_id: string;
   note?: string | null;
   tracking?: TrackingSnapshot | null;
+  promo?: PromoAttempt | null;
   website?: string | null;
   form_rendered_at?: string | null;
   turnstile_token?: string | null;
