@@ -78,8 +78,13 @@ PMU_TECHNIQUES: list[PmuTechniqueDefinition] = [
         slug="nano-hairstrokes-anna",
         name="Realistic Nano Hairstrokes — Anna Kara",
         description="Ultra-fine, hair-like strokes for the most natural, realistic brow look — Anna's signature technique.",
-        item_id="PNYBHJH3NKLLKHE2S7PRT3XD",
-        variation_id="DKKDXNTXZ7URX76M4IUM3KOM",
+        # 2026-08-20: Square-side catalog reorg merged Anna's and Anastasiia's previously separate
+        # Nano Hairstrokes items into one shared item ("Eyebrows Realistic NANO Hairstrokes
+        # Technique") with a variation per provider — same shape nano-hairstrokes-anastasiia and
+        # combo already used. The old item_id/variation_id below were archived/deleted, breaking
+        # GET /api/pmu/catalog entirely (a single missing catalog id 502s the whole batch fetch).
+        item_id="3NXKMI2RHESZHQQQK6JIMR7C",
+        variation_id="FKO7JLSXCFPSH7XM47F5GLK7",
         team_member_ids=[ANNA_KARA_TEAM_MEMBER_ID],
     ),
     PmuTechniqueDefinition(
@@ -102,8 +107,13 @@ PMU_TECHNIQUES: list[PmuTechniqueDefinition] = [
         slug="powder-ombre-anastasiia",
         name="Powder & Ombré — Anastasiia",
         description="A soft, gradient powder-fill look, fuller toward the tail — by Anastasiia.",
-        item_id="XXPME2PPA4GATCMWMWJO4QU3",
-        variation_id="6O2A66K6KCGUILZDO7NTLW5Z",
+        # 2026-08-20: same Square-side reorg as nano-hairstrokes-anna above — this used to be its
+        # own standalone item, now it's the "Anastasia" variation of the shared "Ombre / Powder
+        # Brows" item (which also has an "Anna Kara" variation now, RYFYN3T6MZVRW3OBGKQPVZHI —
+        # not wired up here since adding Anna as a second provider for this technique is a real
+        # scope decision, not part of this stale-id fix).
+        item_id="XYYARZTVGB7FEDAAD7R3L6FN",
+        variation_id="UZ4T47IZTIK4KCPRQMA3UNC4",
         team_member_ids=[ANASTASIIA_TEAM_MEMBER_ID],
     ),
 ]
