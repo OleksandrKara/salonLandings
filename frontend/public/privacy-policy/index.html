@@ -168,6 +168,9 @@
         <div class="contact">
           <div class="business-name">AK.LUX.NAILS</div>
           <div id="business-address">1357 Seventh Ave, Ste C, San Diego, CA 92101</div>
+          <div id="business-email-row" style="display: none; margin-top: 4px;">
+            <a id="business-email" href="#"></a>
+          </div>
           <div style="margin-top: 8px;">
             Reply to any text message we've sent you, or reach us through our booking site, and we'll get back to you.
           </div>
@@ -180,14 +183,27 @@
       // try_files fallback, deliberately outside the SPA so the content is real HTML any crawler
       // or reviewer can read without executing JS), so it re-implements just the tiny bit of
       // branding logic it needs.
+      //
+      // The pmu-annakara branch uses the legal entity name ("Anna Kara's Brow Studio LLC" — same
+      // name now used in PMU_SMS_CONSENT_TEXT and in this business's own `name` field), not the
+      // "Anna Kara's Beauty PMU Studio" trade name shown elsewhere on that site — this page and
+      // the SMS opt-in are the two places Twilio's toll-free review actually checks, and a
+      // 2026-08-28 rejection (reason 30445, "Contact, Email, Address, or URL Is Invalid") flagged
+      // this page for having no contact email at all. mani.akluxnails.com's own toll-free number
+      // is already approved, so its branch is intentionally left as-is (no email added).
       (function () {
         if (window.location.hostname.includes("pmu-annakara")) {
-          var name = "Anna Kara's Beauty PMU Studio";
+          var name = "Anna Kara's Brow Studio LLC";
+          var email = "anna@pmu-annakara.com";
           document.title = "Privacy Policy | " + name;
           document.getElementById("business-name").textContent = name;
           document.querySelectorAll(".business-name").forEach(function (el) {
             el.textContent = name;
           });
+          var emailLink = document.getElementById("business-email");
+          emailLink.textContent = email;
+          emailLink.href = "mailto:" + email;
+          document.getElementById("business-email-row").style.display = "block";
         }
       })();
     </script>

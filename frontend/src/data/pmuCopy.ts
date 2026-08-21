@@ -81,5 +81,24 @@ export const PMU_GALLERY_INITIAL_COUNT = 5;
 // Same legal shape as designCopy.ts's SMS_CONSENT_TEXT, business name swapped for PMU. No
 // cancellation-policy step exists on this page (or its equivalent consent card) — the owner
 // asked to drop it for PMU, so ConfirmStep.tsx's cancelCard pattern is intentionally not mirrored.
+//
+// Names the legal entity ("Anna Kara's Brow Studio LLC" — matches the name on file with Twilio
+// for this toll-free number, +18339125558), not the "Anna Kara's Beauty PMU Studio" trade name
+// used everywhere else on this page (header, footer, gallery, page title). A toll-free
+// verification for this number was rejected 2026-08-28 for reason 30506 ("Opt-Ins Must Clearly
+// Reflect the End Business") — the opt-in shown to customers didn't match the registered legal
+// name at all, so a reviewer couldn't connect the two. Keep this string's business name in sync
+// with whatever's actually on file with Twilio; the rest of the site's PMU-branded copy is
+// deliberately untouched (the owner only wants the legal name where it's compliance-relevant).
+//
+// Marketing-only wording, no mention of reminders/confirmations — same fix already applied (and
+// later deliberately reverted, on an already-approved number with the owner accepting the
+// re-review risk) to mani's own SMS_CONSENT_TEXT in PR #59/#61. This checkbox has only ever
+// gated MARKETING-class sends (see salaryReview's TwilioSmsService); appointment reminders are
+// sent natively by Square regardless of this checkbox. Twilio's toll-free review rejects a single
+// opt-in that promises both transactional and marketing content under one consent (reason 30504,
+// "Single Opt-In for Multiple Use Cases Is Not Allowed") — not one of this rejection's three
+// listed reasons, but worth fixing now while this text is already being touched for resubmission,
+// rather than risking a fourth rejection reason on the next review.
 export const PMU_SMS_CONSENT_TEXT =
-  "By checking this box, I agree to receive recurring automated marketing & appointment text messages (offers, promotions & reminders) from Anna Kara's Beauty PMU Studio at the number I provided. Consent is not a condition of purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help.";
+  "By checking this box, I agree to receive recurring automated marketing text messages from Anna Kara's Brow Studio LLC — occasional discounts and first access to newly opened appointment slots — at the number provided. Consent is not a condition of purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help.";
