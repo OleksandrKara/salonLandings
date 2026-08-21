@@ -532,10 +532,10 @@ function ContactFields({
           <SmsCheckbox checked={smsOptIn} />
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "block", fontWeight: 600, fontSize: 14.5, color: "var(--color-ink)" }}>
-              Text me reminders &amp; exclusive offers
+              Text me exclusive offers
             </span>
             <span style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--color-accent)", marginTop: 2 }}>
-              {smsOptIn ? "You're in — enjoy VIP offers & booking updates." : "Never miss your slot + first dibs on last-minute openings"}
+              {smsOptIn ? "You're in — enjoy VIP offers & first access to open slots." : "Occasional discounts + first dibs on last-minute openings"}
             </span>
           </span>
           <span
