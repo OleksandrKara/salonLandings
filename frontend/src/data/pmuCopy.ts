@@ -90,5 +90,15 @@ export const PMU_GALLERY_INITIAL_COUNT = 5;
 // name at all, so a reviewer couldn't connect the two. Keep this string's business name in sync
 // with whatever's actually on file with Twilio; the rest of the site's PMU-branded copy is
 // deliberately untouched (the owner only wants the legal name where it's compliance-relevant).
+//
+// Marketing-only wording, no mention of reminders/confirmations — same fix already applied (and
+// later deliberately reverted, on an already-approved number with the owner accepting the
+// re-review risk) to mani's own SMS_CONSENT_TEXT in PR #59/#61. This checkbox has only ever
+// gated MARKETING-class sends (see salaryReview's TwilioSmsService); appointment reminders are
+// sent natively by Square regardless of this checkbox. Twilio's toll-free review rejects a single
+// opt-in that promises both transactional and marketing content under one consent (reason 30504,
+// "Single Opt-In for Multiple Use Cases Is Not Allowed") — not one of this rejection's three
+// listed reasons, but worth fixing now while this text is already being touched for resubmission,
+// rather than risking a fourth rejection reason on the next review.
 export const PMU_SMS_CONSENT_TEXT =
-  "By checking this box, I agree to receive recurring automated marketing & appointment text messages (offers, promotions & reminders) from Anna Kara's Brow Studio LLC at the number I provided. Consent is not a condition of purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help.";
+  "By checking this box, I agree to receive recurring automated marketing text messages from Anna Kara's Brow Studio LLC — occasional discounts and first access to newly opened appointment slots — at the number provided. Consent is not a condition of purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help.";
