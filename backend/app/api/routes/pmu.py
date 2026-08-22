@@ -126,6 +126,36 @@ async def book_consultation(
         customer_email=request.customer.email_address,
         customer_phone=phone_number,
     )
+    # These three calls, plus link_contact_to_booking_safely below, were already the
+    # established pattern in bookings.py (mani's own booking routes) — missing here until now,
+    # which meant every PMU booking silently skipped marketing.attribution (so it never counted
+    # toward the "tracked-flow" conversion path despite PMU running a real, active landing-page
+    # experiment — see marketing.experiments — and instead only ever showed up via the
+    # follow-up-appointments fallback, which is meant for a manager's own later outreach, not an
+    # immediate self-service booking) and both consent-log tables (marketing.sms_consent/
+    # email_consent — link_contact_to_booking_safely below only sets the boolean flag on the
+    # contact row itself, not the append-only audit log). Found live 2026-08-22.
+    await tracking_service.record_attribution_safely(
+        business_id=business.id,
+        tracking=tracking,
+        booking_id=confirmation.booking_id,
+    )
+    await tracking_service.record_sms_consent_safely(
+        business_id=business.id,
+        phone_number=phone_number,
+        consented=request.customer.marketing_opt_in,
+        source="booking",
+        visitor_id=tracking.visitor_id if tracking else None,
+        ip_address=client_context["ip_address"],
+    )
+    if request.customer.email_address is not None:
+        await tracking_service.record_email_consent_safely(
+            business_id=business.id,
+            email_address=request.customer.email_address,
+            source="booking",
+            visitor_id=tracking.visitor_id if tracking else None,
+            ip_address=client_context["ip_address"],
+        )
     await tracking_service.link_contact_to_booking_safely(
         business_id=business.id,
         given_name=request.customer.given_name,
@@ -211,6 +241,27 @@ async def book_with_deposit(
         customer_email=request.customer.email_address,
         customer_phone=phone_number,
     )
+    await tracking_service.record_attribution_safely(
+        business_id=business.id,
+        tracking=tracking,
+        booking_id=confirmation.booking_id,
+    )
+    await tracking_service.record_sms_consent_safely(
+        business_id=business.id,
+        phone_number=phone_number,
+        consented=request.customer.marketing_opt_in,
+        source="booking",
+        visitor_id=tracking.visitor_id if tracking else None,
+        ip_address=client_context["ip_address"],
+    )
+    if request.customer.email_address is not None:
+        await tracking_service.record_email_consent_safely(
+            business_id=business.id,
+            email_address=request.customer.email_address,
+            source="booking",
+            visitor_id=tracking.visitor_id if tracking else None,
+            ip_address=client_context["ip_address"],
+        )
     await tracking_service.link_contact_to_booking_safely(
         business_id=business.id,
         given_name=request.customer.given_name,
