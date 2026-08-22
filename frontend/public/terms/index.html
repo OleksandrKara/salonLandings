@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2a211d" />
+    <title>Terms &amp; Conditions</title>
+    <meta name="robots" content="noindex" />
+    <style>
+      :root {
+        --color-bg-from: #fbf6f2;
+        --color-bg-mid: #f3e7df;
+        --color-bg-to: #eaddd4;
+        --color-card: #fffdfb;
+        --color-ink: #2a211d;
+        --color-ink-soft: #4a3d36;
+        --color-muted: #6b5d55;
+        --color-border: #ecdbd3;
+        --color-accent: #9e5a63;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Jost", system-ui, sans-serif;
+        color: var(--color-ink-soft);
+        background: radial-gradient(120% 80% at 50% 0%, var(--color-bg-from) 0%, var(--color-bg-mid) 55%, var(--color-bg-to) 100%);
+        line-height: 1.65;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 48px 20px 64px;
+      }
+      .card {
+        background: var(--color-card);
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        padding: 32px 28px;
+      }
+      h1 {
+        font-family: "Playfair Display", serif;
+        color: var(--color-ink);
+        font-size: 28px;
+        margin: 0 0 4px;
+      }
+      .effective-date {
+        color: var(--color-muted);
+        font-size: 13px;
+        margin: 0 0 28px;
+      }
+      h2 {
+        font-family: "Playfair Display", serif;
+        color: var(--color-ink);
+        font-size: 18px;
+        margin: 28px 0 8px;
+      }
+      p, li { font-size: 14.5px; }
+      ul { margin: 8px 0; padding-left: 20px; }
+      li { margin-bottom: 6px; }
+      a { color: var(--color-accent); }
+      .contact {
+        margin-top: 8px;
+        padding: 16px;
+        background: var(--color-bg-from);
+        border-radius: 10px;
+        font-size: 14.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="card">
+        <h1 id="business-name">AK.LUX.NAILS</h1>
+        <p class="effective-date">Effective date: August 22, 2026</p>
+
+        <p>
+          These Terms &amp; Conditions ("Terms") govern your use of
+          <span class="business-name">AK.LUX.NAILS</span>'s ("we," "us") website and booking services, and your
+          agreement to receive text messages and emails from us. By booking an appointment, visiting our website,
+          or opting in to text messages, you agree to these Terms.
+        </p>
+
+        <h2>Booking &amp; payment</h2>
+        <ul>
+          <li>Appointments are booked and paid for through our online booking widget, powered by Square.</li>
+          <li>Prices, availability, and cancellation/deposit policies are shown at the time of booking.</li>
+          <li>We reserve the right to reschedule or decline a booking (e.g. an unavailable slot, a no-show history) — we'll always try to reach you first.</li>
+        </ul>
+
+        <h2>Text messaging terms</h2>
+        <p>
+          If you provide your phone number when booking or check the box to opt in on our website, you agree to
+          receive text messages from us at that number, on the following terms:
+        </p>
+        <ul>
+          <li>Message types include appointment confirmations/reminders and, only if you've separately opted in, marketing offers (discounts, rebooking reminders, early access to open slots).</li>
+          <li>Consent to receive marketing text messages is never a condition of booking or purchase.</li>
+          <li>Message frequency varies. Message and data rates may apply.</li>
+          <li>Reply <strong>STOP</strong> at any time to stop receiving text messages from us.</li>
+          <li>Reply <strong>HELP</strong> for help, or contact us directly (see below).</li>
+          <li>Carriers are not liable for delayed or undelivered messages.</li>
+          <li>See our <a href="/privacy-policy">Privacy Policy</a> for how we handle your information.</li>
+        </ul>
+
+        <h2>Website use</h2>
+        <ul>
+          <li>You agree to provide accurate information when booking and not to misuse our booking system (e.g. fraudulent bookings, automated scraping).</li>
+          <li>All content on this site (text, images, branding) belongs to us or our licensors and may not be reused without permission.</li>
+        </ul>
+
+        <h2>Limitation of liability</h2>
+        <p>
+          Our services are provided "as is." To the fullest extent permitted by law, we are not liable for
+          indirect, incidental, or consequential damages arising from your use of our website or services, or
+          from any text message we send or that you don't receive.
+        </p>
+
+        <h2>Changes to these Terms</h2>
+        <p>We may update these Terms from time to time. The effective date above reflects the most recent revision. Continuing to use our services after a change means you accept the updated Terms.</p>
+
+        <h2>Governing law</h2>
+        <p>These Terms are governed by the laws of the State of California, without regard to its conflict-of-law principles.</p>
+
+        <h2>Contact us</h2>
+        <div class="contact">
+          <div class="business-name">AK.LUX.NAILS</div>
+          <div id="business-address">1357 Seventh Ave, Ste C, San Diego, CA 92101</div>
+          <div id="business-email-row" style="display: none; margin-top: 4px;">
+            <a id="business-email" href="#"></a>
+          </div>
+          <div style="margin-top: 8px;">
+            Reply to any text message we've sent you, or reach us through our booking site, and we'll get back to you.
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+      // Same hostname-based business-name switch privacy-policy/index.html already uses — see its
+      // own doc comment for why this is a static page outside the SPA. Only pmu-annakara needs this
+      // page linked from anywhere right now (its toll-free verification's terms_and_conditions_url
+      // pointed at a URL with no real content behind it — found live 2026-08-22, alongside that
+      // same verification's opt_in_image_urls pointing at mani's screenshot instead of its own).
+      // mani.akluxnails.com's own toll-free number is already approved and points its
+      // terms_and_conditions_url at a separate, existing akluxnails.com/terms page instead of this
+      // one, so its branch here is unused today but kept for consistency with privacy-policy's.
+      (function () {
+        if (window.location.hostname.includes("pmu-annakara")) {
+          var name = "Anna Kara's Brow Studio LLC";
+          var email = "anna@pmu-annakara.com";
+          document.title = "Terms & Conditions | " + name;
+          document.getElementById("business-name").textContent = name;
+          document.querySelectorAll(".business-name").forEach(function (el) {
+            el.textContent = name;
+          });
+          var emailLink = document.getElementById("business-email");
+          emailLink.textContent = email;
+          emailLink.href = "mailto:" + email;
+          document.getElementById("business-email-row").style.display = "block";
+        }
+      })();
+    </script>
+  </body>
+</html>
