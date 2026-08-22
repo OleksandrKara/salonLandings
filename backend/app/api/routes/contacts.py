@@ -26,10 +26,11 @@ async def capture_contact(
 ) -> ContactCaptureResponse:
     tracking = resolve_tracking_snapshot(http_request, http_response, request.tracking)
     # Normalized once, up front, and reused for every downstream call (Square lookup, the
-    # marketing.contacts/submissions write) — marketing.contacts is unique on phone_number and
-    # used as the upsert dedup key, so the same physical number typed differently across visits
-    # must always normalize to the same string here, or it silently becomes two separate "leads"
-    # that never merge. See normalize_phone_for_storage's own doc comment.
+    # marketing.contacts/submissions write) — marketing.contacts is unique on (business_id,
+    # phone_number) and used as the upsert dedup key, so the same physical number typed
+    # differently across visits must always normalize to the same string here, or it silently
+    # becomes two separate "leads" that never merge. See normalize_phone_for_storage's own doc
+    # comment.
     phone_number = normalize_phone_for_storage(request.phone_number)
 
     # Read-only lookup — never creates a Square customer here. A failure must never block
