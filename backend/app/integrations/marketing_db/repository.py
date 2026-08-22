@@ -305,11 +305,14 @@ class MarketingRepository:
         square_customer_id: str | None,
     ) -> None:
         """First-touch capture at Step 1 — before a Square customer exists *of our making*.
-        Dedup key is phone_number (the only field guaranteed present); original_traffic_source,
-        and the landing_page_slug/variant_name describing what the lead first saw, are set on
-        first insert and intentionally absent from the DO UPDATE SET clause below, so a repeat
-        visit updates only the "latest" fields (traffic source, device/os/browser) and never
-        overwrites first-touch attribution.
+        Dedup key is (business_id, phone_number) — the same phone number can be a first-touch
+        lead for more than one business (two related salons, one owner), and each needs its own
+        row rather than colliding into one (see _DDL_CONTACTS_BUSINESS_SCOPED_UNIQUE's own doc
+        for the incident that found this the hard way). original_traffic_source, and the
+        landing_page_slug/variant_name describing what the lead first saw, are set on first
+        insert and intentionally absent from the DO UPDATE SET clause below, so a repeat visit
+        updates only the "latest" fields (traffic source, device/os/browser) and never overwrites
+        first-touch attribution.
 
         square_customer_id here is the result of a *lookup*, not a creation — a Square customer
         that already existed before this lead was ever captured (e.g. booked in person, or
@@ -327,7 +330,7 @@ class MarketingRepository:
                 device_type, os_name, os_version, browser_name, browser_version,
                 square_customer_id, updated_at
             ) VALUES ($1, $2, $3, $4, $5, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, now())
-            ON CONFLICT (phone_number) DO UPDATE SET
+            ON CONFLICT (business_id, phone_number) DO UPDATE SET
                 given_name = EXCLUDED.given_name,
                 email_address = COALESCE(EXCLUDED.email_address, marketing.contacts.email_address),
                 marketing_traffic_source = EXCLUDED.marketing_traffic_source,
@@ -392,10 +395,11 @@ class MarketingRepository:
         booking_artist_name: str | None,
     ) -> None:
         """Links a contact to its real Square booking once one is created. Same upsert shape
-        as upsert_contact_step1 (original_traffic_source and the landing_page_slug/variant_name
-        first-touch capture context both untouched on conflict) — also handles the edge case
-        where a booking happens without a prior Step-1 capture (e.g. a network hiccup dropped
-        that call), inserting a fresh contact row instead of erroring.
+        as upsert_contact_step1 — same (business_id, phone_number) dedup key, same
+        original_traffic_source/landing_page_slug/variant_name first-touch capture context left
+        untouched on conflict — also handles the edge case where a booking happens without a
+        prior Step-1 capture (e.g. a network hiccup dropped that call), inserting a fresh contact
+        row instead of erroring.
 
         sms_marketing_consent is OR-merged on conflict, not overwritten: a customer who opted in
         on an earlier booking and later books again without re-checking the box keeps their
@@ -424,7 +428,7 @@ class MarketingRepository:
                 $1, $2, $3, $4, $5, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
                 $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, now()
             )
-            ON CONFLICT (phone_number) DO UPDATE SET
+            ON CONFLICT (business_id, phone_number) DO UPDATE SET
                 given_name = EXCLUDED.given_name,
                 email_address = COALESCE(EXCLUDED.email_address, marketing.contacts.email_address),
                 marketing_traffic_source = EXCLUDED.marketing_traffic_source,

@@ -29,7 +29,7 @@ def normalize_phone_for_storage(phone_number: str) -> str:
     tracking_service.py and the abuse-guard rate-limit check, all of which need one consistent
     string to key on — unlike Square search (which is fine skipping a number it can't confidently
     call US), a write path can't just decline to store something. marketing.contacts is unique on
-    phone_number and used as the upsert dedup key, so the same physical number must always
+    (business_id, phone_number) and used as the upsert dedup key, so the same physical number must always
     normalize to the same value here, or a customer who's typed their number differently across
     visits ends up as two separate "leads" that never merge, and — since lead_followup_send is
     itself keyed off the resulting contact_id — silently stops getting the lead-follow-up nudge

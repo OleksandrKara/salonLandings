@@ -190,14 +190,16 @@ CREATE INDEX IF NOT EXISTS idx_marketing_email_consent_occurred_at ON marketing.
 """
 
 # Leads captured as soon as Step 1 (name + phone, email optional) is submitted — before a real
-# Square booking (and thus a Square customer) exists. phone_number is the dedup key since it's
-# the only field guaranteed present at that point. original_traffic_source is set once, on first
-# insert, and never overwritten on conflict — the booking columns stay null until/unless this
-# contact later completes a real appointment (see update_contact_after_booking).
+# Square booking (and thus a Square customer) exists. (business_id, phone_number) is the dedup key
+# — the actual uniqueness constraint is added by _DDL_CONTACTS_BUSINESS_SCOPED_UNIQUE below (this
+# table originally had phone_number alone UNIQUE, before business_id existed at all).
+# original_traffic_source is set once, on first insert, and never overwritten on conflict — the
+# booking columns stay null until/unless this contact later completes a real appointment (see
+# update_contact_after_booking).
 _DDL_CONTACTS = """
 CREATE TABLE IF NOT EXISTS marketing.contacts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    phone_number TEXT NOT NULL UNIQUE,
+    phone_number TEXT NOT NULL,
     given_name TEXT,
     email_address TEXT,
     original_traffic_source TEXT,
@@ -368,6 +370,23 @@ CREATE INDEX IF NOT EXISTS idx_marketing_abuse_blocks_business_id ON marketing.a
 CREATE INDEX IF NOT EXISTS idx_marketing_funnel_events_business_id ON marketing.funnel_events (business_id);
 """
 
+# contacts.phone_number was UNIQUE on its own since before business_id existed (see _DDL_CONTACTS
+# above) — _DDL_BUSINESS_ID added the column but never revisited that constraint, so two different
+# businesses sharing a customer's phone number (a real scenario for two related salons run by the
+# same owner) silently collided into ONE row: whichever business wrote last clobbered the other's
+# square_customer_id/booking_status/booking_start_at/etc, and the earlier business's contact
+# started showing the later business's booking as its own — while the later business's own upsert
+# never actually inserted a new row, so ITS OWN funnel/ads-report never saw the conversion at all.
+# Found live 2026-08-22: a customer known to business 1 (AK.LUX.NAILS) booked a PMU (business 2)
+# consultation; business 1's contact record got overwritten with the PMU booking, and business 1's
+# lead-follow-up scheduler (keyed off contacts.updated_at) fired a stale nudge text off the back of
+# that phantom write. Each business now gets its own row per phone number, like every other
+# per-business table here already does.
+_DDL_CONTACTS_BUSINESS_SCOPED_UNIQUE = """
+ALTER TABLE marketing.contacts DROP CONSTRAINT IF EXISTS contacts_phone_number_key;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_marketing_contacts_business_phone ON marketing.contacts (business_id, phone_number);
+"""
+
 
 async def run_migrations() -> None:
     pool = get_pool()
@@ -383,4 +402,5 @@ async def run_migrations() -> None:
         await conn.execute(_DDL_ABUSE_BLOCKS)
         await conn.execute(_DDL_FUNNEL_EVENTS)
         await conn.execute(_DDL_BUSINESS_ID)
+        await conn.execute(_DDL_CONTACTS_BUSINESS_SCOPED_UNIQUE)
     logger.info("Marketing schema migrations applied")

@@ -43,9 +43,10 @@ async def create_booking(
     tracking = resolve_tracking_snapshot(http_request, http_response, request.tracking)
     client_context = derive_client_context(http_request)
     # Normalized once, up front, and reused for the abuse guard's own rate-limit lookup plus every
-    # marketing write below — marketing.contacts is unique on phone_number and used as the upsert
-    # dedup key, so the same physical number typed differently across visits must always
-    # normalize to the same string, or it silently becomes two separate "leads" that never merge
+    # marketing write below — marketing.contacts is unique on (business_id, phone_number) and used
+    # as the upsert dedup key, so the same physical number typed differently across visits must
+    # always normalize to the same string, or it silently becomes two separate "leads" that never
+    # merge
     # (and the abuse guard's count_recent_submissions_by_phone would miss half their history too).
     # See normalize_phone_for_storage's own doc comment. booking_service.create_booking below still
     # gets the raw request object — Square-side lookup/creation already normalizes internally.
