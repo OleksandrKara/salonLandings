@@ -78,7 +78,7 @@ _DDL_EXPERIMENTS = """
 CREATE TABLE IF NOT EXISTS marketing.landing_pages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
-    slug TEXT NOT NULL UNIQUE,
+    slug TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -387,6 +387,20 @@ ALTER TABLE marketing.contacts DROP CONSTRAINT IF EXISTS contacts_phone_number_k
 CREATE UNIQUE INDEX IF NOT EXISTS uq_marketing_contacts_business_phone ON marketing.contacts (business_id, phone_number);
 """
 
+# Same class of bug as contacts.phone_number above, found during the same 2026-08-22 audit:
+# landing_pages.slug was UNIQUE on its own too, from before business_id existed. Unlike contacts,
+# nothing has ever hit this live — landing_pages rows are only ever created by the admin CLI
+# (manage_landing_variants.py), via a plain INSERT with no ON CONFLICT, so a same-slug collision
+# across two businesses would fail loudly (constraint violation) rather than silently overwrite
+# another business's page. Still worth closing now, before a third business (or a slug like
+# "home"/"book" two businesses would both reach for) ever hits it — every read already scopes by
+# (slug, business_id) (see MarketingDashboardRepository#findLandingPageId), so this is purely a
+# constraint change, no application-code follow-up needed.
+_DDL_LANDING_PAGES_BUSINESS_SCOPED_SLUG = """
+ALTER TABLE marketing.landing_pages DROP CONSTRAINT IF EXISTS landing_pages_slug_key;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_marketing_landing_pages_business_slug ON marketing.landing_pages (business_id, slug);
+"""
+
 
 async def run_migrations() -> None:
     pool = get_pool()
@@ -403,4 +417,5 @@ async def run_migrations() -> None:
         await conn.execute(_DDL_FUNNEL_EVENTS)
         await conn.execute(_DDL_BUSINESS_ID)
         await conn.execute(_DDL_CONTACTS_BUSINESS_SCOPED_UNIQUE)
+        await conn.execute(_DDL_LANDING_PAGES_BUSINESS_SCOPED_SLUG)
     logger.info("Marketing schema migrations applied")
