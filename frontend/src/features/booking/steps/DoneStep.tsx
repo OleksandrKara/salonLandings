@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { buildGoogleCalendarLink, buildIcsDataUri } from "@/lib/calendar";
+import { buildGoogleCalendarLink, buildIcsUrl } from "@/lib/calendar";
 import { formatPrice, formatSlotDay, formatSlotTime } from "@/lib/formatting";
 import type { BookingConfirmation, FourHandRequestConfirmation, SlotOption } from "@/types/api";
 
@@ -39,7 +39,7 @@ export function DoneStep({
       details,
       location: bookingConfirmation.location_address,
     });
-    calIcs = buildIcsDataUri({
+    calIcs = buildIcsUrl({
       title: `AK.LUX.NAILS — ${bookingConfirmation.service_name}`,
       startAt: bookingConfirmation.start_at,
       durationMinutes: bookingConfirmation.duration_minutes,
@@ -116,7 +116,7 @@ export function DoneStep({
               </span>
               <span style={styles.calendarChevron}>›</span>
             </a>
-            <a href={calIcs} download="appointment.ics" className="calendar-link" style={styles.calendarLink}>
+            <a href={calIcs} target="_blank" rel="noopener" className="calendar-link" style={styles.calendarLink}>
               <span style={{ ...styles.calendarIconBadge, background: "#1d1d1f" }}>
                 <AppleGlyph />
               </span>
