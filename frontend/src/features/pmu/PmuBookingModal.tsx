@@ -7,7 +7,7 @@ import { Spinner } from "@/features/landing/Spinner";
 import { TurnstileWidget } from "@/features/booking/TurnstileWidget";
 import { PmuCardField } from "@/features/pmu/PmuCardField";
 import { usePmuBookingModalContext } from "@/features/pmu/PmuBookingModalContext";
-import { buildGoogleCalendarLink, buildIcsDataUri } from "@/lib/calendar";
+import { buildGoogleCalendarLink, buildIcsUrl } from "@/lib/calendar";
 import { formatPrice, formatSlotDay, formatSlotTime, groupSlotsByDateKey, pacificTodayKey, slotHour, toPacificDateKey } from "@/lib/formatting";
 import { getTrackingSnapshot } from "@/lib/tracking";
 import type { PmuCatalogResponse, PmuConsultationConfirmation, PmuDepositBookingConfirmation, PmuSlotOption } from "@/types/pmu";
@@ -664,7 +664,7 @@ function DoneStep({
     details: calDetails,
     location: PMU_LOCATION.address,
   });
-  const calIcs = buildIcsDataUri({
+  const calIcs = buildIcsUrl({
     title: calTitle,
     startAt: confirmation.start_at,
     durationMinutes,
@@ -706,7 +706,7 @@ function DoneStep({
             </span>
             <span style={styles.calendarChevron}>›</span>
           </a>
-          <a href={calIcs} download="appointment.ics" style={styles.calendarLink}>
+          <a href={calIcs} target="_blank" rel="noopener noreferrer" style={styles.calendarLink}>
             <span style={{ ...styles.calendarIconBadge, background: "#1d1d1f" }}>
               <AppleGlyph />
             </span>
