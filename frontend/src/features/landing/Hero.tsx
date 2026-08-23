@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import mani1 from "@/assets/hero-white-manicure.jpg";
-import { CREDIBILITY_STATS, HEADLINE, SUBHEAD, terminologize } from "@/data/designCopy";
+import { CREDIBILITY_STATS, GOOGLE_REVIEW_COUNT, GOOGLE_REVIEW_RATING, HEADLINE, SUBHEAD, terminologize } from "@/data/designCopy";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
@@ -30,9 +30,9 @@ export function Hero({ overrides }: { overrides?: LandingVariantContent }) {
         <div style={styles.imageGradient} />
         <div style={styles.ratingBadge}>
           <GoogleLogo size={20} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--color-ink)" }}>4.7</span>
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--color-ink)" }}>{GOOGLE_REVIEW_RATING}</span>
           <span style={{ color: "var(--color-gold)", fontSize: 13, letterSpacing: 1 }}>★★★★★</span>
-          <span style={{ fontSize: 12, color: "var(--color-muted-2)", fontWeight: 500 }}>113 reviews</span>
+          <span style={{ fontSize: 12, color: "var(--color-muted-2)", fontWeight: 500 }}>{GOOGLE_REVIEW_COUNT} reviews</span>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from "react";
-import { MORE_REVIEWS, REVIEWS, terminologize, type Review } from "@/data/designCopy";
+import { GOOGLE_REVIEW_COUNT, GOOGLE_REVIEW_RATING, MORE_REVIEWS, REVIEWS, terminologize, type Review } from "@/data/designCopy";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
 import type { LandingVariantContent } from "@/types/api";
 
@@ -14,10 +14,10 @@ export function GoogleReviews({ terminology }: { terminology?: LandingVariantCon
         <GoogleLogo size={34} />
         <div style={{ flex: 1, lineHeight: 1.15 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 30, color: "var(--color-ink)" }}>4.7</span>
+            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 30, color: "var(--color-ink)" }}>{GOOGLE_REVIEW_RATING}</span>
             <span style={{ color: "var(--color-gold)", fontSize: 16, letterSpacing: 1 }}>★★★★★</span>
           </div>
-          <div style={{ fontSize: 12.5, color: "var(--color-muted-2)", marginTop: 3 }}>Based on 113 Google reviews</div>
+          <div style={{ fontSize: 12.5, color: "var(--color-muted-2)", marginTop: 3 }}>Based on {GOOGLE_REVIEW_COUNT} Google reviews</div>
         </div>
         <span style={styles.verifiedBadge}>✓ Verified</span>
       </div>
