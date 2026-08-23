@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { formatPrice } from "@/lib/formatting";
-import { CREDIBILITY_STATS, GUARANTEE_POINT } from "@/data/designCopy";
+import { CREDIBILITY_STATS, GOOGLE_REVIEW_RATING, GUARANTEE_POINT } from "@/data/designCopy";
 import { StepProgress } from "@/features/booking/StepProgress";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
 import type { ServiceOffer } from "@/types/api";
@@ -60,7 +60,7 @@ export function ContactStep({
       <div style={styles.trustBar}>
         <span style={styles.googleGroup}>
           <GoogleLogo size={14} />
-          <span style={styles.googleRating}>4.7</span>
+          <span style={styles.googleRating}>{GOOGLE_REVIEW_RATING}</span>
           <span style={styles.googleStar} aria-hidden="true">★</span>
           {CREDIBILITY_STATS[0].label}
         </span>
