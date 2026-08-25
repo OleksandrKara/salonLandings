@@ -20,6 +20,8 @@ CONSULTATION_KWARGS = dict(
     phone_number="+15551234567",
     business_id=2,
     start_at="2026-08-01T18:00:00Z",
+    is_online=True,
+    location_address="",
 )
 
 
@@ -85,6 +87,44 @@ def test_consultation_relay_success_returns_true():
         # of this relay still gets (see InternalNotificationController.SmsSendRequest's own doc).
         assert post.call_args.kwargs["json"]["businessId"] == 2
         assert "businessName" not in post.call_args.kwargs["json"]["variables"]
+
+
+def test_consultation_online_clause_says_call():
+    response = httpx.Response(200, json={"sent": True}, request=httpx.Request("POST", "http://backend:8080"))
+    with patch(
+        "app.integrations.sms.notifier.get_settings",
+        return_value=_settings("http://backend:8080", "secret"),
+    ), patch("httpx.Client.post", return_value=response) as post:
+        notify_consultation_request_sms(**{**CONSULTATION_KWARGS, "is_online": True, "location_address": "123 Main St"})
+        clause = post.call_args.kwargs["json"]["variables"]["detailsClause"]
+        assert clause == "We'll call you at Sat, Aug 1 at 11:00 AM PDT!"
+        # An online consultation's clause never mentions the studio address, even if one happens
+        # to be passed in.
+        assert "Main St" not in clause
+
+
+def test_consultation_in_person_clause_includes_address():
+    response = httpx.Response(200, json={"sent": True}, request=httpx.Request("POST", "http://backend:8080"))
+    with patch(
+        "app.integrations.sms.notifier.get_settings",
+        return_value=_settings("http://backend:8080", "secret"),
+    ), patch("httpx.Client.post", return_value=response) as post:
+        notify_consultation_request_sms(**{**CONSULTATION_KWARGS, "is_online": False, "location_address": "123 Main St, San Diego, CA 92101"})
+        clause = post.call_args.kwargs["json"]["variables"]["detailsClause"]
+        assert clause == "We'll be waiting for you at 123 Main St, San Diego, CA 92101 at Sat, Aug 1 at 11:00 AM PDT!"
+
+
+def test_consultation_in_person_missing_address_omits_at_address_clause():
+    # A resolvable-but-empty address (e.g. Square location lookup failed upstream) must not
+    # produce a broken "at , at <time>" fragment.
+    response = httpx.Response(200, json={"sent": True}, request=httpx.Request("POST", "http://backend:8080"))
+    with patch(
+        "app.integrations.sms.notifier.get_settings",
+        return_value=_settings("http://backend:8080", "secret"),
+    ), patch("httpx.Client.post", return_value=response) as post:
+        notify_consultation_request_sms(**{**CONSULTATION_KWARGS, "is_online": False, "location_address": ""})
+        clause = post.call_args.kwargs["json"]["variables"]["detailsClause"]
+        assert clause == "We'll be waiting for you at Sat, Aug 1 at 11:00 AM PDT!"
 
 
 def test_consultation_relay_blocked_returns_false():

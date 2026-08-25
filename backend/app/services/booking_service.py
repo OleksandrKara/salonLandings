@@ -19,6 +19,7 @@ from app.integrations.sms.notifier import notify_four_hand_request_sms
 from app.integrations.telegram.notifier import notify_four_hand_request
 from app.services.artist_service import ArtistNotFoundError, ArtistService
 from app.services.catalog_service import CatalogService
+from app.services.formatting import format_square_address
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +93,7 @@ class BookingService:
 
         location = self._business_repo.get_location()
         profile = self._business_repo.get_booking_profile()
-        address_line = self._format_address(location.address)
+        address_line = format_square_address(location.address)
 
         confirmation = BookingConfirmation(
             booking_id=booking.id,
@@ -208,16 +209,3 @@ class BookingService:
 
         raise InvalidSlotError(f"Unknown service '{service_slug}' with variation '{variation_id}'.")
 
-    @staticmethod
-    def _format_address(address) -> str:
-        if address is None:
-            return ""
-        return ", ".join(
-            part
-            for part in [
-                address.address_line1,
-                address.locality,
-                " ".join(filter(None, [address.administrative_district_level1, address.postal_code])),
-            ]
-            if part
-        )
