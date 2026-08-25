@@ -52,7 +52,11 @@ class PmuTechniqueDefinition:
 class PmuConsultationDefinition:
     """Booked like any normal mani appointment — no payment collected here, matches the
     existing create_booking mechanics exactly. team_member_ids lists every provider the client
-    can choose between for this consultation type.
+    can choose between for this consultation type. is_online drives the confirmation SMS's own
+    "we'll call you" vs. "we'll be waiting for you at {address}" clause (see
+    notify_consultation_request_sms) — explicit data here rather than inferred from slug string
+    matching at the call site, so a future third consultation type can't silently pick the wrong
+    branch just by not matching an expected slug spelling.
     """
 
     slug: str
@@ -61,6 +65,7 @@ class PmuConsultationDefinition:
     item_id: str
     variation_id: str
     team_member_ids: list[str]
+    is_online: bool
 
 
 @dataclass(frozen=True)
@@ -126,6 +131,7 @@ PMU_CONSULTATIONS: list[PmuConsultationDefinition] = [
         item_id="52X2D4SLY64DGS637F2JO4CV",
         variation_id="6QH2EUW5RFS5DBRTS6ZFYT3Q",
         team_member_ids=ACTIVE_PROVIDER_IDS,
+        is_online=True,
     ),
     PmuConsultationDefinition(
         slug="in-person-consultation",
@@ -134,6 +140,7 @@ PMU_CONSULTATIONS: list[PmuConsultationDefinition] = [
         item_id="YIJY7CVQWNCDEMRCF5LD36ZE",
         variation_id="QGKYRG66BJ2DS54VRG6YO5ZN",
         team_member_ids=ACTIVE_PROVIDER_IDS,
+        is_online=False,
     ),
 ]
 

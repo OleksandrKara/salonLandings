@@ -24,6 +24,7 @@ from app.domain.schemas import (
 )
 from app.integrations.square.availability import SquareAvailabilityGateway
 from app.integrations.square.bookings import BookingSegment, SquareBookingGateway
+from app.integrations.square.business import SquareBusinessRepository
 from app.integrations.square.catalog import SquareCatalogRepository
 from app.integrations.square.credentials import get_square_credentials
 from app.integrations.square.customer_attributes import SquareCustomerAttributesGateway
@@ -31,6 +32,7 @@ from app.integrations.square.customers import SquareCustomerGateway
 from app.integrations.square.exceptions import SquareIntegrationError
 from app.integrations.square.payments import SquarePaymentGateway
 from app.integrations.sms.notifier import notify_consultation_request_sms
+from app.services.formatting import format_square_address
 from app.integrations.square.team import SquareTeamRepository
 
 logger = logging.getLogger(__name__)
@@ -177,12 +179,14 @@ class PmuBookingService:
         team_repo: SquareTeamRepository,
         customer_attributes_gateway: SquareCustomerAttributesGateway,
         business_id: int,
+        business_repo: SquareBusinessRepository,
     ):
         self._customer_gateway = customer_gateway
         self._booking_gateway = booking_gateway
         self._payment_gateway = payment_gateway
         self._catalog_repo = catalog_repo
         self._business_id = business_id
+        self._business_repo = business_repo
         self._team_repo = team_repo
         self._customer_attributes_gateway = customer_attributes_gateway
 
@@ -224,12 +228,17 @@ class PmuBookingService:
         # booking type. Same fail-open shape/placement as notify_four_hand_request_sms's own call
         # in create_four_hand_request: inline in this synchronous service method (already run via
         # run_in_threadpool from the async route), not the route itself, so the blocking relay call
-        # never runs on the event loop. Never blocks the booking response either way.
+        # never runs on the event loop. Never blocks the booking response either way. Address is
+        # only actually resolved (a live Square location lookup) for an in-person consultation —
+        # not needed, and not fetched, for an online one.
+        location_address = "" if definition.is_online else format_square_address(self._business_repo.get_location().address)
         notify_consultation_request_sms(
             given_name=request.customer.given_name,
             phone_number=request.customer.phone_number,
             business_id=self._business_id,
             start_at=booking.start_at,
+            is_online=definition.is_online,
+            location_address=location_address,
         )
 
         return PmuConsultationConfirmation(

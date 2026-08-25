@@ -232,10 +232,11 @@ def _pmu_booking_service_for(
     catalog_repository: SquareCatalogRepository,
     team_repository: SquareTeamRepository,
     customer_attributes_gateway: SquareCustomerAttributesGateway,
+    business_repository: SquareBusinessRepository,
 ) -> PmuBookingService:
     return PmuBookingService(
         customer_gateway, booking_gateway, payment_gateway, catalog_repository, team_repository,
-        customer_attributes_gateway, business_id,
+        customer_attributes_gateway, business_id, business_repository,
     )
 
 
@@ -247,6 +248,7 @@ def get_pmu_booking_service(
     catalog_repository: SquareCatalogRepository = Depends(get_catalog_repository),
     team_repository: SquareTeamRepository = Depends(get_team_repository),
     customer_attributes_gateway: SquareCustomerAttributesGateway = Depends(get_customer_attributes_gateway),
+    business_repository: SquareBusinessRepository = Depends(get_business_repository),
 ) -> PmuBookingService:
     return _pmu_booking_service_for(
         business.id,
@@ -256,6 +258,7 @@ def get_pmu_booking_service(
         catalog_repository,
         team_repository,
         customer_attributes_gateway,
+        business_repository,
     )
 
 
