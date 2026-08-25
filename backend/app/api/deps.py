@@ -234,7 +234,8 @@ def _pmu_booking_service_for(
     customer_attributes_gateway: SquareCustomerAttributesGateway,
 ) -> PmuBookingService:
     return PmuBookingService(
-        customer_gateway, booking_gateway, payment_gateway, catalog_repository, team_repository, customer_attributes_gateway
+        customer_gateway, booking_gateway, payment_gateway, catalog_repository, team_repository,
+        customer_attributes_gateway, business_id,
     )
 
 

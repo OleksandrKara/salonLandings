@@ -30,6 +30,7 @@ from app.integrations.square.customer_attributes import SquareCustomerAttributes
 from app.integrations.square.customers import SquareCustomerGateway
 from app.integrations.square.exceptions import SquareIntegrationError
 from app.integrations.square.payments import SquarePaymentGateway
+from app.integrations.sms.notifier import notify_consultation_request_sms
 from app.integrations.square.team import SquareTeamRepository
 
 logger = logging.getLogger(__name__)
@@ -175,11 +176,13 @@ class PmuBookingService:
         catalog_repo: SquareCatalogRepository,
         team_repo: SquareTeamRepository,
         customer_attributes_gateway: SquareCustomerAttributesGateway,
+        business_id: int,
     ):
         self._customer_gateway = customer_gateway
         self._booking_gateway = booking_gateway
         self._payment_gateway = payment_gateway
         self._catalog_repo = catalog_repo
+        self._business_id = business_id
         self._team_repo = team_repo
         self._customer_attributes_gateway = customer_attributes_gateway
 
@@ -215,6 +218,18 @@ class PmuBookingService:
                 )
             ],
             customer_note=request.note,
+        )
+
+        # Business 2 automation #1 — Square's own confirmation text doesn't reliably fire for this
+        # booking type. Same fail-open shape/placement as notify_four_hand_request_sms's own call
+        # in create_four_hand_request: inline in this synchronous service method (already run via
+        # run_in_threadpool from the async route), not the route itself, so the blocking relay call
+        # never runs on the event loop. Never blocks the booking response either way.
+        notify_consultation_request_sms(
+            given_name=request.customer.given_name,
+            phone_number=request.customer.phone_number,
+            business_id=self._business_id,
+            start_at=booking.start_at,
         )
 
         return PmuConsultationConfirmation(
