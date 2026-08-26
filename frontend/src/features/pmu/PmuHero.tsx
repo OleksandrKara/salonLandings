@@ -11,7 +11,12 @@ export function PmuHero({ overrides }: { overrides?: LandingVariantContent }) {
   return (
     <section style={styles.section}>
       <div style={styles.imageWrap}>
-        <img src={heroBrows} alt="Close-up of hand-drawn hairstroke brow tattooing" style={styles.image} fetchPriority="high" />
+        <img
+          src={overrides?.heroImageUrl ?? heroBrows}
+          alt="Close-up of hand-drawn hairstroke brow tattooing"
+          style={styles.image}
+          fetchPriority="high"
+        />
         <div style={styles.imageGradient} />
         <div style={styles.ratingBadge}>
           <GoogleLogo size={20} />
