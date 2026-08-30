@@ -123,6 +123,13 @@ export interface LandingVariantContent {
    * wording — a terminology/branding test, not a different technique: absent or "russian" is
    * today's default copy. See data/designCopy.ts's terminologize(). */
   terminology?: "russian" | "european";
+  /** Selects an entirely different marketing-content template instead of a content override on
+   * the classic layout — "precision" and "editorial" are the 2 new mobile-first A/B designs
+   * (see LandingPage.tsx's template branch, ManiPrecisionTemplate.tsx / ManiEditorialTemplate.tsx).
+   * Absent means the classic template, unchanged. Both new templates still render the identical
+   * shared booking funnel (BookingModalProvider/BookingModal/useBookingModal) — only the marketing
+   * content around it differs. */
+  template?: "precision" | "editorial";
   /** Where the booking modal collects contact info (name/phone/email): "start" (today's default,
    * step 1 of 4) or "end" (right before Confirm, after services + date/time are picked) — see
    * lib/funnelFlow.ts's BOOKING_FLOWS. Absent means "start", so every variant that doesn't set

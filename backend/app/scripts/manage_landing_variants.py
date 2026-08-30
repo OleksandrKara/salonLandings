@@ -105,6 +105,10 @@ def _build_content(args: argparse.Namespace) -> dict:
         content["terminology"] = args.terminology
     if getattr(args, "default_service", None):
         content["defaultService"] = args.default_service
+    if getattr(args, "contact_step_position", None):
+        content["contactStepPosition"] = args.contact_step_position
+    if getattr(args, "template", None):
+        content["template"] = args.template
 
     pedicure_override = {}
     if getattr(args, "pedi_headline", None):
@@ -396,6 +400,20 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["manicure", "pedicure"],
         default=None,
         help="Which service starts pre-selected (checked) in the booking modal's cart step — absent means manicure (today's default). Neither is ever forced off; the visitor can still add the other.",
+    )
+    p_add.add_argument(
+        "--contact-step-position",
+        choices=["start", "end"],
+        default=None,
+        help="Where the booking modal collects contact info: 'start' (today's default, step 1) or 'end' "
+        "(after services + date/time, right before Confirm — Version_7's tested funnel). Absent means 'start'.",
+    )
+    p_add.add_argument(
+        "--template",
+        choices=["precision", "editorial"],
+        default=None,
+        help="Render an entirely different marketing-content template instead of a content override on the "
+        "classic layout — see LandingVariantContent.template / LandingPage.tsx. Absent means the classic template.",
     )
     p_add.add_argument(
         "--pedi-headline",
