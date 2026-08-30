@@ -69,12 +69,10 @@ export function LandingPage() {
   // around the content) so it also reaches StickyBottomBar/BookingModal, which render as its
   // siblings, not descendants of the content block — same reasoning as the accentColor effect
   // above, which writes to document.documentElement for the same reason.
-  const themeClassName =
-    overrides.template === "precision"
-      ? "mani-precision-theme"
-      : overrides.template === "editorial"
-        ? "mani-editorial-theme"
-        : undefined;
+  // "precision" deliberately has no theme class of its own — the owner asked for its layout to
+  // keep Version_7's exact colors/fonts (the default :root tokens in tokens.css), so it falls
+  // through to `undefined` here just like the classic template does.
+  const themeClassName = overrides.template === "editorial" ? "mani-editorial-theme" : undefined;
 
   const content =
     overrides.template === "precision" ? (
