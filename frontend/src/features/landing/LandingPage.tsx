@@ -10,6 +10,8 @@ import { Hero } from "@/features/landing/Hero";
 import { LocationSection } from "@/features/landing/LocationSection";
 import { ResultsCarousel } from "@/features/landing/ResultsCarousel";
 import { StickyBottomBar } from "@/features/landing/StickyBottomBar";
+import { ManiEditorialTemplate } from "@/features/landing/templates/ManiEditorialTemplate";
+import { ManiPrecisionTemplate } from "@/features/landing/templates/ManiPrecisionTemplate";
 import { TrustGrid } from "@/features/landing/TrustGrid";
 import { WhyClientsStay } from "@/features/landing/WhyClientsStay";
 import { resolveExperiment } from "@/lib/experiments";
@@ -59,28 +61,54 @@ export function LandingPage() {
     };
   }, [overrides.accentColor]);
 
+  // "precision"/"editorial" pick an entirely different marketing-content template (see
+  // ManiPrecisionTemplate/ManiEditorialTemplate) instead of a content override on the classic
+  // layout — both render inside this exact same CartMenuProvider/BookingModalProvider/
+  // StickyBottomBar/BookingModal wrapper, so the booking funnel is byte-for-byte identical no
+  // matter which template is showing. The theme class is applied on this outermost div (not just
+  // around the content) so it also reaches StickyBottomBar/BookingModal, which render as its
+  // siblings, not descendants of the content block — same reasoning as the accentColor effect
+  // above, which writes to document.documentElement for the same reason.
+  const themeClassName =
+    overrides.template === "precision"
+      ? "mani-precision-theme"
+      : overrides.template === "editorial"
+        ? "mani-editorial-theme"
+        : undefined;
+
+  const content =
+    overrides.template === "precision" ? (
+      <ManiPrecisionTemplate overrides={overrides} />
+    ) : overrides.template === "editorial" ? (
+      <ManiEditorialTemplate overrides={overrides} />
+    ) : (
+      <div style={styles.page}>
+        <Header />
+        <Hero overrides={overrides} />
+        <TrustGrid terminology={overrides.terminology} />
+        <ResultsCarousel terminology={overrides.terminology} />
+        <WhyClientsStay terminology={overrides.terminology} />
+        <GoogleReviews terminology={overrides.terminology} />
+        <LocationSection />
+        <BookingCtaBanner />
+        <FinalUrgencyCta terminology={overrides.terminology} />
+        <Footer terminology={overrides.terminology} />
+      </div>
+    );
+
   return (
-    <CartMenuProvider>
-      <BookingModalProvider
-        position={overrides.contactStepPosition ?? "start"}
-        defaultService={overrides.defaultService ?? "manicure"}
-      >
-        <div style={styles.page}>
-          <Header />
-          <Hero overrides={overrides} />
-          <TrustGrid terminology={overrides.terminology} />
-          <ResultsCarousel terminology={overrides.terminology} />
-          <WhyClientsStay terminology={overrides.terminology} />
-          <GoogleReviews terminology={overrides.terminology} />
-          <LocationSection />
-          <BookingCtaBanner />
-          <FinalUrgencyCta terminology={overrides.terminology} />
-          <Footer terminology={overrides.terminology} />
-        </div>
-        <StickyBottomBar />
-        <BookingModal terminology={overrides.terminology} position={overrides.contactStepPosition ?? "start"} />
-      </BookingModalProvider>
-    </CartMenuProvider>
+    <div className={themeClassName} style={themeClassName ? { minHeight: "100vh" } : undefined}>
+      <CartMenuProvider>
+        <BookingModalProvider
+          position={overrides.contactStepPosition ?? "start"}
+          defaultService={overrides.defaultService ?? "manicure"}
+        >
+          {content}
+          <StickyBottomBar />
+          <BookingModal terminology={overrides.terminology} position={overrides.contactStepPosition ?? "start"} />
+        </BookingModalProvider>
+      </CartMenuProvider>
+    </div>
   );
 }
 

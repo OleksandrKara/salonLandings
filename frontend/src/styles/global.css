@@ -84,3 +84,82 @@ img {
     box-shadow: 0 4px 12px rgba(42, 33, 29, 0.1);
   }
 }
+
+/* "Precision Studio" A/B variant — clinical-precision/hygiene positioning. Redeclares the same
+ * variable names tokens.css defines on :root, scoped to this class so the shared Header/Footer/
+ * GoogleReviews/BookingModal/StickyBottomBar components (which all read var(--color-accent) etc.)
+ * automatically reskin without any component-level branching. See LandingPage.tsx's `template`
+ * branch and ManiPrecisionTemplate.tsx. */
+.mani-precision-theme {
+  --color-bg-from: #f7f7f5;
+  --color-bg-mid: #f2f1ed;
+  --color-bg-to: #ecebe4;
+  --color-card: #ffffff;
+  --color-ink: #151716;
+  --color-ink-soft: #363a38;
+  --color-muted: #5b5f5c;
+  --color-muted-2: #767b77;
+  --color-muted-3: #93968f;
+  --color-border: #e4e1d8;
+  --color-border-2: #ded9cc;
+  --color-border-3: #d5cfc0;
+  --color-accent: #3c6e5a;
+  --color-accent-dark: #2c5445;
+  --color-accent-hover: #2c5445;
+  --color-accent-tint: #dfe9e3;
+  --color-accent-tint-2: #eef3f0;
+  --color-accent-border-soft: #a9c3b7;
+  --color-gold: #8a8060;
+  --color-gold-text: #6b6349;
+  --color-success: #2f7d5b;
+  --color-success-bg: #eef6f0;
+  --color-success-bg-2: #e6f2ea;
+  --color-danger: #b5453f;
+  --color-warm-gold-bg: linear-gradient(135deg, #eef3f0, #e4e1d8);
+  --color-warm-gold-border: #c9c2b4;
+  --color-warm-gold-text: #3c6e5a;
+  --color-warm-gold-text-2: #5b5f5c;
+
+  --font-heading: "Archivo", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  background: var(--color-bg-from);
+}
+
+/* "Editorial Gloss" A/B variant — high-fashion beauty-editorial positioning. Same
+ * variable-redeclaration mechanism as .mani-precision-theme above. */
+.mani-editorial-theme {
+  --color-bg-from: #0b0b0c;
+  --color-bg-mid: #0b0b0c;
+  --color-bg-to: #0b0b0c;
+  --color-card: #141415;
+  --color-ink: #fafaf8;
+  --color-ink-soft: #e4e2df;
+  --color-muted: #b8b4ac;
+  --color-muted-2: #96938c;
+  --color-muted-3: #77746e;
+  --color-border: #2a2a2b;
+  --color-border-2: #232324;
+  --color-border-3: #1c1c1d;
+  --color-accent: #e0264b;
+  --color-accent-dark: #b81d3d;
+  --color-accent-hover: #b81d3d;
+  --color-accent-tint: #3a1420;
+  --color-accent-tint-2: #241014;
+  --color-accent-border-soft: #6b2534;
+  --color-gold: #e0264b;
+  --color-gold-text: #e0264b;
+  --color-success: #4caf7d;
+  --color-success-bg: #10241a;
+  --color-success-bg-2: #142c20;
+  --color-danger: #e0264b;
+  --color-warm-gold-bg: linear-gradient(135deg, #1a1a1b, #141415);
+  --color-warm-gold-border: #2a2a2b;
+  --color-warm-gold-text: #fafaf8;
+  --color-warm-gold-text-2: #b8b4ac;
+
+  --font-heading: "Bodoni Moda", serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+
+  background: var(--color-bg-from);
+}
