@@ -1,5 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
-import { BookingModal } from "@/features/booking/BookingModal";
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 import { BookingModalProvider } from "@/features/booking/BookingModalContext";
 import { BookingCtaBanner, FinalUrgencyCta } from "@/features/landing/CtaBanners";
 import { CartMenuProvider } from "@/features/landing/CartMenuContext";
@@ -10,8 +9,6 @@ import { Hero } from "@/features/landing/Hero";
 import { LocationSection } from "@/features/landing/LocationSection";
 import { ResultsCarousel } from "@/features/landing/ResultsCarousel";
 import { StickyBottomBar } from "@/features/landing/StickyBottomBar";
-import { ManiEditorialTemplate } from "@/features/landing/templates/ManiEditorialTemplate";
-import { ManiPrecisionTemplate } from "@/features/landing/templates/ManiPrecisionTemplate";
 import { TrustGrid } from "@/features/landing/TrustGrid";
 import { WhyClientsStay } from "@/features/landing/WhyClientsStay";
 import { resolveExperiment } from "@/lib/experiments";
@@ -19,6 +16,23 @@ import { terminologize } from "@/data/designCopy";
 import { recordVisit } from "@/lib/tracking";
 import { accentPaletteToCssVars, deriveAccentPalette } from "@/lib/theme";
 import type { LandingVariantContent } from "@/types/api";
+
+// Lazy: BookingModal is always mounted (it just stays visually closed until the "open" trigger
+// fires) but isn't needed for the initial paint at all — shipping its code (plus the two variant
+// templates below) in the same chunk that blocks first render was a real, measured contributor to
+// mani.akluxnails.com's slow LCP (found live 2026-09-01), same fix already applied to
+// akluxnails-home's own booking modal for the identical reason.
+const BookingModal = lazy(() =>
+  import("@/features/booking/BookingModal").then((m) => ({ default: m.BookingModal })),
+);
+// Only the "precision"/"editorial" A/B variants ever render these — most visitors get the classic
+// layout below and never need either chunk at all.
+const ManiPrecisionTemplate = lazy(() =>
+  import("@/features/landing/templates/ManiPrecisionTemplate").then((m) => ({ default: m.ManiPrecisionTemplate })),
+);
+const ManiEditorialTemplate = lazy(() =>
+  import("@/features/landing/templates/ManiEditorialTemplate").then((m) => ({ default: m.ManiEditorialTemplate })),
+);
 
 export function LandingPage() {
   const [overrides, setOverrides] = useState<LandingVariantContent>({});
@@ -76,9 +90,13 @@ export function LandingPage() {
 
   const content =
     overrides.template === "precision" ? (
-      <ManiPrecisionTemplate overrides={overrides} />
+      <Suspense fallback={null}>
+        <ManiPrecisionTemplate overrides={overrides} />
+      </Suspense>
     ) : overrides.template === "editorial" ? (
-      <ManiEditorialTemplate overrides={overrides} />
+      <Suspense fallback={null}>
+        <ManiEditorialTemplate overrides={overrides} />
+      </Suspense>
     ) : (
       <div style={styles.page}>
         <Header />
@@ -103,7 +121,9 @@ export function LandingPage() {
         >
           {content}
           <StickyBottomBar />
-          <BookingModal terminology={overrides.terminology} position={overrides.contactStepPosition ?? "start"} />
+          <Suspense fallback={null}>
+            <BookingModal terminology={overrides.terminology} position={overrides.contactStepPosition ?? "start"} />
+          </Suspense>
         </BookingModalProvider>
       </CartMenuProvider>
     </div>
