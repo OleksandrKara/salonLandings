@@ -4,8 +4,10 @@ from fastapi import APIRouter, Depends, Request, Response
 
 from app.api.deps import get_tracking_service
 from app.core.business_context import BusinessContext, get_current_business
+from app.core.tracking_config import resolve_clarity_project_id
 from app.domain.schemas import (
     BookingFunnelStepEvent,
+    ClarityConfigResponse,
     EventRecordedResponse,
     TrackingEvent,
     TrackingSnapshot,
@@ -21,6 +23,15 @@ from app.services.tracking_service import TrackingService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/tracking", tags=["tracking"])
+
+
+@router.get("/clarity-config", response_model=ClarityConfigResponse)
+async def get_clarity_config(request: Request) -> ClarityConfigResponse:
+    # Keyed by the real hostname, not business — see tracking_config.py's own doc. Never errors:
+    # resolve_clarity_project_id already swallows any lookup failure and returns None, same
+    # "nothing to inject" outcome as "not configured yet".
+    host = (request.headers.get("host") or "").split(":")[0].strip().lower()
+    return ClarityConfigResponse(clarity_project_id=resolve_clarity_project_id(host))
 
 
 @router.post("/visit", response_model=VisitRecordedResponse, status_code=201)

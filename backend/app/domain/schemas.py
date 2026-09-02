@@ -165,6 +165,10 @@ class VisitRecordedResponse(BaseModel):
     visitor_id: str
 
 
+class ClarityConfigResponse(BaseModel):
+    clarity_project_id: str | None = None
+
+
 class TrackingEvent(BaseModel):
     """A funnel event for the experimentation system — distinct from `TrackingSnapshot`,
     which drives the general visits/submissions log. Always carries a session_id (the same
