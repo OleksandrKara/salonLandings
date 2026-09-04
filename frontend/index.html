@@ -31,15 +31,41 @@
       content="First-visit special: Russian Hard Gel Manicure in Downtown San Diego. No acrylics. Book your appointment online in under 60 seconds."
     />
     <meta name="twitter:image" content="https://mani.akluxnails.com/og-image.png" />
+    <!-- Default hero photo (Hero.tsx's DEFAULT_HERO_IMAGE) — preloaded here so the browser starts
+         fetching it immediately from the initial HTML instead of waiting for the JS bundle to
+         download/parse/execute all the way to Hero's render (a real, measured contributor to
+         mani.akluxnails.com's mobile LCP, flagged by the SEO dashboard 2026-09-02). Only wrong for
+         the rare visitor whose resolved A/B variant overrides heroImageUrl to something else
+         (resolveExperiment resolves after first paint — see LandingPage.tsx) — worst case there is
+         one small wasted prefetch, not a regression. -->
+    <link rel="preload" as="image" href="/hero-white-manicure.jpg" fetchpriority="high" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500&family=Jost:wght@400;500;600&family=Bodoni+Moda:ital,wght@0,500;0,700;0,800;0,900;1,600&family=Manrope:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
     <!-- Bodoni Moda/Manrope power the "mani-editorial" A/B variant — see .mani-editorial-theme in
          global.css. "mani-precision" deliberately reuses Playfair Display/Jost (Version_7's
          fonts), so it needs no font family of its own. -->
+    <!-- preload+media=print/onload swap: a plain <link rel=stylesheet> here would block the
+         initial paint (including the hero image) on this cross-origin CSS fetch. This starts the
+         fetch at the same priority but doesn't block rendering on it — &display=swap already means
+         text renders in a fallback font until the real one loads, so there's no new FOIT risk,
+         just an LCP win. <noscript> keeps the normal blocking behavior for the no-JS case. -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500&family=Jost:wght@400;500;600&family=Bodoni+Moda:ital,wght@0,500;0,700;0,800;0,900;1,600&family=Manrope:wght@400;500;600;700&display=swap"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500&family=Jost:wght@400;500;600&family=Bodoni+Moda:ital,wght@0,500;0,700;0,800;0,900;1,600&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500&family=Jost:wght@400;500;600&family=Bodoni+Moda:ital,wght@0,500;0,700;0,800;0,900;1,600&family=Manrope:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <!-- Meta Pixel Code -->
     <script>
       !function(f,b,e,v,n,t,s)

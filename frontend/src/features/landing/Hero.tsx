@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import mani1 from "@/assets/hero-white-manicure.jpg";
 import { CREDIBILITY_STATS, GOOGLE_REVIEW_COUNT, GOOGLE_REVIEW_RATING, HEADLINE, SUBHEAD, terminologize } from "@/data/designCopy";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
@@ -8,6 +7,14 @@ import { formatPrice } from "@/lib/formatting";
 import { ErrorNotice } from "@/features/landing/ErrorNotice";
 import { Spinner } from "@/features/landing/Spinner";
 import type { LandingVariantContent } from "@/types/api";
+
+// Served from public/ (not a src/assets/ import) so its URL is stable across builds — Vite
+// content-hashes imported assets, which meant index.html's <link rel="preload"> for this exact
+// image (added 2026-09-04 after the SEO dashboard flagged mani's mobile LCP) could never
+// reference the right hashed filename. A stable path also means the image only had to be
+// discoverable in the JS bundle before the browser could start fetching it; now the browser
+// starts that fetch in parallel with the bundle download, straight from the initial HTML.
+const DEFAULT_HERO_IMAGE = "/hero-white-manicure.jpg";
 
 export function Hero({ overrides }: { overrides?: LandingVariantContent }) {
   const { open } = useBookingModalContext();
@@ -22,7 +29,7 @@ export function Hero({ overrides }: { overrides?: LandingVariantContent }) {
     <section style={styles.section}>
       <div style={styles.imageWrap}>
         <img
-          src={overrides?.heroImageUrl ?? mani1}
+          src={overrides?.heroImageUrl ?? DEFAULT_HERO_IMAGE}
           alt={terminologize("Russian hard-gel manicure close-up", overrides?.terminology)}
           style={styles.image}
           fetchPriority="high"
