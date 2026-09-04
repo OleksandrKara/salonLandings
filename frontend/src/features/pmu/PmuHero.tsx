@@ -1,9 +1,18 @@
 import type { CSSProperties } from "react";
-import heroBrows from "@/assets/pmu/hero-brows.jpg";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
 import { PMU_RATING } from "@/data/pmuCopy";
 import { usePmuBookingModalContext } from "@/features/pmu/PmuBookingModalContext";
 import type { LandingVariantContent } from "@/types/api";
+
+// Served from public/ (not a src/assets/pmu/ import) so its URL is stable across builds —
+// index.html's inline head script preloads this exact path for pmu-annakara.com visitors (see
+// that script's own comment for why it can't just be a static <link>, the way mani's hero is
+// preloaded, since this one build serves both businesses). Matches mani's identical fix
+// (2026-09-04) for the identical problem: an imported hero image only exists inside the JS
+// bundle, so the browser couldn't start fetching it until the bundle downloaded/parsed/executed
+// all the way to this component's render — worse here, since this file is 148KB, the largest
+// hero-class image across all three businesses this SPA serves.
+const DEFAULT_HERO_IMAGE = "/pmu-hero-default.jpg";
 
 export function PmuHero({ overrides }: { overrides?: LandingVariantContent }) {
   const { openConsultation } = usePmuBookingModalContext();
@@ -12,7 +21,7 @@ export function PmuHero({ overrides }: { overrides?: LandingVariantContent }) {
     <section style={styles.section}>
       <div style={styles.imageWrap}>
         <img
-          src={overrides?.heroImageUrl ?? heroBrows}
+          src={overrides?.heroImageUrl ?? DEFAULT_HERO_IMAGE}
           alt="Close-up of hand-drawn hairstroke brow tattooing"
           style={styles.image}
           fetchPriority="high"

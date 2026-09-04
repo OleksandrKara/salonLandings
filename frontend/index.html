@@ -31,14 +31,32 @@
       content="First-visit special: Russian Hard Gel Manicure in Downtown San Diego. No acrylics. Book your appointment online in under 60 seconds."
     />
     <meta name="twitter:image" content="https://mani.akluxnails.com/og-image.png" />
-    <!-- Default hero photo (Hero.tsx's DEFAULT_HERO_IMAGE) — preloaded here so the browser starts
-         fetching it immediately from the initial HTML instead of waiting for the JS bundle to
-         download/parse/execute all the way to Hero's render (a real, measured contributor to
-         mani.akluxnails.com's mobile LCP, flagged by the SEO dashboard 2026-09-02). Only wrong for
-         the rare visitor whose resolved A/B variant overrides heroImageUrl to something else
-         (resolveExperiment resolves after first paint — see LandingPage.tsx) — worst case there is
-         one small wasted prefetch, not a regression. -->
-    <link rel="preload" as="image" href="/hero-white-manicure.jpg" fetchpriority="high" />
+    <!-- Preloads the right default hero photo (Hero.tsx / PmuHero.tsx's DEFAULT_HERO_IMAGE) so the
+         browser starts fetching it immediately from the initial HTML, instead of waiting for the
+         JS bundle to download/parse/execute all the way to Hero's/PmuHero's render — a real,
+         measured contributor to mani.akluxnails.com's mobile LCP (flagged by the SEO dashboard
+         2026-09-02) and, since this one build's index.html serves both businesses (see App.tsx's
+         hostname check), also to book.pmu-annakara.com's — its default hero is 148KB, the largest
+         hero-class image across all three businesses this SPA serves. Can't be a plain static
+         <link rel=preload> the way a single-business page would do it (like akluxnails-home's own
+         identical fix) since the correct image depends on which domain the visitor is on and
+         nothing here is server-rendered per-request; this inline script runs synchronously during
+         head parsing, before the JS bundle's own <script type=module> tag, so the preload is
+         requested just as early as a static link would be. Only wrong for the rare visitor whose
+         resolved A/B variant overrides heroImageUrl to something else (resolveExperiment resolves
+         after first paint — see LandingPage.tsx/PmuLandingPage.tsx) — worst case there is one
+         small wasted prefetch, not a regression. -->
+    <script>
+      (function () {
+        var isPmu = location.hostname.indexOf("pmu-annakara") !== -1;
+        var link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "image";
+        link.fetchPriority = "high";
+        link.href = isPmu ? "/pmu-hero-default.jpg" : "/hero-white-manicure.jpg";
+        document.head.appendChild(link);
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Bodoni Moda/Manrope power the "mani-editorial" A/B variant — see .mani-editorial-theme in
