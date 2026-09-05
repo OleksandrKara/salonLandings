@@ -30,8 +30,9 @@ from app.integrations.square.credentials import get_square_credentials
 from app.integrations.square.customer_attributes import SquareCustomerAttributesGateway
 from app.integrations.square.customers import SquareCustomerGateway
 from app.integrations.square.exceptions import SquareIntegrationError
-from app.integrations.square.payments import SquarePaymentGateway
+from app.integrations.square.payments import PaymentDeclinedError, SquarePaymentGateway
 from app.integrations.sms.notifier import notify_consultation_request_sms
+from app.integrations.telegram.notifier import notify_payment_failed
 from app.services.formatting import format_square_address
 from app.integrations.square.team import SquareTeamRepository
 
@@ -302,8 +303,26 @@ class PmuBookingService:
                 customer_id=customer_id,
                 note=f"Deposit for {definition.name} (booking {booking.id})",
             )
-        except SquareIntegrationError:
+        except SquareIntegrationError as exc:
             self._booking_gateway.cancel_booking(booking.id)
+            # Owner direction 2026-09-05: staff need to know the moment a customer's card fails to
+            # charge, whether it's a genuine decline (PaymentDeclinedError — their card/bank said
+            # no) or a failure on our own side (any other SquareIntegrationError). Best-effort,
+            # after the booking is already cancelled — never affects what gets raised to the
+            # customer either way.
+            error_codes = None
+            if isinstance(exc.detail, dict):
+                error_codes = ", ".join(str(e.get("code")) for e in exc.detail.get("errors", []) if e.get("code"))
+            notify_payment_failed(
+                business_id=self._business_id,
+                customer_name=f"{request.customer.given_name} {request.customer.family_name}",
+                phone_number=request.customer.phone_number,
+                service_name=definition.name,
+                amount=PMU_DEPOSIT.amount_cents / 100,
+                error_message=exc.message,
+                error_code=error_codes or None,
+                client_error=isinstance(exc, PaymentDeclinedError),
+            )
             raise
 
         deposit_amount = PMU_DEPOSIT.amount_cents / 100
