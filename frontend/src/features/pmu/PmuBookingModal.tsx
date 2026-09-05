@@ -76,7 +76,20 @@ export function PmuBookingModal() {
 
   const consultationOffer = mode.kind === "consultation" ? catalog?.consultations.find((c) => c.slug === mode.consultationSlug) : undefined;
   const techniqueOffer = mode.kind === "deposit" ? catalog?.techniques.find((t) => t.slug === mode.techniqueSlug) : undefined;
-  const title = mode.kind === "consultation" ? consultationOffer?.name ?? "Consultation" : techniqueOffer?.name ?? "Book Your Appointment";
+  // The real name comes from the catalog fetch, which takes a beat — showing a generic "Book
+  // Your Appointment" until then reads as a wrong title that then flips to the right one. These
+  // two slugs are only ever reached via a direct link (never a button whose own label already
+  // says what it is, unlike every other technique/consultation here), so the modal needs a title
+  // from the very first paint — this fallback mirrors the real catalog name exactly, so there's
+  // nothing to visibly "correct" once the fetch resolves.
+  const DEPOSIT_TITLE_FALLBACKS: Record<string, string> = {
+    "touch-up": "Touch-Up",
+    "color-booster": "Color Booster",
+  };
+  const title =
+    mode.kind === "consultation"
+      ? consultationOffer?.name ?? "Consultation"
+      : techniqueOffer?.name ?? DEPOSIT_TITLE_FALLBACKS[mode.techniqueSlug] ?? "Book Your Appointment";
 
   const canContinueFromContact = givenName.trim().length > 0 && familyName.trim().length > 0 && phone.trim().length >= 7;
 
