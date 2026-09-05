@@ -11,7 +11,13 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
-const SEARCH_DAYS = 32; // Square's search_availability caps the query range at 32 days
+// Deliberately a week, not Square's own 32-day search cap (owner direction 2026-09-05): a live
+// data check found ad-driven bookings that later cancelled/no-showed had been booked ~2x further
+// ahead on average than ones that were kept (median 4.5 days vs 1.9 days lead time, 90-day sample)
+// — organic/direct traffic showed no such correlation at all, but a universal cap is simpler than
+// branching the booking widget on traffic source, and this window still comfortably covers the
+// P75 lead time of ad bookings that did complete (~7.3 days).
+const SEARCH_DAYS = 7;
 
 interface DateTimeStepProps {
   serviceSlugs: string[];
