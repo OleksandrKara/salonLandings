@@ -46,6 +46,10 @@ class PmuTechniqueDefinition:
     item_id: str
     variation_id: str
     team_member_ids: list[str]
+    # False for a technique that should still be bookable by slug (find_technique, availability,
+    # booking) but must not appear in the landing page's own public technique list — see the
+    # touch-up/color-booster entries below, reachable only via a direct emailed link.
+    public: bool = True
 
 
 @dataclass(frozen=True)
@@ -120,6 +124,35 @@ PMU_TECHNIQUES: list[PmuTechniqueDefinition] = [
         item_id="XYYARZTVGB7FEDAAD7R3L6FN",
         variation_id="UZ4T47IZTIK4KCPRQMA3UNC4",
         team_member_ids=[ANASTASIIA_TEAM_MEMBER_ID],
+    ),
+    # Maintenance procedures for existing clients — not part of the "new client picks a technique"
+    # flow above, so not linked from the main landing page techniques list; only reachable via a
+    # direct emailed link (see salaryReview's touchup_reminder/color_booster_reminder email
+    # templates). Added 2026-09-05: these five Square items (three Touch-Up tiers, two Color
+    # Booster tiers) previously had available_for_booking=False and no team_member_ids assigned in
+    # Square (a real availability-search blocker, same class of gap as Anna's Powder&Ombre above) —
+    # both were fixed live via the Catalog API for all five items so the picture is consistent, but
+    # only the two tiers matching each reminder's actual trigger window are wired up here:
+    # touch-up fires at ~4-6 weeks (the "1-6 month" tier), color-booster at ~1 year (the
+    # "10 month-1 year" tier). The other three tiers (6-8mo / 8-10mo touch-up, 1-2yr booster) exist
+    # in Square for staff to charge manually but have no reminder or deep link pointing at them.
+    PmuTechniqueDefinition(
+        slug="touch-up",
+        name="Touch-Up (1-6 month)",
+        description="A required part of the process, not an add-on — locks in your result for the long run.",
+        item_id="P5CCSK4COM4QJH53KDSK4R7U",
+        variation_id="E5BZJGW3T2DV7LKXT5KXITRT",
+        team_member_ids=ACTIVE_PROVIDER_IDS,
+        public=False,
+    ),
+    PmuTechniqueDefinition(
+        slug="color-booster",
+        name="Color Booster (10 month-1 year)",
+        description="The yearly refresh permanent makeup needs to keep holding — required on schedule, not optional.",
+        item_id="3SO5XYJ5GVLRIJJFXQIXSIJB",
+        variation_id="PR4GXWJN24E7HO76QCLL6H4K",
+        team_member_ids=ACTIVE_PROVIDER_IDS,
+        public=False,
     ),
 ]
 

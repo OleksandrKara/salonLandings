@@ -62,7 +62,7 @@ class PmuCatalogService:
         self._business_id = business_id
 
     def get_catalog(self) -> PmuCatalogResponse:
-        techniques = [self._build_technique(t) for t in PMU_TECHNIQUES]
+        techniques = [self._build_technique(t) for t in PMU_TECHNIQUES if t.public]
         consultations = [self._build_consultation(c) for c in PMU_CONSULTATIONS]
         deposit_variation = self._find_variation(PMU_DEPOSIT.item_id, PMU_DEPOSIT.variation_id)
         deposit_amount = (deposit_variation.item_variation_data.price_money.amount or 0) / 100
