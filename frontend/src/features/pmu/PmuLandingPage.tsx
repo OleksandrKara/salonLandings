@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { RebookingPromoBanner } from "@/components/RebookingPromoBanner";
 import { PmuBookingModal } from "@/features/pmu/PmuBookingModal";
 import { PmuBookingModalProvider } from "@/features/pmu/PmuBookingModalContext";
+import { PmuDeepLinkOpener } from "@/features/pmu/PmuDeepLinkOpener";
 import { PmuFooter } from "@/features/pmu/PmuFooter";
 import { PmuHeader } from "@/features/pmu/PmuHeader";
 import { PmuHero } from "@/features/pmu/PmuHero";
@@ -58,6 +59,7 @@ export function PmuLandingPage() {
 
   return (
     <PmuBookingModalProvider promoAttempt={promoAttempt}>
+      <PmuDeepLinkOpener />
       {banner && <RebookingPromoBanner {...banner} />}
       <div style={styles.page}>
         <PmuHeader />
