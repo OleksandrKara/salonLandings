@@ -62,7 +62,10 @@ class PmuCatalogService:
         self._business_id = business_id
 
     def get_catalog(self) -> PmuCatalogResponse:
-        techniques = [self._build_technique(t) for t in PMU_TECHNIQUES if t.public]
+        # Not filtered by `public` here — the booking modal fetches this same catalog to resolve a
+        # technique's name/price by slug even for a non-public one (opened via PmuDeepLinkOpener),
+        # so the public/private split has to happen client-side (see PmuTechniques.tsx) instead.
+        techniques = [self._build_technique(t) for t in PMU_TECHNIQUES]
         consultations = [self._build_consultation(c) for c in PMU_CONSULTATIONS]
         deposit_variation = self._find_variation(PMU_DEPOSIT.item_id, PMU_DEPOSIT.variation_id)
         deposit_amount = (deposit_variation.item_variation_data.price_money.amount or 0) / 100
@@ -86,6 +89,7 @@ class PmuCatalogService:
             duration_minutes=(vd.service_duration or 0) // 60_000,
             variation_id=variation.id,
             variation_version=variation.version,
+            public=definition.public,
         )
 
     def _build_consultation(self, definition: PmuConsultationDefinition) -> PmuConsultationOffer:

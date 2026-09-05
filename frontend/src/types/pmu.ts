@@ -8,6 +8,9 @@ export interface PmuTechniqueOffer {
   duration_minutes: number;
   variation_id: string;
   variation_version: number;
+  // False for a maintenance procedure (touch-up/color-booster) that must stay off the landing
+  // page's own technique list — see PmuTechniques.tsx, which filters on this.
+  public: boolean;
 }
 
 export interface PmuConsultationOffer {

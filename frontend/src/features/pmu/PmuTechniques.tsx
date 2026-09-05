@@ -32,7 +32,7 @@ export function PmuTechniques() {
         <div style={styles.divider}>
           <div style={styles.dividerLabel}>Already know what you want?</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 14 }}>
-            {data.techniques.map((technique) => (
+            {data.techniques.filter((technique) => technique.public).map((technique) => (
               <TechniqueCard key={technique.slug} technique={technique} depositAmount={data.deposit_amount} onBook={() => openDeposit(technique.slug)} />
             ))}
           </div>
