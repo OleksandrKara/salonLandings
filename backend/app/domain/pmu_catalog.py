@@ -138,7 +138,10 @@ PMU_TECHNIQUES: list[PmuTechniqueDefinition] = [
     # in Square for staff to charge manually but have no reminder or deep link pointing at them.
     PmuTechniqueDefinition(
         slug="touch-up",
-        name="Touch-Up (1-6 month)",
+        # Customer-facing name is deliberately just "Touch-Up" (owner direction 2026-09-05: the
+        # "(1-6 month)" tier suffix reads as confusing/internal) — the slug/item_id/variation_id
+        # below still point at the real "Touch-Up (1-6 month)" Square item specifically.
+        name="Touch-Up",
         description="A required part of the process, not an add-on — locks in your result for the long run.",
         item_id="P5CCSK4COM4QJH53KDSK4R7U",
         variation_id="E5BZJGW3T2DV7LKXT5KXITRT",
@@ -147,7 +150,8 @@ PMU_TECHNIQUES: list[PmuTechniqueDefinition] = [
     ),
     PmuTechniqueDefinition(
         slug="color-booster",
-        name="Color Booster (10 month-1 year)",
+        # Same reasoning as Touch-Up's name above — plain "Color Booster", tier suffix dropped.
+        name="Color Booster",
         description="The yearly refresh permanent makeup needs to keep holding — required on schedule, not optional.",
         item_id="3SO5XYJ5GVLRIJJFXQIXSIJB",
         variation_id="PR4GXWJN24E7HO76QCLL6H4K",
