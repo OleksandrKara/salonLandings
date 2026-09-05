@@ -322,6 +322,11 @@ class PmuTechniqueOffer(BaseModel):
     duration_minutes: int
     variation_id: str
     variation_version: int
+    # False for a maintenance procedure (touch-up/color-booster) reachable only via a direct
+    # emailed link — the landing page's own technique list filters these out client-side, but the
+    # booking modal (opened by slug via PmuDeepLinkOpener) still needs the name/price/etc. for any
+    # technique, public or not, which is why this isn't filtered out of the response entirely.
+    public: bool
 
 
 class PmuConsultationOffer(BaseModel):
