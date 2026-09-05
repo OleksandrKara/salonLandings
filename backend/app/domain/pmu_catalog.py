@@ -132,10 +132,15 @@ PMU_TECHNIQUES: list[PmuTechniqueDefinition] = [
     # Booster tiers) previously had available_for_booking=False and no team_member_ids assigned in
     # Square (a real availability-search blocker, same class of gap as Anna's Powder&Ombre above) —
     # both were fixed live via the Catalog API for all five items so the picture is consistent, but
-    # only the two tiers matching each reminder's actual trigger window are wired up here:
-    # touch-up fires at ~4-6 weeks (the "1-6 month" tier), color-booster at ~1 year (the
-    # "10 month-1 year" tier). The other three tiers (6-8mo / 8-10mo touch-up, 1-2yr booster) exist
-    # in Square for staff to charge manually but have no reminder or deep link pointing at them.
+    # only the tiers matching this business's actual real reminders are wired up here: touch-up
+    # fires at ~4-6 weeks (the "1-6 month" tier). Color booster below deliberately points at the
+    # "1-2 year" tier, not the "10 month-1 year" one — owner decision 2026-09-05: the shorter tier
+    # isn't a service they want to sell at all (real customers are realistically 1+ years overdue by
+    # the time they actually rebook, per the color-booster winback one-off's own cohort analysis),
+    # so both the recurring color_booster_reminder SMS automation and any one-off campaign should
+    # only ever route to the 1-2yr tier. The other three tiers (6-8mo / 8-10mo touch-up, 10mo-1yr
+    # booster) exist in Square for staff to charge manually but have no reminder or deep link
+    # pointing at them.
     PmuTechniqueDefinition(
         slug="touch-up",
         # Customer-facing name is deliberately just "Touch-Up" (owner direction 2026-09-05: the
@@ -151,10 +156,12 @@ PMU_TECHNIQUES: list[PmuTechniqueDefinition] = [
     PmuTechniqueDefinition(
         slug="color-booster",
         # Same reasoning as Touch-Up's name above — plain "Color Booster", tier suffix dropped.
+        # item_id/variation_id point at the "Color Booster (1-2 year)" Square item, not the "10
+        # month-1 year" one — see the block comment above.
         name="Color Booster",
-        description="The yearly refresh permanent makeup needs to keep holding — required on schedule, not optional.",
-        item_id="3SO5XYJ5GVLRIJJFXQIXSIJB",
-        variation_id="PR4GXWJN24E7HO76QCLL6H4K",
+        description="The refresh permanent makeup needs to keep holding — required on schedule, not optional.",
+        item_id="PFWBF5IF2AIJ7YGRHWFNLVYS",
+        variation_id="MWRHIS6RVIQHGTLHVMZYHQU5",
         team_member_ids=ACTIVE_PROVIDER_IDS,
         public=False,
     ),
