@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { notifyParentToClose } from "@/lib/embedMode";
 import type { PromoAttempt } from "@/types/api";
 
 export type PmuModalMode =
@@ -31,7 +32,10 @@ export function PmuBookingModalProvider({
     mode,
     openConsultation: (consultationSlug = "online-consultation") => setMode({ kind: "consultation", consultationSlug }),
     openDeposit: (techniqueSlug) => setMode({ kind: "deposit", techniqueSlug }),
-    close: () => setMode(null),
+    close: () => {
+      setMode(null);
+      notifyParentToClose();
+    },
     promoAttempt,
   };
 

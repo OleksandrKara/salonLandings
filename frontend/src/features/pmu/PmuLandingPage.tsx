@@ -10,6 +10,7 @@ import { PmuResultsCarousel } from "@/features/pmu/PmuResultsCarousel";
 import { PmuReviews } from "@/features/pmu/PmuReviews";
 import { PmuStickyBottomBar } from "@/features/pmu/PmuStickyBottomBar";
 import { PmuTechniques } from "@/features/pmu/PmuTechniques";
+import { isEmbedMode } from "@/lib/embedMode";
 import { resolveExperiment } from "@/lib/experiments";
 import { recordVisit } from "@/lib/tracking";
 import { useRebookingPromo } from "@/lib/useRebookingPromo";
@@ -60,16 +61,24 @@ export function PmuLandingPage() {
   return (
     <PmuBookingModalProvider promoAttempt={promoAttempt}>
       <PmuDeepLinkOpener />
-      {banner && <RebookingPromoBanner {...banner} />}
-      <div style={styles.page}>
-        <PmuHeader />
-        <PmuHero overrides={overrides} />
-        <PmuTechniques />
-        <PmuResultsCarousel />
-        <PmuReviews />
-        <PmuFooter />
-      </div>
-      <PmuStickyBottomBar />
+      {/* isEmbedMode (?embed=1, see lib/embedMode.ts) skips this page's own header/hero/etc
+          entirely — pmu-annakara.com's WordPress iframe popup wants just the booking modal
+          filling the iframe, not this site's full page with the modal floating over a dimmed
+          copy of it (a "popup inside a popup" look, reported live 2026-09-09). */}
+      {!isEmbedMode && (
+        <>
+          {banner && <RebookingPromoBanner {...banner} />}
+          <div style={styles.page}>
+            <PmuHeader />
+            <PmuHero overrides={overrides} />
+            <PmuTechniques />
+            <PmuResultsCarousel />
+            <PmuReviews />
+            <PmuFooter />
+          </div>
+          <PmuStickyBottomBar />
+        </>
+      )}
       <PmuBookingModal />
     </PmuBookingModalProvider>
   );

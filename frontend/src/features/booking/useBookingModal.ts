@@ -8,6 +8,7 @@ import { BOOKING_FLOWS, type BookingFlowStep, type ContactStepPosition } from "@
 import { logExperimentEvent } from "@/lib/experiments";
 import { getTrackingSnapshot, recordMetaBookingConversion } from "@/lib/tracking";
 import { enterThankYouUrl, exitThankYouUrl } from "@/lib/thankYouUrl";
+import { notifyParentToClose } from "@/lib/embedMode";
 
 /** Which BookingFlowStep kind renders at a given 1-based numeric BookingStep, for this flow. */
 export function kindAtStep(steps: readonly BookingFlowStep[], step: BookingStep): BookingFlowStep {
@@ -78,6 +79,7 @@ export function useBookingModal(
   const close = useCallback(() => {
     exitThankYouUrl();
     setState((s) => ({ ...s, isOpen: false }));
+    notifyParentToClose();
   }, []);
   const stop = useCallback((e: { stopPropagation: () => void }) => e.stopPropagation(), []);
 

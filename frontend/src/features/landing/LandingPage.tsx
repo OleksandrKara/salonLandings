@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 import { BookingModalProvider } from "@/features/booking/BookingModalContext";
 import { BookingDeepLinkOpener } from "@/features/booking/BookingDeepLinkOpener";
+import { isEmbedMode } from "@/lib/embedMode";
 import { BookingCtaBanner, FinalUrgencyCta } from "@/features/landing/CtaBanners";
 import { CartMenuProvider } from "@/features/landing/CartMenuContext";
 import { Footer } from "@/features/landing/Footer";
@@ -120,9 +121,14 @@ export function LandingPage() {
           position={overrides.contactStepPosition ?? "start"}
           defaultService={overrides.defaultService ?? "manicure"}
         >
-          {content}
+          {/* isEmbedMode (?embed=1, see lib/embedMode.ts) skips this page's own header/hero/etc
+              entirely — pmu-annakara.com's WordPress iframe popup wants just the booking modal
+              filling the iframe, not this site's full page with the modal floating over a dimmed
+              copy of it (a "popup inside a popup" look, reported live 2026-09-09). StickyBottomBar
+              has nothing to stick to the bottom OF without a page underneath it either. */}
+          {!isEmbedMode && content}
+          {!isEmbedMode && <StickyBottomBar />}
           <BookingDeepLinkOpener />
-          <StickyBottomBar />
           <Suspense fallback={null}>
             <BookingModal terminology={overrides.terminology} position={overrides.contactStepPosition ?? "start"} />
           </Suspense>
