@@ -11,7 +11,14 @@ function captureSnapshotFromUrl(): TrackingSnapshot {
   return {
     visitor_id: getOrCreateVisitorId(),
     landing_path: window.location.pathname,
-    referrer: document.referrer || null,
+    // `attr_referrer` — set by the pmu-annakara.com WordPress popup (see its own footer script)
+    // when this page loads inside its iframe. Plain `document.referrer` in that case would only
+    // ever say "pmu-annakara.com" (the parent frame), since browsers report the actual embedding
+    // document as the referrer regardless of what originally brought the visitor to that WordPress
+    // page — so a genuine external referrer (e.g. Google organic) captured there gets forwarded
+    // explicitly instead. Falls back to the normal document.referrer for every other visit (a
+    // direct hit on this app itself, no iframe involved), unchanged from before.
+    referrer: params.get("attr_referrer") || document.referrer || null,
     utm_source: params.get("utm_source"),
     utm_medium: params.get("utm_medium"),
     utm_campaign: params.get("utm_campaign"),
