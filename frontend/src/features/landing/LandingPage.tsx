@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 import { BookingModalProvider } from "@/features/booking/BookingModalContext";
+import { BookingDeepLinkOpener } from "@/features/booking/BookingDeepLinkOpener";
 import { BookingCtaBanner, FinalUrgencyCta } from "@/features/landing/CtaBanners";
 import { CartMenuProvider } from "@/features/landing/CartMenuContext";
 import { Footer } from "@/features/landing/Footer";
@@ -120,6 +121,7 @@ export function LandingPage() {
           defaultService={overrides.defaultService ?? "manicure"}
         >
           {content}
+          <BookingDeepLinkOpener />
           <StickyBottomBar />
           <Suspense fallback={null}>
             <BookingModal terminology={overrides.terminology} position={overrides.contactStepPosition ?? "start"} />
