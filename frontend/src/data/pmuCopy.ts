@@ -100,5 +100,15 @@ export const PMU_GALLERY_INITIAL_COUNT = 5;
 // "Single Opt-In for Multiple Use Cases Is Not Allowed") — not one of this rejection's three
 // listed reasons, but worth fixing now while this text is already being touched for resubmission,
 // rather than risking a fourth rejection reason on the next review.
+//
+// Resubmitted 2026-09-09 after the above fix, then rejected again 2026-09-10 for a *different*
+// reason: 30488 ("Doing Business As (DBA) Name Must Be Accurately Provided") — this text now
+// correctly named the legal entity, but the submission's own `doing_business_as` field was left
+// blank, so the reviewer still couldn't connect "Anna Kara's Brow Studio LLC" (this text, and the
+// name on file) to "Anna Kara's Beauty PMU Studio" (everywhere else on the site, including the
+// opt-in screenshot itself). Fixed by setting `doing_business_as` on the existing verification
+// (SID HH37077b216e9ff29ddd394ccb52fff503, via POST .../Tollfree/Verifications/{sid}) to "Anna
+// Kara's Beauty PMU Studio" rather than touching this text again — the mismatch was in the filing
+// metadata, not the copy shown to customers. Back to PENDING_REVIEW as of 2026-09-10.
 export const PMU_SMS_CONSENT_TEXT =
   "By checking this box, I agree to receive recurring automated marketing text messages from Anna Kara's Brow Studio LLC — occasional discounts and first access to newly opened appointment slots — at the number provided. Consent is not a condition of purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help.";
