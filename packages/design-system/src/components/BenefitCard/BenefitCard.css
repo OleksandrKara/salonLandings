@@ -1,0 +1,39 @@
+.ds-benefit-card {
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-md);
+  padding: var(--ds-space-4);
+  box-shadow: var(--ds-shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2);
+}
+
+.ds-benefit-card__image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--ds-radius-sm);
+  margin-bottom: var(--ds-space-2);
+}
+
+.ds-benefit-card__icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.ds-benefit-card__title {
+  font-family: var(--ds-font-body);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ds-ink);
+  margin: 0;
+}
+
+.ds-benefit-card__desc {
+  font-family: var(--ds-font-body);
+  font-size: 14px;
+  color: var(--ds-ink-soft);
+  margin: 0;
+  line-height: 1.5;
+}

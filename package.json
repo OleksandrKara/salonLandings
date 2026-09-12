@@ -1,0 +1,8 @@
+{
+  "name": "salonlandings-workspace",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "packages/*"
+  ]
+}

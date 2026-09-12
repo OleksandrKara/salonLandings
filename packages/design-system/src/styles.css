@@ -1,0 +1,8 @@
+/* The single stylesheet entry point for this design system — every component's real CSS is
+   reachable from here via @import, which is what a consumer (a landing page, Storybook, or a
+   future claude.ai/design sync) needs: one import gets the whole closure, tokens included. */
+@import "./tokens/tokens.css";
+@import "./components/StatBand/StatBand.css";
+@import "./components/BenefitCard/BenefitCard.css";
+@import "./components/ReviewCard/ReviewCard.css";
+@import "./components/BeforeAfterSlider/BeforeAfterSlider.css";

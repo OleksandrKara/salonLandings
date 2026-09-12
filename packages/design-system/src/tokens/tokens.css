@@ -1,0 +1,62 @@
+/* Base tokens every tenant theme inherits — layout/type scale/motion, not color. Color lives
+   entirely in the per-tenant theme blocks below so each landing page can look genuinely
+   different (the mani redesign explicitly wants its own palette, not a shared brand skin). */
+:root {
+  --ds-font-display: 'Fraunces', Georgia, serif;
+  --ds-font-body: 'Public Sans', system-ui, -apple-system, sans-serif;
+  --ds-font-mono: 'IBM Plex Mono', monospace;
+
+  --ds-radius-sm: 8px;
+  --ds-radius-md: 14px;
+  --ds-radius-lg: 20px;
+
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-6: 24px;
+  --ds-space-8: 32px;
+
+  --ds-shadow-card: 0 1px 2px rgba(0,0,0,0.06), 0 8px 20px -10px rgba(0,0,0,0.18);
+
+  --ds-motion-fast: 160ms;
+  --ds-motion-base: 240ms;
+  --ds-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* mani.akluxnails.com — Russian Hard Gel Manicure, Downtown San Diego. Precision/craft over
+   the default pink/rose-gold nail-salon look (owner direction, 2026-09 redesign brief). */
+.theme-mani {
+  --ds-bg: #FAF8F6;
+  --ds-surface: #FFFFFF;
+  --ds-surface-2: #F1ECE7;
+  --ds-ink: #241C1E;
+  --ds-ink-soft: #6B5F5A;
+  --ds-line: #E7DED7;
+  --ds-accent: #7A4B32;
+  --ds-accent-ink: #5C3822;
+  --ds-accent-soft: #F1E3D8;
+  --ds-good: #3F6B4F;
+  --ds-good-soft: #E4EEE6;
+  --ds-warn: #B5762A;
+  --ds-warn-soft: #F5E7D2;
+}
+
+/* book.pmu-annakara.com — placeholder palette, distinct hue family from mani, ready to tune
+   once the PMU studio's own redesign starts (kept here so the token contract already proves
+   itself across more than one tenant). */
+.theme-pmu {
+  --ds-bg: #F6F3F5;
+  --ds-surface: #FFFFFF;
+  --ds-surface-2: #EFE7EC;
+  --ds-ink: #241B21;
+  --ds-ink-soft: #6B5F65;
+  --ds-line: #E3D7DE;
+  --ds-accent: #7A3350;
+  --ds-accent-ink: #5C2039;
+  --ds-accent-soft: #F1DDE6;
+  --ds-good: #3F6B4F;
+  --ds-good-soft: #E4EEE6;
+  --ds-warn: #B5762A;
+  --ds-warn-soft: #F5E7D2;
+}

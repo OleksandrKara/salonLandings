@@ -1,0 +1,31 @@
+.ds-stat-band {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: var(--ds-line);
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-md);
+  overflow: hidden;
+}
+
+.ds-stat-band__item {
+  flex: 1 1 120px;
+  background: var(--ds-surface);
+  padding: var(--ds-space-4) var(--ds-space-3);
+  text-align: center;
+}
+
+.ds-stat-band__value {
+  font-family: var(--ds-font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ds-accent);
+  line-height: 1.1;
+}
+
+.ds-stat-band__label {
+  font-family: var(--ds-font-body);
+  font-size: 12.5px;
+  color: var(--ds-ink-soft);
+  margin-top: var(--ds-space-1);
+}

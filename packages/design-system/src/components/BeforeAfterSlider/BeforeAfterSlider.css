@@ -1,0 +1,78 @@
+.ds-before-after {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--ds-radius-md);
+  overflow: hidden;
+  touch-action: none;
+  cursor: ew-resize;
+  user-select: none;
+  box-shadow: var(--ds-shadow-card);
+}
+
+.ds-before-after__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.ds-before-after__image--after {
+  will-change: clip-path;
+}
+
+.ds-before-after__label {
+  position: absolute;
+  top: var(--ds-space-3);
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  pointer-events: none;
+}
+
+.ds-before-after__label--before { left: var(--ds-space-3); }
+.ds-before-after__label--after { right: var(--ds-space-3); }
+
+.ds-before-after__handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #fff;
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+}
+
+.ds-before-after__handle:focus-visible {
+  outline: 2px solid var(--ds-accent);
+  outline-offset: 2px;
+}
+
+.ds-before-after__handle-grip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ds-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: var(--ds-shadow-card);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-before-after__image--after { transition: none; }
+}
