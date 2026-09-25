@@ -32,7 +32,7 @@ from app.integrations.square.customers import SquareCustomerGateway
 from app.integrations.square.exceptions import SquareIntegrationError
 from app.integrations.square.payments import PaymentDeclinedError, SquarePaymentGateway
 from app.integrations.sms.notifier import notify_consultation_request_sms
-from app.integrations.telegram.notifier import notify_payment_failed
+from app.integrations.telegram.notifier import notify_consultation_request, notify_payment_failed
 from app.services.formatting import format_square_address
 from app.integrations.square.team import SquareTeamRepository
 
@@ -241,6 +241,17 @@ class PmuBookingService:
             given_name=request.customer.given_name,
             phone_number=request.customer.phone_number,
             business_id=self._business_id,
+            start_at=booking.start_at,
+            is_online=definition.is_online,
+            location_address=location_address,
+        )
+        # 2026-09-25 owner request: staff previously had no visibility that a consultation had even
+        # been booked — only the customer got a text. Second, independent leg alongside the SMS
+        # above, not a replacement for it (see notify_consultation_request's own doc).
+        notify_consultation_request(
+            business_id=self._business_id,
+            customer_name=request.customer.given_name,
+            phone_number=request.customer.phone_number,
             start_at=booking.start_at,
             is_online=definition.is_online,
             location_address=location_address,
