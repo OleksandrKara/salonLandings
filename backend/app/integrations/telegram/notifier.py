@@ -49,6 +49,51 @@ def notify_four_hand_request(
         return False
 
 
+def notify_consultation_request(
+    *,
+    business_id: int,
+    customer_name: str | None,
+    phone_number: str | None,
+    start_at: str,
+    is_online: bool,
+    location_address: str | None,
+) -> bool:
+    """Best-effort Telegram alert the moment a customer books a free PMU consultation (Business 2
+    automation #1's Telegram leg, added 2026-09-25 owner request) — relayed through salaryReview
+    (which owns the bot token and per-business chat config; this app never holds either). Fires
+    alongside, not instead of, notify_consultation_request_sms's own customer-facing SMS — staff
+    get a heads-up, the customer still gets their text. Never raises: the booking has already
+    succeeded by the time this runs (see PmuBookingService.book_consultation's own call site), so a
+    relay outage here must never turn into an error surfaced to the customer, matching
+    notify_payment_failed's fail-open convention.
+    """
+    settings = get_settings()
+    if not settings.internal_api_base_url or not settings.internal_api_key:
+        logger.info("Consultation-request Telegram alert skipped — internal API not configured")
+        return False
+
+    payload = {
+        "businessId": business_id,
+        "customerName": customer_name,
+        "phoneNumber": phone_number,
+        "startAt": start_at,
+        "online": is_online,
+        "locationAddress": location_address,
+    }
+    try:
+        with httpx.Client(timeout=5.0) as client:
+            response = client.post(
+                f"{settings.internal_api_base_url}/api/internal/notifications/consultation-request",
+                json=payload,
+                headers={"X-Internal-Api-Key": settings.internal_api_key},
+            )
+            response.raise_for_status()
+            return bool(response.json().get("sent"))
+    except httpx.HTTPError:
+        logger.exception("Consultation-request Telegram alert request failed (booking unaffected)")
+        return False
+
+
 def notify_payment_failed(
     *,
     business_id: int,
