@@ -57,6 +57,7 @@ def notify_consultation_request(
     start_at: str,
     is_online: bool,
     location_address: str | None,
+    artist_name: str | None = None,
 ) -> bool:
     """Best-effort Telegram alert the moment a customer books a free PMU consultation (Business 2
     automation #1's Telegram leg, added 2026-09-25 owner request) — relayed through salaryReview
@@ -66,6 +67,11 @@ def notify_consultation_request(
     succeeded by the time this runs (see PmuBookingService.book_consultation's own call site), so a
     relay outage here must never turn into an error surfaced to the customer, matching
     notify_payment_failed's fail-open convention.
+
+    artist_name (added 2026-09-28 owner request) is the booked team member's display name (see
+    PmuBookingService._artist_display_name) — None if it couldn't be resolved, which the alert
+    text renders as "—" rather than omitting the line, same convention as every other optional
+    field in TelegramNotificationService's own formatters.
     """
     settings = get_settings()
     if not settings.internal_api_base_url or not settings.internal_api_key:
@@ -79,6 +85,7 @@ def notify_consultation_request(
         "startAt": start_at,
         "online": is_online,
         "locationAddress": location_address,
+        "artistName": artist_name,
     }
     try:
         with httpx.Client(timeout=5.0) as client:
