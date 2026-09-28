@@ -237,6 +237,10 @@ class PmuBookingService:
         # only actually resolved (a live Square location lookup) for an in-person consultation —
         # not needed, and not fetched, for an online one.
         location_address = "" if definition.is_online else format_square_address(self._business_repo.get_location().address)
+        # Resolved once, reused for both the Telegram alert below and the confirmation response —
+        # was previously only looked up for the response, so the Telegram leg had no way to say
+        # which artist the booking was actually for (owner report 2026-09-28).
+        artist_name = self._artist_display_name(request.team_member_id)
         notify_consultation_request_sms(
             given_name=request.customer.given_name,
             phone_number=request.customer.phone_number,
@@ -255,6 +259,7 @@ class PmuBookingService:
             start_at=booking.start_at,
             is_online=definition.is_online,
             location_address=location_address,
+            artist_name=artist_name,
         )
 
         return PmuConsultationConfirmation(
@@ -262,7 +267,7 @@ class PmuBookingService:
             status=booking.status,
             start_at=booking.start_at,
             service_name=definition.name,
-            artist_name=self._artist_display_name(request.team_member_id),
+            artist_name=artist_name,
             square_customer_id=customer_id,
         )
 
