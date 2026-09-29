@@ -5,69 +5,97 @@ import { Spinner } from "@/features/landing/Spinner";
 import { usePmuBookingModalContext } from "@/features/pmu/PmuBookingModalContext";
 import { formatPrice } from "@/lib/formatting";
 import { useAsync } from "@/lib/useAsync";
-import type { PmuTechniqueOffer } from "@/types/pmu";
+import type { PmuConsultationOffer } from "@/types/pmu";
+
+// Owner request 2026-09-29: this page offers only the two consultation types, no procedure list.
+// Techniques are still bookable by direct link (PmuDeepLinkOpener: ?technique=..., used by the
+// touch-up / color-booster reminder emails); they're just no longer listed here.
+//
+// Card copy restates the owner's own Square item descriptions ("Consultation" and "Online
+// Consultation"), including "the $50 consultation fee is applied toward the cost of your future
+// procedure". Price and length are read live from Square. Nothing about refunds on purpose: the
+// owner's descriptions don't say, so don't add a refund claim until the owner confirms the policy.
+const CARD_COPY: Record<string, { title: string; where: string; points: string[]; cta: string }> = {
+  "online-consultation": {
+    title: "Online Consultation",
+    where: "FaceTime or phone call",
+    points: [
+      "Get to know your artist",
+      "Ask your questions about the procedure",
+      "Find out which technique, shape, and color may fit you",
+      "Discuss existing permanent makeup",
+    ],
+    cta: "Book Free Online Consultation",
+  },
+  "in-person-consultation": {
+    title: "In-Studio Consultation",
+    where: "In person, at the studio",
+    points: [
+      "Your artist sees your brows and skin in person",
+      "Choose your shape, technique, and pigment color together",
+      "Talk through healing, aftercare, and contraindications",
+    ],
+    cta: "Book In-Studio Consultation",
+  },
+};
 
 export function PmuTechniques() {
   const { status, data, error, retry } = useAsync(getPmuCatalog, []);
-  const { openConsultation, openDeposit } = usePmuBookingModalContext();
+  const { openConsultation } = usePmuBookingModalContext();
+  const consultations = (data?.consultations ?? []).filter((c) => CARD_COPY[c.slug]);
 
   return (
     <section style={styles.section} id="techniques">
-      <div style={styles.eyebrow}>Not Sure Which Technique Is Right?</div>
-      <h2 style={styles.heading}>Talk It Through First — Free</h2>
+      <div style={styles.eyebrow}>Start With a Consultation</div>
+      <h2 style={styles.heading}>Two Ways to Meet Your Artist</h2>
       <p style={styles.lead}>
-        Every brow is different. A free video consultation with our team is the easiest way to figure out which
-        technique fits your face shape, skin type, and goals — before you spend a cent.
+        Every brow is different. Before any procedure, we talk it through with you, online for free or in person at
+        the studio.
       </p>
-      <button onClick={() => openConsultation()} style={styles.primaryButton}>
-        Book a Free Online Consultation
-      </button>
-      <button onClick={() => openConsultation("in-person-consultation")} style={styles.secondaryButton}>
-        Prefer to meet in person? Book an in-studio consultation — $50
-      </button>
 
-      {status === "loading" ? <Spinner label="Loading techniques…" /> : null}
+      {status === "loading" ? <Spinner label="Loading…" /> : null}
       {status === "error" ? <ErrorNotice message={error ?? "Something went wrong."} onRetry={retry} /> : null}
-      {status === "success" && data ? (
-        <div style={styles.divider}>
-          <div style={styles.dividerLabel}>Already know what you want?</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 14 }}>
-            {data.techniques.filter((technique) => technique.public).map((technique) => (
-              <TechniqueCard key={technique.slug} technique={technique} depositAmount={data.deposit_amount} onBook={() => openDeposit(technique.slug)} />
-            ))}
-          </div>
-          <p style={styles.depositNote}>
-            Reserve your date with a ${data.deposit_amount.toFixed(0)} deposit now — the remaining balance is due at
-            your appointment. Fully refundable with 48 hours' notice.
-          </p>
+      {status === "success" ? (
+        <div style={styles.options}>
+          {consultations.map((c) => (
+            <ConsultationCard key={c.slug} offer={c} onBook={() => openConsultation(c.slug)} />
+          ))}
         </div>
       ) : null}
     </section>
   );
 }
 
-function TechniqueCard({
-  technique,
-  depositAmount,
-  onBook,
-}: {
-  technique: PmuTechniqueOffer;
-  depositAmount: number;
-  onBook: () => void;
-}) {
+function ConsultationCard({ offer, onBook }: { offer: PmuConsultationOffer; onBook: () => void }) {
+  const copy = CARD_COPY[offer.slug];
+  const isFree = offer.price === 0;
   return (
-    <div style={styles.card}>
-      <div style={{ flex: 1 }}>
-        <div style={styles.cardName}>{technique.name}</div>
-        <p style={styles.cardDescription}>{technique.description}</p>
-        <div style={styles.cardMeta}>{technique.duration_minutes} min</div>
+    <div style={isFree ? styles.card : { ...styles.card, ...styles.cardPaid }}>
+      <div style={styles.cardTop}>
+        <div style={styles.cardName}>{copy.title}</div>
+        <div style={styles.cardPrice}>{isFree ? "Free" : formatPrice(offer.price)}</div>
       </div>
-      <div style={styles.cardPriceCol}>
-        <div style={styles.cardPrice}>{formatPrice(technique.price)}</div>
-        <button onClick={onBook} style={styles.cardButton}>
-          Reserve — ${depositAmount.toFixed(0)} deposit
-        </button>
+      <div style={styles.cardMeta}>
+        {offer.duration_minutes} min · {copy.where}
       </div>
+      <ul style={styles.points}>
+        {copy.points.map((p) => (
+          <li key={p} style={styles.point}>
+            <span style={styles.check} aria-hidden>
+              ✓
+            </span>
+            {p}
+          </li>
+        ))}
+      </ul>
+      {!isFree ? (
+        <div style={styles.credit}>
+          The {formatPrice(offer.price)} fee goes toward the cost of your procedure when you book it with us.
+        </div>
+      ) : null}
+      <button onClick={onBook} style={isFree ? styles.primaryButton : styles.secondaryButton}>
+        {copy.cta}
+      </button>
     </div>
   );
 }
@@ -103,32 +131,30 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 11,
     cursor: "pointer",
   },
-  divider: { marginTop: 30, paddingTop: 22, borderTop: "1px solid var(--color-border)" },
-  dividerLabel: { fontSize: 12.5, fontWeight: 600, color: "var(--color-muted-2)", textAlign: "center" },
+  options: { display: "flex", flexDirection: "column", gap: 14, marginTop: 22 },
   card: {
-    display: "flex",
-    gap: 14,
-    alignItems: "flex-start",
-    padding: "16px 17px",
+    padding: "18px 18px 16px",
     border: "1px solid var(--color-border-2)",
-    borderRadius: 14,
+    borderRadius: 16,
     background: "var(--color-card)",
   },
-  cardName: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 16, color: "var(--color-ink)" },
-  cardDescription: { fontSize: 12.5, lineHeight: 1.45, color: "var(--color-muted)", margin: "5px 0 0" },
-  cardMeta: { fontSize: 11.5, color: "var(--color-muted-3)", marginTop: 8 },
-  cardPriceCol: { flex: "none", textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 },
-  cardPrice: { fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 20, color: "var(--color-ink)" },
-  cardButton: {
-    border: "1px solid var(--color-accent)",
-    background: "transparent",
-    color: "var(--color-accent)",
-    fontSize: 11.5,
+  cardPaid: { background: "var(--color-accent-tint-2)", borderColor: "var(--color-accent-border-soft)" },
+  cardTop: { display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 },
+  cardName: { fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 19, color: "var(--color-ink)" },
+  cardPrice: { fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 21, color: "var(--color-accent)", flex: "none" },
+  cardMeta: { fontSize: 12.5, color: "var(--color-muted-2)", marginTop: 4 },
+  points: { listStyle: "none", padding: 0, margin: "14px 0 0", display: "flex", flexDirection: "column", gap: 7 },
+  point: { display: "flex", gap: 9, fontSize: 13.5, lineHeight: 1.45, color: "var(--color-muted)" },
+  check: { color: "var(--color-accent)", fontWeight: 700, flex: "none" },
+  credit: {
+    marginTop: 14,
+    padding: "10px 12px",
+    borderRadius: 10,
+    background: "var(--color-card)",
+    border: "1px dashed var(--color-accent-border-soft)",
+    fontSize: 13,
+    lineHeight: 1.45,
+    color: "var(--color-ink)",
     fontWeight: 600,
-    padding: "8px 10px",
-    borderRadius: 9,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
   },
-  depositNote: { fontSize: 11.5, color: "var(--color-muted-3)", textAlign: "center", marginTop: 14, lineHeight: 1.5 },
 };
