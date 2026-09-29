@@ -106,26 +106,26 @@ export interface Review {
 // Real Google reviews, verbatim from the business's Google profile (owner-provided screenshots,
 // 2026-09-29), replacing placeholder testimonials that were not real reviews (an FTC fake-review
 // risk, especially on a paid-ads landing page). Same set as akluxnails.com's lib/siteData.ts.
-// Month-only dates. Never reword these, and never run them through terminologize().
+// Exact dates, cross-checked against each reviewer's Square visit. Never reword these, and never run them through terminologize().
 export const REVIEWS: Review[] = [
   {
     initial: "S",
     name: "Svetlana Fadeeva",
-    date: "September 2026",
+    date: "September 13, 2026",
     stars: "★★★★★",
     text: "Lesya is absolutely wonderful! She's so sweet and professional. Her technique is incredibly clean and precise, and she pays attention to every little detail. If you're looking for a true Russian manicure, this is it! It is Russian manicure at its best. My nails came out absolutely beautiful!",
   },
   {
     initial: "E",
     name: "Estacy",
-    date: "September 2026",
+    date: "September 11, 2026",
     stars: "★★★★★",
     text: "First Russian manicure and it was amazing! Lesya did such a great job getting every little cuticle and making sure all of my nails were the shape and length I wanted. I can't wait to go back and get a pedicure!!",
   },
   {
     initial: "M",
     name: "Melis Yurdakul",
-    date: "September 2026",
+    date: "September 22, 2026",
     stars: "★★★★★",
     text: "I've been a customer for almost 5 months now and I drive all the way from Carlsbad just to come here. I absolutely love how clean and professional everything is. I'm so glad I found them—Tatiana and Bayan are my favorite ❤️",
   },
@@ -135,21 +135,21 @@ export const MORE_REVIEWS: Review[] = [
   {
     initial: "G",
     name: "Gemaine Lockett",
-    date: "September 2026",
+    date: "September 25, 2026",
     stars: "★★★★★",
     text: "Thank you so much for accommodating me today. Even though my reservation got mixed up, I really appreciate how quickly you found a way to fit me in and made everything right. Your kindness and professionalism meant a lot. Most importantly, I absolutely LOVE my nails, they turned out beautiful! Thank you again for taking such great care of me. I'll definitely be back!",
   },
   {
     initial: "V",
     name: "Vanessa Jarrett",
-    date: "September 2026",
+    date: "September 22, 2026",
     stars: "★★★★★",
     text: "Clean, nice Salon. Friendly staff (I enjoy no talking). My nails looks great",
   },
   {
     initial: "A",
     name: "Alena Story",
-    date: "September 2026",
+    date: "September 24, 2026",
     stars: "★★★★★",
     text: "I loved my nails, thank you",
   },
