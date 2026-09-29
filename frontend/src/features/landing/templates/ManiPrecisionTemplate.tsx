@@ -95,7 +95,7 @@ export function ManiPrecisionTemplate({ overrides }: { overrides: LandingVariant
         <span style={styles.ratingCount}>{GOOGLE_REVIEW_COUNT} Google reviews</span>
       </section>
 
-      <GoogleReviews terminology={overrides.terminology} />
+      <GoogleReviews />
 
       <section style={styles.finalCta}>
         <h2 style={styles.finalCtaTitle}>Book your slot in under a minute.</h2>

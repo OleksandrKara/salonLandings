@@ -93,7 +93,7 @@ export function ManiEditorialTemplate({ overrides }: { overrides: LandingVariant
         <span style={styles.ratingCount}>· {GOOGLE_REVIEW_COUNT} reviews</span>
       </section>
 
-      <GoogleReviews terminology={overrides.terminology} />
+      <GoogleReviews />
 
       <section style={styles.finalCta}>
         <h2 style={styles.finalCtaTitle}>Your seat is one tap away.</h2>

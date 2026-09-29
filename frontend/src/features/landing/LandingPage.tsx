@@ -106,7 +106,7 @@ export function LandingPage() {
         <TrustGrid terminology={overrides.terminology} />
         <ResultsCarousel terminology={overrides.terminology} />
         <WhyClientsStay terminology={overrides.terminology} />
-        <GoogleReviews terminology={overrides.terminology} />
+        <GoogleReviews />
         <LocationSection />
         <BookingCtaBanner />
         <FinalUrgencyCta terminology={overrides.terminology} />
