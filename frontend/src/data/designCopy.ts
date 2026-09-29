@@ -131,20 +131,20 @@ export const REVIEWS: Review[] = [
   },
 ];
 
-export const MORE_REVIEWS: Review[] = [
-  {
-    initial: "G",
-    name: "Gemaine Lockett",
-    date: "September 25, 2026",
-    stars: "★★★★★",
-    text: "Thank you so much for accommodating me today. Even though my reservation got mixed up, I really appreciate how quickly you found a way to fit me in and made everything right. Your kindness and professionalism meant a lot. Most importantly, I absolutely LOVE my nails, they turned out beautiful! Thank you again for taking such great care of me. I'll definitely be back!",
-  },
+export const MORE_REVIEWS: Review[
   {
     initial: "V",
     name: "Vanessa Jarrett",
     date: "September 22, 2026",
     stars: "★★★★★",
     text: "Clean, nice Salon. Friendly staff (I enjoy no talking). My nails looks great",
+  },
+  {
+    initial: "G",
+    name: "Gemaine Lockett",
+    date: "September 25, 2026",
+    stars: "★★★★★",
+    text: "Thank you so much for accommodating me today. Even though my reservation got mixed up, I really appreciate how quickly you found a way to fit me in and made everything right. Your kindness and professionalism meant a lot. Most importantly, I absolutely LOVE my nails, they turned out beautiful! Thank you again for taking such great care of me. I'll definitely be back!",
   },
   {
     initial: "A",
