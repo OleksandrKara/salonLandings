@@ -33,9 +33,9 @@ export const SUBHEAD = "Long-lasting, chip-free nails up to 4 weeks — trusted 
 // Single source of truth for the Google rating shown across the page (Hero's rating badge,
 // GoogleReviews, Footer, and ContactStep's trust bar) — previously each of those hardcoded its own
 // copy of "4.7"/"113", so updating the real rating meant hunting down every occurrence individually
-// and one (ContactStep's own score) got missed for a while. Updated 2026-08-23: 4.8★, 125 reviews.
-export const GOOGLE_REVIEW_RATING = "4.8";
-export const GOOGLE_REVIEW_COUNT = 125;
+// and one (ContactStep's own score) got missed for a while. Updated 2026-09-29: 4.7★, 143 reviews.
+export const GOOGLE_REVIEW_RATING = "4.7";
+export const GOOGLE_REVIEW_COUNT = 143;
 
 export const CREDIBILITY_STATS = [
   { value: `${GOOGLE_REVIEW_RATING}★`, label: `${GOOGLE_REVIEW_COUNT} Google reviews` },
