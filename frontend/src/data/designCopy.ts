@@ -98,6 +98,8 @@ export const WHY_CLIENTS_STAY = [
 export interface Review {
   initial: string;
   name: string;
+  /** The reviewer's own Google profile photo (same files as akluxnails.com); letter avatar when absent. */
+  profileImage?: string;
   date: string;
   stars: string;
   text: string;
@@ -111,6 +113,7 @@ export const REVIEWS: Review[] = [
   {
     initial: "S",
     name: "Svetlana Fadeeva",
+    profileImage: "/images/reviews/svetlana-fadeeva.jpg",
     date: "September 13, 2026",
     stars: "★★★★★",
     text: "Lesya is absolutely wonderful! She's so sweet and professional. Her technique is incredibly clean and precise, and she pays attention to every little detail. If you're looking for a true Russian manicure, this is it! It is Russian manicure at its best. My nails came out absolutely beautiful!",
@@ -125,6 +128,7 @@ export const REVIEWS: Review[] = [
   {
     initial: "M",
     name: "Melis Yurdakul",
+    profileImage: "/images/reviews/melis-yurdakul.jpg",
     date: "September 22, 2026",
     stars: "★★★★★",
     text: "I've been a customer for almost 5 months now and I drive all the way from Carlsbad just to come here. I absolutely love how clean and professional everything is. I'm so glad I found them—Tatiana and Bayan are my favorite ❤️",
@@ -133,6 +137,14 @@ export const REVIEWS: Review[] = [
 
 export const MORE_REVIEWS: Review[] = [
   {
+    initial: "V",
+    name: "Vanessa Jarrett",
+    profileImage: "/images/reviews/vanessa-jarrett.jpg",
+    date: "September 22, 2026",
+    stars: "★★★★★",
+    text: "Clean, nice Salon. Friendly staff (I enjoy no talking). My nails looks great",
+  },
+  {
     initial: "G",
     name: "Gemaine Lockett",
     date: "September 25, 2026",
@@ -140,15 +152,9 @@ export const MORE_REVIEWS: Review[] = [
     text: "Thank you so much for accommodating me today. Even though my reservation got mixed up, I really appreciate how quickly you found a way to fit me in and made everything right. Your kindness and professionalism meant a lot. Most importantly, I absolutely LOVE my nails, they turned out beautiful! Thank you again for taking such great care of me. I'll definitely be back!",
   },
   {
-    initial: "V",
-    name: "Vanessa Jarrett",
-    date: "September 22, 2026",
-    stars: "★★★★★",
-    text: "Clean, nice Salon. Friendly staff (I enjoy no talking). My nails looks great",
-  },
-  {
     initial: "A",
     name: "Alena Story",
+    profileImage: "/images/reviews/alena-story.jpg",
     date: "September 24, 2026",
     stars: "★★★★★",
     text: "I loved my nails, thank you",

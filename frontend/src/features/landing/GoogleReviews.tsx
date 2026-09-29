@@ -49,7 +49,11 @@ function ReviewCard({ review }: { review: Review }) {
   return (
     <div style={styles.reviewCard}>
       <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 9 }}>
-        <span style={styles.avatar}>{review.initial}</span>
+        {review.profileImage ? (
+          <img src={review.profileImage} alt={`${review.name} profile picture`} width={36} height={36} loading="lazy" style={styles.avatarImg} />
+        ) : (
+          <span style={styles.avatar}>{review.initial}</span>
+        )}
         <span style={{ flex: 1, lineHeight: 1.2 }}>
           <span style={{ display: "block", fontWeight: 600, fontSize: 14, color: "var(--color-ink)" }}>{review.name}</span>
           <span style={{ display: "block", fontSize: 11.5, color: "var(--color-muted-3)" }}>{review.date}</span>
@@ -70,6 +74,7 @@ const styles: Record<string, CSSProperties> = {
   summaryCard: { display: "flex", alignItems: "center", gap: 14, margin: "16px 0 20px", padding: "16px 18px", border: "1px solid var(--color-border-2)", borderRadius: 14, background: "var(--color-card)" },
   verifiedBadge: { flex: "none", display: "flex", textDecoration: "none", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--color-success)", background: "var(--color-success-bg-2)", borderRadius: 20, padding: "7px 11px" },
   reviewCard: { padding: "16px 17px", border: "1px solid var(--color-border-2)", borderRadius: 14, background: "var(--color-card)" },
+  avatarImg: { flex: "none", width: 36, height: 36, borderRadius: "50%", objectFit: "cover", display: "block" },
   avatar: { flex: "none", width: 36, height: 36, borderRadius: "50%", background: "#f0e2dc", color: "var(--color-accent)", fontWeight: 600, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" },
   toggleButton: { width: "100%", marginTop: 12, border: "1px solid #d9c7bd", background: "transparent", color: "var(--color-accent)", fontSize: 14, fontWeight: 600, padding: 13, borderRadius: 11, cursor: "pointer" },
 };
