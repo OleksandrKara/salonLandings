@@ -10,6 +10,7 @@ import { usePmuBookingModalContext } from "@/features/pmu/PmuBookingModalContext
 import { buildGoogleCalendarLink, buildIcsUrl } from "@/lib/calendar";
 import { formatPrice, formatSlotDay, formatSlotTime, groupSlotsByDateKey, pacificTodayKey, slotHour, toPacificDateKey } from "@/lib/formatting";
 import { getTrackingSnapshot } from "@/lib/tracking";
+import { isEmbedMode } from "@/lib/embedMode";
 import type { PmuCatalogResponse, PmuConsultationConfirmation, PmuDepositBookingConfirmation, PmuSlotOption } from "@/types/pmu";
 
 type Step = "slot" | "contact" | "card" | "done";
@@ -118,6 +119,7 @@ export function PmuBookingModal() {
           marketing_opt_in: smsOptIn,
         },
         tracking: getTrackingSnapshot(),
+        ...sourcePage(),
         website: website || null,
         form_rendered_at: formRenderedAt,
         turnstile_token: turnstileToken,
@@ -332,6 +334,18 @@ function DayStrip({
       ) : null}
     </div>
   );
+}
+
+/** The page the client is on when booking, for the staff Telegram alert (owner request
+ * 2026-09-30: managers want to guess what the client is after, e.g. "Permanent Lips"). Inside the
+ * WordPress site's iframe popup (?embed=1) that's the parent page, which we only know through
+ * document.referrer (its title isn't readable cross-origin); otherwise it's this page. Query and
+ * fragment are dropped; the backend re-checks the domain anyway. */
+function sourcePage(): { source_page_url: string | null; source_page_title: string | null } {
+  if (isEmbedMode && document.referrer) {
+    return { source_page_url: document.referrer.split(/[?#]/)[0], source_page_title: null };
+  }
+  return { source_page_url: window.location.origin + window.location.pathname, source_page_title: document.title || null };
 }
 
 function SlotStep({
