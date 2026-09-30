@@ -129,3 +129,8 @@ img {
 
   background: var(--color-bg-from);
 }
+
+/* PmuReviews carousel: hide the horizontal scrollbar in WebKit (Firefox uses scrollbar-width inline). */
+.pmu-reviews-track::-webkit-scrollbar {
+  display: none;
+}

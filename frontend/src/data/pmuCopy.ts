@@ -16,45 +16,71 @@ export const PMU_LOCATION = {
   address: "1357 Seventh Ave, Ste C, San Diego, CA 92101",
 };
 
+// Same figures as the PMU site's own reviews block (pmu-annakara-home Testimonials.tsx, owner
+// SEO/GEO audit 2026-09-24): Google 4.9 / 144.
 export const PMU_RATING = {
   score: 4.9,
-  count: 141,
+  count: 144,
 };
 
 export interface PmuReview {
   name: string;
-  initial: string;
+  /** Exact date as Google shows it (from the PMU site's review widget), never "N months ago". */
   date: string;
-  stars: string;
   text: string;
+  /** Reviewer's real Google profile photo; letter avatar when they have none. */
+  profileImage?: string;
 }
 
 // Only reviews that credit Anna Kara herself — this page is her Brows work specifically, so a
 // review crediting a different artist (Anastasiia, Nikki) stays out of the rotation here even
 // though it's real 5-star praise for the studio overall.
+// Real Google reviews, verbatim, same source and dates as the PMU site (pmu-annakara-home
+// components/Testimonials.tsx, from pmu-annakara.com's live review widget). Updated 2026-09-30.
 export const PMU_REVIEWS: PmuReview[] = [
   {
     name: "Lauren Chaikin",
-    initial: "L",
-    date: "2 weeks ago",
-    stars: "★★★★★",
-    text: "I cannot recommend Anna highly enough! She did my permanent makeup, including both my eyeliner and eyebrows, and I couldn't be happier with the results. From start to finish, she was incredibly patient, meticulous, and made sure every detail was perfect. The final results are absolutely perfect — my eyebrows look so natural, beautifully shaped, and exactly what I was hoping for.",
+    date: "August 16, 2026",
+    profileImage: "/images/pmu-reviews/lauren-chaikin.png",
+    text: "I cannot recommend Anna highly enough! She did my permanent makeup, including both my eyeliner and eyebrows, and I couldn't be happier with the results. From start to finish, she was incredibly patient, meticulous, and made sure every detail was perfect. She took her time to ensure everything was precise and exactly right, and I always felt comfortable and well cared for throughout the entire process.\n\nThe final results are absolutely perfect — my eyeliner and eyebrows look so natural, beautifully shaped, and exactly what I was hoping for. Anna is truly talented, has an amazing eye for detail, and takes great pride in her work. If you're considering permanent makeup, I wholeheartedly recommend Anna. She exceeded all of my expectations, and I would absolutely trust her again!",
+  },
+  {
+    name: "Karina Tikhutina",
+    date: "May 16, 2026",
+    text: "I recently had a lip blush (permanent lip makeup) done, and I couldn't be happier with the result. The contour is beautifully defined, and the color matches my natural shade perfectly — exactly what I was hoping for.\n\nI'm truly grateful to Anna for her professionalism, precision, and attention to detail. She made me feel comfortable throughout the entire process, and her work is incredibly аккуратное and high-quality.\n\nNow I catch myself admiring my lips all the time — they look so natural yet enhanced. It's such a confidence boost! I highly recommend Anna to anyone looking for subtle, elegant, and flawless results. She truly has an amazing eye for beauty and a very gentle touch.",
+  },
+  {
+    name: "Maja Ceranic",
+    date: "January 26, 2026",
+    profileImage: "/images/pmu-reviews/maja-ceranic.png",
+    text: "Anna is an expert in eyebrows and permanent make up. She is so talented and gives you that beautiful and natural look. Will always come back to her treatments.",
   },
   {
     name: "Ms. M",
-    initial: "M",
-    date: "9 months ago",
-    stars: "★★★★★",
-    text: "I knew I could trust Anna 100% with such a delicate procedure. She has a great aesthetic vision, superb attention to detail, and an impeccable technique. Anna really does have a unique talent of making you look and feel more beautiful — the results are amazing and worth every penny. I highly recommend.",
+    date: "November 12, 2025",
+    profileImage: "/images/pmu-reviews/ms-m.png",
+    text: "Getting a permanent eyeliner done can be pretty intimidating, not just because it's, well, pretty permanent (can last 5+ years), but also due to its proximity to eyes. I knew I could trust Anna 100% with such a delicate procedure. She has a great aesthetic vision, superb attention to detail, and an impeccable technique. Anna really does have a unique talent of making you look and feel more beautiful, she is very patient and also a wonderful person. I absolutely love my eyeliner, and I am so glad I finally had the courage to get it done. There was minimal pain, and I always felt like I was in good hands. The results are amazing and worth every penny. I highly recommend.",
   },
   {
     name: "Sheena Hinds",
-    initial: "S",
-    date: "10 months ago",
-    stars: "★★★★★",
-    text: "Wow! Just wow! The most incredible experience from start to finish! Anna is an absolute perfectionist, and she took her time with my procedures. There is no way to convey the time, focus and effort that Anna put in to achieving the perfect result and making sure I was happy. 10/10 I will be returning and 10/10 I recommend Anna.",
+    date: "October 17, 2025",
+    profileImage: "/images/pmu-reviews/sheena-hinds.png",
+    text: "Wow! Just wow! The most incredible experience from start to finish! Anna is an absolute perfectionist, and she took her time with my procedures (lip neutralization & intimate tattoing) I was nervous initially about finally having my intimate tattoing done, but I could not have picked a better Artist. There is no way to convey the time, focus and effort that Anna put in to achieving the perfect result and making sure I was happy. 10/10 I will be returning and 10/10 I recommend Anna for any permanent makeup you may be interested in getting. She is the best!",
+  },
+  {
+    name: "Катерина Фришко",
+    date: "August 2, 2025",
+    profileImage: "/images/pmu-reviews/katerina-frishko.png",
+    text: "excellent craftsmen, the best service in the city! I recommend!🩷🩷🩷",
+  },
+  {
+    name: "Natasha D",
+    date: "June 16, 2025",
+    profileImage: "/images/pmu-reviews/natasha-d.png",
+    text: "Big thanks to Anna for camouflaging my scar so beautifully! The results are amazing — you can barely see it now. Her salon is super clean and cozy, and she's so kind and easy to talk to. Highly recommend!",
   },
 ];
+
 
 export interface PmuGallerySlide {
   id: string;
