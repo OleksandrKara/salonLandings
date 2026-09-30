@@ -58,6 +58,9 @@ def notify_consultation_request(
     is_online: bool,
     location_address: str | None,
     artist_name: str | None = None,
+    source_page_url: str | None = None,
+    source_page_title: str | None = None,
+    ad_campaign: str | None = None,
 ) -> bool:
     """Best-effort Telegram alert the moment a customer books a free PMU consultation (Business 2
     automation #1's Telegram leg, added 2026-09-25 owner request) — relayed through salaryReview
@@ -72,6 +75,9 @@ def notify_consultation_request(
     PmuBookingService._artist_display_name) — None if it couldn't be resolved, which the alert
     text renders as "—" rather than omitting the line, same convention as every other optional
     field in TelegramNotificationService's own formatters.
+
+    source_page_url/source_page_title/ad_campaign (added 2026-09-30 owner request) tell staff which
+    page the booking came from; the caller passes them already cleaned (app.services.source_page).
     """
     settings = get_settings()
     if not settings.internal_api_base_url or not settings.internal_api_key:
@@ -86,6 +92,9 @@ def notify_consultation_request(
         "online": is_online,
         "locationAddress": location_address,
         "artistName": artist_name,
+        "sourcePageUrl": source_page_url,
+        "sourcePageTitle": source_page_title,
+        "adCampaign": ad_campaign,
     }
     try:
         with httpx.Client(timeout=5.0) as client:

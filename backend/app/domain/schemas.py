@@ -359,6 +359,10 @@ class PmuConsultationRequest(BaseModel):
     customer: CustomerContact
     note: str | None = Field(default=None, max_length=500)
     tracking: TrackingSnapshot | None = None
+    # Page the booking was made from (current page, not the visit's first-touch landing_path in
+    # `tracking`), for the staff Telegram alert. Untrusted; see app.services.source_page.
+    source_page_url: str | None = Field(default=None, max_length=500)
+    source_page_title: str | None = Field(default=None, max_length=300)
     website: str | None = None
     form_rendered_at: str | None = None
     turnstile_token: str | None = None

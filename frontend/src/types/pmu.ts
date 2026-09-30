@@ -53,6 +53,10 @@ export interface PmuConsultationRequest {
   website?: string | null;
   form_rendered_at?: string | null;
   turnstile_token?: string | null;
+  /** Page the booking was made from, for the staff Telegram alert (see sourcePage() in
+   * PmuBookingModal). The backend keeps only our own https domains. */
+  source_page_url?: string | null;
+  source_page_title?: string | null;
 }
 
 export interface PmuConsultationConfirmation {

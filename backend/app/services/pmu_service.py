@@ -35,6 +35,7 @@ from app.integrations.sms.notifier import notify_consultation_request_sms
 from app.integrations.telegram.notifier import notify_consultation_request, notify_payment_failed
 from app.services.formatting import format_square_address
 from app.integrations.square.team import SquareTeamRepository
+from app.services.source_page import clean_ad_campaign, clean_one_line, clean_source_page_url
 
 logger = logging.getLogger(__name__)
 
@@ -260,6 +261,9 @@ class PmuBookingService:
             is_online=definition.is_online,
             location_address=location_address,
             artist_name=artist_name,
+            source_page_url=clean_source_page_url(request.source_page_url),
+            source_page_title=clean_one_line(request.source_page_title),
+            ad_campaign=clean_ad_campaign(request.tracking.utm_campaign if request.tracking else None),
         )
 
         return PmuConsultationConfirmation(
