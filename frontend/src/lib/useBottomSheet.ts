@@ -1,9 +1,9 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 
 /**
  * Shared behavior for every bottom-sheet popup (owner request 2026-09-30: "swipe down with a
  * finger to close, and while it's open the background must not scroll, focus stays on the
- * popup"). The same file exists in akluxnails-home and pmu-annakara-home; keep them in sync.
+ * popup"). Copies live in akluxnails-home lib/ and pmu-annakara-home lib/; keep the three in sync.
  *
  * 1. Scroll lock. `overflow: hidden` alone doesn't hold on iOS Safari (the page still
  *    touch-scrolls behind the sheet), so the body is pinned with `position: fixed` at its current
@@ -69,7 +69,9 @@ export function useBottomSheet(sheetRef: RefObject<HTMLElement | null>, open: bo
   // Latest onClose without re-attaching the touch listeners (and resetting a drag in progress)
   // every time the parent re-renders with a new callback identity.
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   // 1. Scroll lock
   useEffect(() => {
