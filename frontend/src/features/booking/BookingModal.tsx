@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useBottomSheet } from "@/lib/useBottomSheet";
 import { fetchAvailability } from "@/api/availability";
 import { CancellationPolicyModal } from "@/features/booking/CancellationPolicyModal";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
@@ -102,34 +103,9 @@ export function BookingModal({
     return () => window.removeEventListener("popstate", handlePopState);
   }, [state.done, close]);
 
-  // The page behind the sheet shouldn't scroll while it's open — otherwise the visitor can
-  // drag the background out from under a fixed-position overlay, which reads as broken.
-  // `overflow: hidden` alone doesn't hold on iOS Safari (it still allows touch-scrolling the
-  // body), so the body is pinned with `position: fixed` at its current scroll offset instead —
-  // the standard cross-browser scroll-lock — and restored (including the scroll position) on
-  // close.
-  useEffect(() => {
-    if (!state.isOpen) return;
-    const scrollY = window.scrollY;
-    const body = document.body;
-    const previous = {
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
-      overflow: body.style.overflow,
-    };
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.width = "100%";
-    body.style.overflow = "hidden";
-    return () => {
-      body.style.position = previous.position;
-      body.style.top = previous.top;
-      body.style.width = previous.width;
-      body.style.overflow = previous.overflow;
-      window.scrollTo(0, scrollY);
-    };
-  }, [state.isOpen]);
+  // Background scroll lock (iOS-safe), swipe down to close, focus into the sheet: see
+  // lib/useBottomSheet.ts, shared by every bottom sheet on this site.
+  useBottomSheet(sheetRef, state.isOpen, close);
 
   // The sheet is one long-lived scroll container reused across every step (never remounted), so
   // without this a step that opens already scrolled — e.g. Step 3 rendering scrolled to the

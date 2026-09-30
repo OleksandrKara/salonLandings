@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useBottomSheet } from "@/lib/useBottomSheet";
 import { bookPmuConsultation, bookPmuDeposit, getPmuCatalog, getPmuConsultationAvailability, getPmuTechniqueAvailability } from "@/api/pmu";
 import { ApiError } from "@/api/client";
 import { PMU_LOCATION, PMU_SMS_CONSENT_TEXT } from "@/data/pmuCopy";
@@ -20,6 +21,7 @@ export function PmuBookingModal() {
   const isOpen = mode !== null;
 
   const [step, setStep] = useState<Step>("slot");
+  const sheetRef = useRef<HTMLDivElement>(null);
   const [catalog, setCatalog] = useState<PmuCatalogResponse | null>(null);
   const [slots, setSlots] = useState<PmuSlotOption[] | null>(null);
   const [slotsError, setSlotsError] = useState<string | null>(null);
@@ -72,6 +74,8 @@ export function PmuBookingModal() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, mode?.kind, mode?.kind === "consultation" ? mode.consultationSlug : mode?.kind === "deposit" ? mode.techniqueSlug : null]);
+
+  useBottomSheet(sheetRef, isOpen && Boolean(mode), close);
 
   if (!isOpen || !mode) return null;
 
@@ -168,7 +172,7 @@ export function PmuBookingModal() {
 
   return (
     <div style={styles.overlay} onClick={close}>
-      <div style={styles.sheet} onClick={(e) => e.stopPropagation()}>
+      <div ref={sheetRef} style={styles.sheet} onClick={(e) => e.stopPropagation()}>
         <div style={styles.grabberRow}>
           <div style={styles.grabber} />
           <button onClick={close} style={styles.closeButton} aria-label="Close">
