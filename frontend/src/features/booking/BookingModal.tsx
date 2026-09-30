@@ -124,7 +124,7 @@ export function BookingModal({
   return (
     <div onClick={close} style={styles.overlay}>
       <div ref={sheetRef} onClick={stop} style={styles.sheet}>
-        <div style={styles.grabberRow}>
+        <div data-sheet-handle style={{ ...styles.grabberRow, touchAction: "none" }}>
           <div style={styles.grabber} />
           <button onClick={close} style={styles.closeButton} aria-label="Close">
             ×

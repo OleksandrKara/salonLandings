@@ -11,7 +11,7 @@ export function CancellationPolicyModal({ onClose }: { onClose: () => void }) {
   return (
     <div onClick={onClose} style={styles.overlay}>
       <div ref={sheetRef} onClick={(e) => e.stopPropagation()} style={styles.sheet}>
-        <div style={styles.grabberRow}>
+        <div data-sheet-handle style={{ ...styles.grabberRow, touchAction: "none" }}>
           <div style={styles.grabber} />
           <button onClick={onClose} style={styles.closeButton} aria-label="Close">
             ×
