@@ -1,10 +1,16 @@
-import type { CSSProperties } from "react";
+import { useRef, type CSSProperties } from "react";
+import { useBottomSheet } from "@/lib/useBottomSheet";
 import { CANCELLATION_POLICY_TEXT } from "@/data/designCopy";
 
 export function CancellationPolicyModal({ onClose }: { onClose: () => void }) {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  // Opens on top of the booking sheet: the shared hook's scroll lock is reference-counted, so
+  // closing this one doesn't unlock the page under the booking sheet.
+  useBottomSheet(sheetRef, true, onClose);
+
   return (
     <div onClick={onClose} style={styles.overlay}>
-      <div onClick={(e) => e.stopPropagation()} style={styles.sheet}>
+      <div ref={sheetRef} onClick={(e) => e.stopPropagation()} style={styles.sheet}>
         <div style={styles.grabberRow}>
           <div style={styles.grabber} />
           <button onClick={onClose} style={styles.closeButton} aria-label="Close">
