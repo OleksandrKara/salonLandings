@@ -173,7 +173,7 @@ export function PmuBookingModal() {
   return (
     <div style={styles.overlay} onClick={close}>
       <div ref={sheetRef} style={styles.sheet} onClick={(e) => e.stopPropagation()}>
-        <div style={styles.grabberRow}>
+        <div data-sheet-handle style={{ ...styles.grabberRow, touchAction: "none" }}>
           <div style={styles.grabber} />
           <button onClick={close} style={styles.closeButton} aria-label="Close">
             ✕

@@ -9,10 +9,13 @@ import { useEffect, useRef, type RefObject } from "react";
  *    touch-scrolls behind the sheet), so the body is pinned with `position: fixed` at its current
  *    offset and restored on close. Reference-counted, so a sheet opened on top of another sheet
  *    (e.g. the cancellation policy over the booking flow) doesn't unlock the page when it closes.
- * 2. Swipe down to close. The sheet follows the finger; far or fast enough closes it, otherwise
- *    it springs back. A drag only starts when everything scrollable under the finger is already at
- *    its top, so inside a scrolled sheet the finger scrolls content first, like native sheets. A
- *    mostly-horizontal gesture (date strip, carousel) is left alone.
+ * 2. Swipe down to close, ONLY when the gesture starts on the sheet's top bar (the element marked
+ *    `data-sheet-handle`: the grabber row with the ✕). Owner decision 2026-09-30: anywhere else a
+ *    finger must just scroll the sheet's own content, so on a small phone a client can always
+ *    scroll down to the Continue/Book button without accidentally closing the sheet. The sheet
+ *    follows the finger; far or fast enough closes it, otherwise it springs back. Mostly-horizontal
+ *    gestures are ignored. `overscroll-behavior: contain` keeps content scrolling from ever
+ *    chaining to the page behind.
  * 3. Focus moves into the sheet on open (so keyboard/screen-reader users land in the popup) and
  *    back to whatever had it on close.
  */
@@ -53,17 +56,10 @@ function lockBodyScroll(): () => void {
   };
 }
 
-/** True if nothing scrollable between the touch target and the sheet is scrolled down. */
-function atTopUnderFinger(target: EventTarget | null, sheet: HTMLElement): boolean {
-  let node = target instanceof HTMLElement ? target : null;
-  while (node) {
-    const style = window.getComputedStyle(node);
-    const scrollsY = /(auto|scroll)/.test(style.overflowY) && node.scrollHeight > node.clientHeight;
-    if (scrollsY && node.scrollTop > 0) return false;
-    if (node === sheet) break;
-    node = node.parentElement;
-  }
-  return true;
+/** True if the touch started on the sheet's own top bar (see point 2 above). */
+function startedOnHandle(target: EventTarget | null, sheet: HTMLElement): boolean {
+  const handle = target instanceof Element ? target.closest("[data-sheet-handle]") : null;
+  return handle !== null && sheet.contains(handle);
 }
 
 const CLOSE_DISTANCE_PX = 120;
@@ -116,7 +112,7 @@ export function useBottomSheet(sheetRef: RefObject<HTMLElement | null>, open: bo
       startTime = Date.now();
       offset = 0;
       dragging = false;
-      tracking = atTopUnderFinger(e.target, sheet!);
+      tracking = startedOnHandle(e.target, sheet!);
     }
 
     function onMove(e: TouchEvent) {
