@@ -19,25 +19,29 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
+# Businesses this process creates Square bookings/customers for: 1 = AK.LUX.NAILS (mani),
+# 2 = AK PMU (book.pmu-annakara.com, pmu-annakara.com).
+_SQUARE_BUSINESS_IDS = (1, 2)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_pool()
     await run_migrations()
-    try:
-        # No request context at startup, so the usual `Depends(get_current_business)` chain can't
-        # resolve here (2026-08-19 regression: calling the FastAPI-dependency wrapper directly
-        # passed the raw Depends object through as "business", crashing on business.id) — call the
-        # business_id-keyed cache helper directly instead. Square custom attribute definitions are
-        # inherently per-business, so this only ensures them for business 1 (the only business this
-        # process actually serves today); once a second business is live, this needs to loop over
-        # every connected business instead, same "Phase 3 replace this" shape as salaryReview's own
-        # BusinessRepository#sole()/#legacySmsBusiness().
-        _customer_attributes_gateway_for(business_id=1).ensure_definitions()
-    except Exception:
-        # Non-fatal: Square custom attribute definitions self-heal on the next
-        # restart, and bookings still succeed without them (attach_tracking
-        # just logs and skips if the definitions aren't there yet).
-        logger.exception("Failed to ensure Square customer custom attribute definitions")
+    # No request context at startup, so the usual `Depends(get_current_business)` chain can't
+    # resolve here (2026-08-19 regression: calling the FastAPI-dependency wrapper directly passed
+    # the raw Depends object through as "business", crashing on business.id) — call the
+    # business_id-keyed cache helper directly instead. Square custom attribute definitions are
+    # per Square account, so every business this process books for needs its own: business 2
+    # (AK PMU) had none until 2026-10-05, so its customers' traffic source / consent fields were
+    # silently never written to Square.
+    for business_id in _SQUARE_BUSINESS_IDS:
+        try:
+            _customer_attributes_gateway_for(business_id=business_id).ensure_definitions()
+        except Exception:
+            # Non-fatal: definitions self-heal on the next restart, and bookings still succeed
+            # without them (attach_tracking just logs and skips if they aren't there yet).
+            logger.exception("Failed to ensure Square customer custom attribute definitions (business %s)", business_id)
     yield
     await close_pool()
 
