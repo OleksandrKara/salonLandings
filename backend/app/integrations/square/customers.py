@@ -12,11 +12,14 @@ logger = logging.getLogger(__name__)
 
 def normalize_phone_e164(phone_number: str) -> str | None:
     """Square stores/matches phone numbers in E.164 (e.g. "+18585550100") regardless of how a
-    customer was entered on Square's own side — our own capture form only ever collects a
-    10-digit US number, so this is the one conversion needed for search to actually hit.
-    Returns None for anything that isn't recognizably a US number, rather than guessing.
+    customer was entered on Square's own side. Forms send E.164 (any country); a bare 10-digit
+    or 1+10-digit number is read as US. Returns None for anything else, rather than guessing.
     """
     digits = re.sub(r"\D", "", phone_number)
+    # Booking forms send E.164 from their country picker since 2026-10-05 ("+380501234567" for a
+    # client with a Ukrainian phone): a "+" with a plausible E.164 length is already canonical.
+    if phone_number.strip().startswith("+") and 8 <= len(digits) <= 15:
+        return f"+{digits}"
     if len(digits) == 10:
         return f"+1{digits}"
     if len(digits) == 11 and digits.startswith("1"):

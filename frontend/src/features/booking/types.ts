@@ -1,3 +1,4 @@
+import { emptyPhone, type PhoneState } from "@/lib/phoneState";
 import type { BookingConfirmation, FourHandRequestConfirmation, SlotOption } from "@/types/api";
 
 export type BookingStep = 1 | 2 | 3 | 4;
@@ -9,7 +10,8 @@ export interface BookingModalState {
 
   // Step 1 — contact info
   givenName: string;
-  phone: string;
+  /** Country picker + number (src/components/PhoneInput.tsx); submissions send phone.e164. */
+  phone: PhoneState;
   email: string;
 
   // Abuse guard — see TurnstileWidget.tsx / useBookingModal's open()/submit()
@@ -42,7 +44,7 @@ export const initialBookingModalState: BookingModalState = {
   step: 1,
   done: false,
   givenName: "",
-  phone: "",
+  phone: emptyPhone(),
   email: "",
   website: "",
   formOpenedAt: "",
