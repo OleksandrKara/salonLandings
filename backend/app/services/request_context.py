@@ -20,7 +20,10 @@ def is_bot_request(request: Request) -> bool:
     skip the DB write entirely rather than just labeling the row.
     """
     ua_string = request.headers.get("user-agent", "")
-    return bool(_BOT_USER_AGENT_PATTERN.search(ua_string))
+    # Plus every crawler the UA parser recognizes (AdsBot-Google, Googlebot, Applebot, ...): they
+    # run the page's JS, so without this each crawl was recorded as a visit and a page view
+    # (found 2026-10-05: 47 AdsBot-Google "visits" in the first 12 hours of pmu-annakara.com).
+    return bool(_BOT_USER_AGENT_PATTERN.search(ua_string)) or parse_user_agent(ua_string).is_bot
 
 
 def derive_client_context(request: Request) -> dict:
