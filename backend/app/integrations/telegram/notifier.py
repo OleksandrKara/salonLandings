@@ -61,6 +61,7 @@ def notify_consultation_request(
     source_page_url: str | None = None,
     source_page_title: str | None = None,
     ad_campaign: str | None = None,
+    note: str | None = None,
 ) -> bool:
     """Best-effort Telegram alert the moment a customer books a free PMU consultation (Business 2
     automation #1's Telegram leg, added 2026-09-25 owner request) — relayed through salaryReview
@@ -78,6 +79,9 @@ def notify_consultation_request(
 
     source_page_url/source_page_title/ad_campaign (added 2026-09-30 owner request) tell staff which
     page the booking came from; the caller passes them already cleaned (app.services.source_page).
+
+    note (added 2026-10-04 owner request) is what the client typed in "Anything you would like us
+    to know?", so staff see it before calling back.
     """
     settings = get_settings()
     if not settings.internal_api_base_url or not settings.internal_api_key:
@@ -95,6 +99,7 @@ def notify_consultation_request(
         "sourcePageUrl": source_page_url,
         "sourcePageTitle": source_page_title,
         "adCampaign": ad_campaign,
+        "note": note,
     }
     try:
         with httpx.Client(timeout=5.0) as client:
