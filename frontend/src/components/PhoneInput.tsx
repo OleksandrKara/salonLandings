@@ -34,7 +34,7 @@ export default function PhoneInput({
   const { margin, marginTop, marginBottom, padding, ...boxLook } = fieldStyle ?? {};
 
   return (
-    <div style={{ margin, marginTop, marginBottom }}>
+    <div style={outerMargin(margin, marginTop, marginBottom)}>
       <div
         style={{
           ...boxLook,
@@ -114,6 +114,16 @@ export default function PhoneInput({
       ) : null}
     </div>
   );
+}
+
+/** Only the margin keys the form actually set: React writes an undefined marginTop as "", which
+ * would wipe the top/bottom of a `margin` shorthand set just before it. */
+function outerMargin(margin?: CSSProperties["margin"], marginTop?: CSSProperties["marginTop"], marginBottom?: CSSProperties["marginBottom"]): CSSProperties {
+  const out: CSSProperties = {};
+  if (margin !== undefined) out.margin = margin;
+  if (marginTop !== undefined) out.marginTop = marginTop;
+  if (marginBottom !== undefined) out.marginBottom = marginBottom;
+  return out;
 }
 
 const styles: Record<string, CSSProperties> = {
