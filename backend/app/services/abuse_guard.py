@@ -1,5 +1,6 @@
 import datetime as dt
 import logging
+import re
 
 from app.integrations.marketing_db.repository import MarketingRepository
 from app.integrations.turnstile import verify_turnstile
@@ -17,16 +18,50 @@ MIN_HUMAN_FILL_SECONDS = 3
 
 _RATE_LIMITED_SUBMISSION_TYPES = ["booking", "four_hand_request"]
 
+# Test numbers (owner request 2026-10-05: the marketing team needs to test the booking flow
+# without real appointments or daily limits): the reserved-for-fiction US range 555-0100 to
+# 555-0199, any area code, e.g. (619) 555-0123. See is_test_phone.
+_TEST_PHONE = re.compile(r"^\+1\d{3}55501\d{2}$")
+
+STUDIO_PHONE_DISPLAY = "(619) 323-1185"
+
+# What the client sees for each rejection (owner request 2026-10-05: say what happened instead of
+# one generic error). Bot-only checks (honeypot) keep a neutral message.
+_USER_MESSAGES = {
+    "rate_limit_phone": (
+        "This phone number has reached today's limit of 3 online bookings. To book or change an "
+        f"appointment, please call or text us at {STUDIO_PHONE_DISPLAY}."
+    ),
+    "rate_limit_ip": (
+        "Too many bookings from this network in the last hour. Please try again later, or call or "
+        f"text us at {STUDIO_PHONE_DISPLAY}."
+    ),
+    "too_fast": "That was a little too fast for us to verify. Please wait a few seconds and try again.",
+    "turnstile_failed": (
+        "We couldn't verify the security check. Please refresh the page and try again "
+        f"(or call/text us at {STUDIO_PHONE_DISPLAY})."
+    ),
+}
+_GENERIC_MESSAGE = "We couldn't verify your submission. Please try again."
+
+
+def is_test_phone(phone_e164: str | None) -> bool:
+    """(XXX) 555-0100 to 555-0199: numbers reserved for fiction, never a real client."""
+    return bool(phone_e164 and _TEST_PHONE.match(phone_e164))
+
+
+def user_message(reason: str) -> str:
+    return _USER_MESSAGES.get(reason, _GENERIC_MESSAGE)
+
 
 class AbuseGuardError(Exception):
-    """Raised when a submission is rejected. The message is deliberately generic — never
-    reveals which specific check failed, so an attacker can't use the response to debug their
-    way past the guard.
+    """Raised when a submission is rejected. The message tells a real client what to do (limit
+    reached, refresh the page); only the honeypot keeps the generic one.
     """
 
     def __init__(self, reason: str):
         self.reason = reason
-        super().__init__("We couldn't verify your submission. Please try again.")
+        super().__init__(user_message(reason))
 
 
 class AbuseGuard:
@@ -58,7 +93,11 @@ class AbuseGuard:
             if elapsed is not None and elapsed < MIN_HUMAN_FILL_SECONDS:
                 await self._reject(business_id, endpoint, "too_fast", phone_number, ip_address)
 
-        if phone_number:
+        # Test numbers skip the daily/hourly limits (they never create a real booking, see
+        # is_test_phone); the bot checks above and the security check below still apply.
+        testing = is_test_phone(phone_number)
+
+        if phone_number and not testing:
             since_day = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)
             phone_count = await self._repository.count_recent_submissions_by_phone(
                 phone_number=phone_number, submission_types=_RATE_LIMITED_SUBMISSION_TYPES, since=since_day
@@ -66,7 +105,7 @@ class AbuseGuard:
             if phone_count >= MAX_BOOKING_ATTEMPTS_PER_PHONE_PER_DAY:
                 await self._reject(business_id, endpoint, "rate_limit_phone", phone_number, ip_address)
 
-        if ip_address:
+        if ip_address and not testing:
             since_hour = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)
             ip_count = await self._repository.count_recent_submissions_by_ip(
                 ip_address=ip_address, submission_types=_RATE_LIMITED_SUBMISSION_TYPES, since=since_hour

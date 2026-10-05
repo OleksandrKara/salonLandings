@@ -23,7 +23,7 @@ from app.domain.schemas import (
 from app.integrations.square.customers import normalize_phone_for_storage
 from app.integrations.square.exceptions import SquareIntegrationError
 from app.integrations.square.payments import PaymentDeclinedError
-from app.services.abuse_guard import AbuseGuard, AbuseGuardError
+from app.services.abuse_guard import AbuseGuard, AbuseGuardError, is_test_phone
 from app.services.identity import resolve_tracking_snapshot
 from app.services.pmu_service import (
     InvalidProviderError,
@@ -39,8 +39,6 @@ from app.services.tracking_service import TrackingService
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/pmu", tags=["pmu"])
 
-# Same generic message as mani's own abuse-guard rejections — see bookings.py.
-ABUSE_BLOCKED_MESSAGE = "We couldn't verify your submission. Please try again."
 
 
 @router.get("/catalog", response_model=PmuCatalogResponse)
@@ -103,7 +101,16 @@ async def book_consultation(
             turnstile_token=request.turnstile_token,
         )
     except AbuseGuardError as exc:
-        raise HTTPException(status_code=400, detail=ABUSE_BLOCKED_MESSAGE) from exc
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if is_test_phone(phone_number):
+        # Test booking (see abuse_guard.is_test_phone): the site behaves exactly as for a real
+        # one (confirmation screen, GA4/Ads events), but nothing reaches Square, SMS, Telegram or
+        # the marketing records.
+        try:
+            return await run_in_threadpool(booking_service.test_consultation_confirmation, request)
+        except (PmuServiceNotFoundError, InvalidProviderError) as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     try:
         confirmation = await run_in_threadpool(booking_service.book_consultation, request)
@@ -200,7 +207,7 @@ async def book_with_deposit(
             turnstile_token=request.turnstile_token,
         )
     except AbuseGuardError as exc:
-        raise HTTPException(status_code=400, detail=ABUSE_BLOCKED_MESSAGE) from exc
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     try:
         confirmation = await run_in_threadpool(booking_service.book_with_deposit, request)
