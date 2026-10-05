@@ -196,6 +196,23 @@ class PmuBookingService:
         self._team_repo = team_repo
         self._customer_attributes_gateway = customer_attributes_gateway
 
+    def test_consultation_confirmation(self, request: PmuConsultationRequest) -> PmuConsultationConfirmation:
+        """A confirmation for a test number (abuse_guard.is_test_phone) without booking anything:
+        same validation as book_consultation, then a TEST- booking id."""
+        definition = find_consultation(request.consultation_slug)
+        if definition is None:
+            raise PmuServiceNotFoundError(f"Unknown consultation '{request.consultation_slug}'")
+        if request.team_member_id not in definition.team_member_ids:
+            raise InvalidProviderError(f"'{request.team_member_id}' doesn't offer this consultation")
+        return PmuConsultationConfirmation(
+            booking_id=f"TEST-{uuid.uuid4().hex[:12]}",
+            status="TEST",
+            start_at=request.start_at,
+            service_name=definition.name,
+            artist_name=self._artist_display_name(request.team_member_id),
+            square_customer_id="",
+        )
+
     def book_consultation(self, request: PmuConsultationRequest) -> PmuConsultationConfirmation:
         definition = find_consultation(request.consultation_slug)
         if definition is None:

@@ -26,8 +26,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 
 # Deliberately generic — never reveals which specific check failed, so an attacker can't use
-# the response to debug their way past the guard.
-ABUSE_BLOCKED_MESSAGE = "We couldn't verify your submission. Please try again."
 
 
 @router.post("", response_model=BookingConfirmation, status_code=201)
@@ -62,7 +60,7 @@ async def create_booking(
             turnstile_token=request.turnstile_token,
         )
     except AbuseGuardError as exc:
-        raise HTTPException(status_code=400, detail=ABUSE_BLOCKED_MESSAGE) from exc
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     try:
         confirmation = await run_in_threadpool(booking_service.create_booking, request)
@@ -168,7 +166,7 @@ async def submit_four_hand_request(
             turnstile_token=submission.turnstile_token,
         )
     except AbuseGuardError as exc:
-        raise HTTPException(status_code=400, detail=ABUSE_BLOCKED_MESSAGE) from exc
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     try:
         confirmation = await run_in_threadpool(booking_service.submit_four_hand_request, submission)
