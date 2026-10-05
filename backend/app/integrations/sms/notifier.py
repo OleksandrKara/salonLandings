@@ -25,7 +25,13 @@ def _format_preferred_time(iso_start_at: str) -> str:
         return iso_start_at
 
 
-_PHOTO_REQUEST_AREAS = "the area you'd like to enhance (brows, lips or eyes)"
+# Generic on purpose: consultations also cover scars, stretch marks, areola and more, not just
+# brows/lips/eyes (owner correction 2026-10-05).
+_PHOTO_REQUEST_AREAS = "the area you'd like us to work on"
+
+# Shown to clients instead of the legal entity name on the business record (owner decision
+# 2026-10-05), same name as the website and Google Business Profile.
+PMU_CLIENT_FACING_NAME = "Anna Kara's PMU Studio"
 
 
 def consultation_details_clause(*, start_at: str, is_online: bool, location_address: str, artist_name: str | None) -> str:
@@ -42,7 +48,7 @@ def consultation_details_clause(*, start_at: str, is_online: bool, location_addr
         return (
             f"It's a free online consultation by phone: {who} will call you at this number on {time_str}, "
             f"no need to come to the studio. To help {artist_name or 'us'} prepare, please reply with 2-3 photos of "
-            f"{_PHOTO_REQUEST_AREAS}, in daylight and without makeup."
+            f"{_PHOTO_REQUEST_AREAS}, taken in good daylight."
         )
     where = f" at {location_address}" if location_address else ""
     return (
@@ -133,6 +139,7 @@ def notify_consultation_request_sms(
         "phoneNumber": phone_number,
         "variables": {
             "name": given_name,
+            "businessName": PMU_CLIENT_FACING_NAME,
             "detailsClause": details_clause,
         },
         "businessId": business_id,
