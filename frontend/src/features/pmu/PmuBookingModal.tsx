@@ -235,6 +235,7 @@ export function PmuBookingModal() {
             consultationConfirmation={consultationConfirmation}
             depositConfirmation={depositConfirmation}
             consultationDurationMinutes={consultationOffer?.duration_minutes ?? null}
+            isOnline={!depositConfirmation && consultationOffer?.slug === "online-consultation"}
             onClose={close}
           />
         )}
@@ -675,32 +676,40 @@ function DoneStep({
   consultationConfirmation,
   depositConfirmation,
   consultationDurationMinutes,
+  isOnline,
   onClose,
 }: {
   consultationConfirmation: PmuConsultationConfirmation | null;
   depositConfirmation: PmuDepositBookingConfirmation | null;
   consultationDurationMinutes: number | null;
+  /** Free online consultation: a phone call from the artist, not a studio visit (owner report
+   * 2026-10-05: the calendar invite said "arrive 5 minutes early" and carried the studio address). */
+  isOnline: boolean;
   onClose: () => void;
 }) {
   const confirmation = depositConfirmation ?? consultationConfirmation;
   if (!confirmation) return null;
 
   const durationMinutes = depositConfirmation?.duration_minutes ?? consultationDurationMinutes ?? 60;
-  const calDetails = `Your appointment at ${PMU_LOCATION.name}. ${confirmation.service_name}. Please arrive 5 minutes early.`;
+  const artist = confirmation.artist_name ?? "Your artist";
+  const calDetails = isOnline
+    ? `Free online consultation with ${PMU_LOCATION.name}. ${artist} will call you at the phone number you booked with. No need to come to the studio, just keep your phone nearby.`
+    : `Your appointment at ${PMU_LOCATION.name}. ${confirmation.service_name}. Please arrive 5 minutes early.`;
+  const calLocation = isOnline ? "Phone call" : PMU_LOCATION.address;
   const calTitle = `${PMU_LOCATION.name} — ${confirmation.service_name}`;
   const calGoogle = buildGoogleCalendarLink({
     title: calTitle,
     startAt: confirmation.start_at,
     durationMinutes,
     details: calDetails,
-    location: PMU_LOCATION.address,
+    location: calLocation,
   });
   const calIcs = buildIcsUrl({
     title: calTitle,
     startAt: confirmation.start_at,
     durationMinutes,
     details: calDetails,
-    location: PMU_LOCATION.address,
+    location: calLocation,
   });
 
   return (
@@ -715,7 +724,11 @@ function DoneStep({
         <DoneDetailRow label="Service" value={confirmation.service_name} />
         <DoneDetailRow label="When" value={`${formatSlotDay(confirmation.start_at)} · ${formatSlotTime(confirmation.start_at)}`} />
         <DoneDetailRow label="Artist" value={confirmation.artist_name ?? "Your artist"} />
-        <DoneDetailRow label="Where" value={PMU_LOCATION.address} last={!depositConfirmation} />
+        <DoneDetailRow
+          label="Where"
+          value={isOnline ? `Phone call: ${artist} will call you` : PMU_LOCATION.address}
+          last={!depositConfirmation}
+        />
         {depositConfirmation ? (
           <>
             <DoneDetailRow label="Deposit paid" value={formatPrice(depositConfirmation.deposit_amount)} />
@@ -733,7 +746,7 @@ function DoneStep({
             </span>
             <span style={styles.calendarTextBlock}>
               <span style={styles.calendarLinkTitle}>Add to Google Calendar</span>
-              <span style={styles.calendarLinkSubtitle}>Get a reminder before your visit</span>
+              <span style={styles.calendarLinkSubtitle}>{isOnline ? "Get a reminder before your call" : "Get a reminder before your visit"}</span>
             </span>
             <span style={styles.calendarChevron}>›</span>
           </a>
