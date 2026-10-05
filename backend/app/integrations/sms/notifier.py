@@ -25,6 +25,32 @@ def _format_preferred_time(iso_start_at: str) -> str:
         return iso_start_at
 
 
+_PHOTO_REQUEST_AREAS = "the area you'd like to enhance (brows, lips or eyes)"
+
+
+def consultation_details_clause(*, start_at: str, is_online: bool, location_address: str, artist_name: str | None) -> str:
+    """The consultation confirmation's body after "is confirmed 💛" (owner request 2026-10-05).
+
+    Says plainly what kind of consultation it is (an online one is a phone call to the client's
+    number, nobody comes to the studio; an in-person one has the address and "arrive 5 minutes
+    early") and asks for photos up front, which managers used to request by hand after every
+    booking. Replies with photos land in /admin/messages like any other inbound MMS.
+    """
+    time_str = _format_preferred_time(start_at)
+    who = artist_name or "your artist"
+    if is_online:
+        return (
+            f"It's a free online consultation by phone: {who} will call you at this number on {time_str}, "
+            f"no need to come to the studio. To help {artist_name or 'us'} prepare, please reply with 2-3 photos of "
+            f"{_PHOTO_REQUEST_AREAS}, in daylight and without makeup."
+        )
+    where = f" at {location_address}" if location_address else ""
+    return (
+        f"It's an in-studio consultation{where} on {time_str}. Please arrive 5 minutes early. "
+        f"To help us prepare, you're welcome to reply with 2-3 photos of {_PHOTO_REQUEST_AREAS}."
+    )
+
+
 def notify_four_hand_request_sms(
     *,
     given_name: str,
@@ -72,6 +98,7 @@ def notify_consultation_request_sms(
     start_at: str,
     is_online: bool,
     location_address: str,
+    artist_name: str | None = None,
 ) -> bool:
     """Best-effort SMS confirming a new PMU consultation booking (Business 2 automation #1) —
     Square's own confirmation text doesn't reliably fire for this booking type. Same relay/fail-
@@ -97,13 +124,9 @@ def notify_consultation_request_sms(
         logger.info("Consultation confirmation SMS skipped — internal API not configured")
         return False
 
-    time_str = _format_preferred_time(start_at)
-    if is_online:
-        details_clause = f"We'll call you at {time_str}!"
-    elif location_address:
-        details_clause = f"We'll be waiting for you at {location_address} at {time_str}!"
-    else:
-        details_clause = f"We'll be waiting for you at {time_str}!"
+    details_clause = consultation_details_clause(
+        start_at=start_at, is_online=is_online, location_address=location_address, artist_name=artist_name
+    )
 
     payload = {
         "templateKey": "consultation_request_confirmation",
