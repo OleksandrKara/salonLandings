@@ -86,7 +86,7 @@ def test_consultation_relay_success_returns_true():
         # distinguishes a business-2 send from the legacy-default behavior every other caller
         # of this relay still gets (see InternalNotificationController.SmsSendRequest's own doc).
         assert post.call_args.kwargs["json"]["businessId"] == 2
-        assert "businessName" not in post.call_args.kwargs["json"]["variables"]
+        assert post.call_args.kwargs["json"]["variables"]["businessName"] == "Anna Kara's PMU Studio"
 
 
 def test_consultation_online_clause_says_call():
@@ -159,3 +159,14 @@ def test_consultation_online_clause_names_the_artist():
         clause = post.call_args.kwargs["json"]["variables"]["detailsClause"]
         assert "Anna K. will call you at this number" in clause
         assert "To help Anna K. prepare" in clause
+
+
+def test_consultation_clause_is_plain_gsm_text():
+    # Emoji or curly quotes switch the whole SMS to UCS-2 (70 chars per segment instead of 160):
+    # owner asked to keep these texts cheap (2026-10-05).
+    from app.integrations.sms.notifier import consultation_details_clause
+
+    for online in (True, False):
+        clause = consultation_details_clause(start_at="2026-08-01T18:00:00Z", is_online=online, location_address="1357 Seventh Ave, Ste C, San Diego, CA 92101", artist_name="Anna K.")
+        assert clause.isascii()
+        assert "brows" not in clause
