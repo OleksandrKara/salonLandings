@@ -97,7 +97,8 @@ def test_consultation_online_clause_says_call():
     ), patch("httpx.Client.post", return_value=response) as post:
         notify_consultation_request_sms(**{**CONSULTATION_KWARGS, "is_online": True, "location_address": "123 Main St"})
         clause = post.call_args.kwargs["json"]["variables"]["detailsClause"]
-        assert clause == "We'll call you at Sat, Aug 1 at 11:00 AM PDT!"
+        assert clause.startswith("It's a free online consultation by phone: your artist will call you at this number on Sat, Aug 1 at 11:00 AM PDT, no need to come to the studio.")
+        assert "reply with 2-3 photos" in clause and "arrive" not in clause
         # An online consultation's clause never mentions the studio address, even if one happens
         # to be passed in.
         assert "Main St" not in clause
@@ -111,7 +112,8 @@ def test_consultation_in_person_clause_includes_address():
     ), patch("httpx.Client.post", return_value=response) as post:
         notify_consultation_request_sms(**{**CONSULTATION_KWARGS, "is_online": False, "location_address": "123 Main St, San Diego, CA 92101"})
         clause = post.call_args.kwargs["json"]["variables"]["detailsClause"]
-        assert clause == "We'll be waiting for you at 123 Main St, San Diego, CA 92101 at Sat, Aug 1 at 11:00 AM PDT!"
+        assert clause.startswith("It's an in-studio consultation at 123 Main St, San Diego, CA 92101 on Sat, Aug 1 at 11:00 AM PDT. Please arrive 5 minutes early.")
+        assert "reply with 2-3 photos" in clause
 
 
 def test_consultation_in_person_missing_address_omits_at_address_clause():
@@ -124,7 +126,7 @@ def test_consultation_in_person_missing_address_omits_at_address_clause():
     ), patch("httpx.Client.post", return_value=response) as post:
         notify_consultation_request_sms(**{**CONSULTATION_KWARGS, "is_online": False, "location_address": ""})
         clause = post.call_args.kwargs["json"]["variables"]["detailsClause"]
-        assert clause == "We'll be waiting for you at Sat, Aug 1 at 11:00 AM PDT!"
+        assert clause.startswith("It's an in-studio consultation on Sat, Aug 1 at 11:00 AM PDT.")
 
 
 def test_consultation_relay_blocked_returns_false():
@@ -145,3 +147,15 @@ def test_format_preferred_time_converts_utc_to_pacific():
 
 def test_format_preferred_time_falls_back_on_malformed_input():
     assert _format_preferred_time("not-a-timestamp") == "not-a-timestamp"
+
+
+def test_consultation_online_clause_names_the_artist():
+    response = httpx.Response(200, json={"sent": True}, request=httpx.Request("POST", "http://backend:8080"))
+    with patch(
+        "app.integrations.sms.notifier.get_settings",
+        return_value=_settings("http://backend:8080", "secret"),
+    ), patch("httpx.Client.post", return_value=response) as post:
+        notify_consultation_request_sms(**{**CONSULTATION_KWARGS, "is_online": True, "location_address": "", "artist_name": "Anna K."})
+        clause = post.call_args.kwargs["json"]["variables"]["detailsClause"]
+        assert "Anna K. will call you at this number" in clause
+        assert "To help Anna K. prepare" in clause

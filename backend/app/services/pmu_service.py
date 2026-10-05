@@ -266,6 +266,7 @@ class PmuBookingService:
             start_at=booking.start_at,
             is_online=definition.is_online,
             location_address=location_address,
+            artist_name=artist_name,
         )
         # 2026-09-25 owner request: staff previously had no visibility that a consultation had even
         # been booked — only the customer got a text. Second, independent leg alongside the SMS
