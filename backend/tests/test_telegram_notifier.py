@@ -136,7 +136,9 @@ def test_consultation_alert_payload_carries_source_page():
             source_page_url="https://pmu-annakara.com/permanent-makeup-lips/",
             source_page_title="Permanent Lips",
             ad_campaign="lips_sept",
+            note="Had microblading in 2022",
         ) is True
     assert captured["json"]["sourcePageUrl"] == "https://pmu-annakara.com/permanent-makeup-lips/"
     assert captured["json"]["sourcePageTitle"] == "Permanent Lips"
     assert captured["json"]["adCampaign"] == "lips_sept"
+    assert captured["json"]["note"] == "Had microblading in 2022"
