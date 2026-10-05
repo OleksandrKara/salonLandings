@@ -108,3 +108,12 @@ def test_find_or_create_reuses_phone_match_without_creating():
 
     assert result == "CUST_PHONE"
     client.customers.create.assert_not_called()
+
+
+def test_normalize_phone_e164_accepts_international_e164_from_the_country_picker():
+    from app.integrations.square.customers import normalize_phone_e164
+
+    assert normalize_phone_e164("+380501234567") == "+380501234567"
+    assert normalize_phone_e164("+1 (619) 555-0123") == "+16195550123"
+    assert normalize_phone_e164("(619) 555-0123") == "+16195550123"
+    assert normalize_phone_e164("+12") is None

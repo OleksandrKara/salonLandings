@@ -1,3 +1,5 @@
+import { PhoneInput } from "@/components/LazyPhoneInput";
+import type { PhoneState } from "@/lib/phoneState";
 import type { CSSProperties } from "react";
 import { formatPrice } from "@/lib/formatting";
 import { CREDIBILITY_STATS, GOOGLE_REVIEW_RATING, GUARANTEE_POINT } from "@/data/designCopy";
@@ -10,11 +12,11 @@ interface ContactStepProps {
   currentStep: number;
   totalSteps: number;
   givenName: string;
-  phone: string;
+  phone: PhoneState;
   email: string;
   website: string;
   onGivenNameChange: (v: string) => void;
-  onPhoneChange: (v: string) => void;
+  onPhoneChange: (v: PhoneState) => void;
   onEmailChange: (v: string) => void;
   onWebsiteChange: (v: string) => void;
   onContinue: () => void;
@@ -83,17 +85,7 @@ export function ContactStep({
         style={styles.input}
       />
       <label style={styles.label}>Mobile number</label>
-      <input
-        value={phone}
-        onChange={(e) => onPhoneChange(e.target.value)}
-        type="tel"
-        name="phone"
-        autoComplete="tel"
-        inputMode="numeric"
-        maxLength={14}
-        placeholder="(619) 000-0000"
-        style={styles.input}
-      />
+      <PhoneInput value={phone} onChange={onPhoneChange} fieldStyle={styles.input} />
       <label style={styles.label}>Email</label>
       <input
         value={email}

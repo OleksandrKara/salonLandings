@@ -13,6 +13,8 @@ import { formatPrice, formatSlotDay, formatSlotTime, groupSlotsByDateKey, pacifi
 import { getTrackingSnapshot } from "@/lib/tracking";
 import { isEmbedMode } from "@/lib/embedMode";
 import type { PmuCatalogResponse, PmuConsultationConfirmation, PmuDepositBookingConfirmation, PmuSlotOption } from "@/types/pmu";
+import { PhoneInput } from "@/components/LazyPhoneInput";
+import { emptyPhone, type PhoneState } from "@/lib/phoneState";
 
 type Step = "slot" | "contact" | "card" | "done";
 
@@ -29,7 +31,7 @@ export function PmuBookingModal() {
 
   const [givenName, setGivenName] = useState("");
   const [familyName, setFamilyName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState<PhoneState>(emptyPhone());
   const [email, setEmail] = useState("");
   // Off by default, unlike mani's own checkbox — California requires marketing SMS consent to be
   // an affirmative, unchecked-by-default action, not pre-ticked.
@@ -96,7 +98,7 @@ export function PmuBookingModal() {
       ? consultationOffer?.name ?? "Consultation"
       : techniqueOffer?.name ?? DEPOSIT_TITLE_FALLBACKS[mode.techniqueSlug] ?? "Book Your Appointment";
 
-  const canContinueFromContact = givenName.trim().length > 0 && familyName.trim().length > 0 && phone.trim().length >= 7;
+  const canContinueFromContact = givenName.trim().length > 0 && familyName.trim().length > 0 && phone.valid;
 
   async function handleContactContinue() {
     if (mode?.kind === "deposit") {
@@ -119,7 +121,7 @@ export function PmuBookingModal() {
           given_name: givenName,
           family_name: familyName,
           email_address: email || null,
-          phone_number: phone,
+          phone_number: phone.e164,
           marketing_opt_in: smsOptIn,
         },
         tracking: getTrackingSnapshot(),
@@ -151,7 +153,7 @@ export function PmuBookingModal() {
           given_name: givenName,
           family_name: familyName,
           email_address: email || null,
-          phone_number: phone,
+          phone_number: phone.e164,
           marketing_opt_in: smsOptIn,
         },
         source_id: sourceId,
@@ -502,13 +504,13 @@ function ContactFields({
   selectedSlot: PmuSlotOption | null;
   givenName: string;
   familyName: string;
-  phone: string;
+  phone: PhoneState;
   email: string;
   smsOptIn: boolean;
   website: string;
   onGivenNameChange: (v: string) => void;
   onFamilyNameChange: (v: string) => void;
-  onPhoneChange: (v: string) => void;
+  onPhoneChange: (v: PhoneState) => void;
   onEmailChange: (v: string) => void;
   onSmsOptInChange: (v: boolean) => void;
   onWebsiteChange: (v: string) => void;
@@ -549,7 +551,7 @@ function ContactFields({
         </div>
       </div>
       <label style={styles.label}>Mobile number</label>
-      <input value={phone} onChange={(e) => onPhoneChange(e.target.value)} type="tel" name="phone" autoComplete="tel" inputMode="numeric" maxLength={14} placeholder="(619) 000-0000" style={styles.input} />
+      <PhoneInput value={phone} onChange={onPhoneChange} fieldStyle={styles.input} />
       <label style={styles.label}>Email (optional)</label>
       <input value={email} onChange={(e) => onEmailChange(e.target.value)} type="email" name="email" autoComplete="email" style={{ ...styles.input, marginBottom: 8 }} />
       <label

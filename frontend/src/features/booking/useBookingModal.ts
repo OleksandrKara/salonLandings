@@ -1,3 +1,4 @@
+import type { PhoneState } from "@/lib/phoneState";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createBooking, submitFourHandRequest } from "@/api/bookings";
 import { captureContact } from "@/api/contacts";
@@ -30,16 +31,6 @@ function shiftKind(steps: readonly BookingFlowStep[], kind: BookingFlowStep, del
   return steps[idx];
 }
 
-function formatPhone(value: string): string {
-  const digits = value.replace(/\D/g, "").replace(/^1(?=\d{10})/, "").slice(0, 10);
-  const a = digits.slice(0, 3);
-  const b = digits.slice(3, 6);
-  const c = digits.slice(6, 10);
-  if (digits.length > 6) return `(${a}) ${b}-${c}`;
-  if (digits.length > 3) return `(${a}) ${b}`;
-  if (digits.length > 0) return `(${a}`;
-  return "";
-}
 
 export function selectedServiceSlugs(state: BookingModalState): string[] {
   if (state.fourHandSelected) return ["four-hand-request"];
@@ -85,7 +76,7 @@ export function useBookingModal(
 
   const setGivenName = useCallback((v: string) => setState((s) => ({ ...s, givenName: v })), []);
   const setEmail = useCallback((v: string) => setState((s) => ({ ...s, email: v })), []);
-  const setPhone = useCallback((v: string) => setState((s) => ({ ...s, phone: formatPhone(v) })), []);
+  const setPhone = useCallback((v: PhoneState) => setState((s) => ({ ...s, phone: v })), []);
   const setWebsite = useCallback((v: string) => setState((s) => ({ ...s, website: v })), []);
   const setTurnstileToken = useCallback((token: string | null) => setState((s) => ({ ...s, turnstileToken: token })), []);
 
@@ -131,7 +122,7 @@ export function useBookingModal(
       // never block advancing past the contact step, wherever it falls in this flow.
       captureContact({
         given_name: s.givenName.trim(),
-        phone_number: s.phone.trim(),
+        phone_number: s.phone.e164,
         email_address: s.email.trim() || null,
         tracking: getTrackingSnapshot(),
       });
@@ -181,7 +172,7 @@ export function useBookingModal(
     capturedContactRef.current = true;
     captureContact({
       given_name: state.givenName.trim(),
-      phone_number: state.phone.trim(),
+      phone_number: state.phone.e164,
       email_address: state.email.trim() || null,
       tracking: getTrackingSnapshot(),
     });
@@ -222,7 +213,7 @@ export function useBookingModal(
             given_name: current.givenName.trim(),
             family_name: familyName,
             email_address: current.email.trim() || null,
-            phone_number: current.phone.trim(),
+            phone_number: current.phone.e164,
             marketing_opt_in: current.smsOptIn,
           },
           requested_services: requested || "4-hand service",
@@ -251,7 +242,7 @@ export function useBookingModal(
           given_name: current.givenName.trim(),
           family_name: familyName,
           email_address: current.email.trim() || null,
-          phone_number: current.phone.trim(),
+          phone_number: current.phone.e164,
           marketing_opt_in: current.smsOptIn,
         },
         sms_opt_in: current.smsOptIn,
@@ -296,6 +287,5 @@ export function useBookingModal(
 }
 
 export function isContactReady(state: BookingModalState): boolean {
-  const phoneDigits = state.phone.replace(/\D/g, "");
-  return state.givenName.trim().length > 0 && phoneDigits.length === 10;
+  return state.givenName.trim().length > 0 && state.phone.valid;
 }
