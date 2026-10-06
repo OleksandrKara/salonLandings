@@ -1,9 +1,13 @@
 /**
- * Google Tag Manager, GA4 and Google Ads on book.pmu-annakara.com (owner request 2026-10-06: the
- * PPC team needs to track and advertise this page too). Same container and IDs as pmu-annakara.com
- * (pmu-annakara-home components/ThirdPartyScripts.tsx): GTM-W2W3H8S, GA4 G-XTPZZV1DKR, Google Ads
- * AW-830249908. Both sites share the pmu-annakara.com cookie domain, so GA4 sees a visitor moving
- * between them as one user.
+ * GA4 and Google Ads on book.pmu-annakara.com (owner request 2026-10-06: the PPC team needs to
+ * track and advertise this page too). Same IDs as pmu-annakara.com (pmu-annakara-home
+ * components/ThirdPartyScripts.tsx): GA4 G-XTPZZV1DKR, Google Ads AW-830249908. Both sites share
+ * the pmu-annakara.com cookie domain, so GA4 sees a visitor moving between them as one user.
+ *
+ * The page's GTM container is the team's own GTM-TSFP3TND, injected by nginx
+ * (nginx/book.pmu-annakara.com.conf); it reads the booking events below from the shared dataLayer.
+ * GA4 page views and the GA4 events go out directly via gtag here, so the container must not add
+ * its own GA4 page_view or copies of these events.
  *
  * PMU host only (mani.akluxnails.com never loads these), and never in ?embed=1 mode, where the
  * page sits inside another site's popup that already has its own tags.
@@ -13,7 +17,6 @@
  * consultation_booked (a test booking only gets a dataLayer entry marked test_booking: true, no
  * GA4 event and no Ads conversion), plus the old WordPress conversion names Ads still optimizes on.
  */
-const GTM_ID = "GTM-W2W3H8S";
 const GA4_ID = "G-XTPZZV1DKR";
 const GOOGLE_ADS_ID = "AW-830249908";
 
@@ -27,11 +30,6 @@ export function installGoogleTags(): void {
   installed = true;
   const w = window as TagWindow;
   w.dataLayer = w.dataLayer || [];
-  w.dataLayer.push({ "gtm.start": Date.now(), event: "gtm.js" });
-  addScript(`https://www.googletagmanager.com/gtm.js?id=${GTM_ID}`);
-
-  // gtag.js for GA4 page views and the Google Ads tag, as on pmu-annakara.com: the GTM container
-  // itself has no GA4 page_view tag and no Ads base tag.
   w.gtag = function gtag() {
     // eslint-disable-next-line prefer-rest-params
     w.dataLayer!.push(arguments);
