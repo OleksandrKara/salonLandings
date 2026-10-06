@@ -12,6 +12,9 @@ from app.domain.pmu_catalog import (
     find_technique,
 )
 from app.domain.schemas import (
+    PmuMenuResponse,
+    PmuServiceBookingConfirmation,
+    PmuServiceBookingRequest,
     PmuAvailabilityResponse,
     PmuCatalogResponse,
     PmuConsultationConfirmation,
@@ -34,6 +37,7 @@ from app.integrations.square.payments import PaymentDeclinedError, SquarePayment
 from app.integrations.sms.notifier import notify_consultation_request_sms
 from app.integrations.telegram.notifier import notify_consultation_request, notify_payment_failed
 from app.services.formatting import format_square_address
+from app.services import pmu_menu
 from app.integrations.square.team import SquareTeamRepository
 from app.services.source_page import clean_ad_campaign, clean_one_line, clean_source_page_url
 
@@ -116,6 +120,32 @@ class PmuCatalogService:
         return variation
 
 
+
+class PmuMenuReader:
+    """The live procedure menu (see app.services.pmu_menu) for one business."""
+
+    def __init__(self, catalog_repo: SquareCatalogRepository, team_repo: SquareTeamRepository, business_id: int):
+        self._catalog_repo = catalog_repo
+        self._team_repo = team_repo
+        self._business_id = business_id
+
+    def get_menu(self) -> PmuMenuResponse:
+        creds = get_square_credentials(self._business_id)
+        return pmu_menu.build_menu(
+            self._catalog_repo.list_items(),
+            self._catalog_repo.category_names(),
+            self._artist_display_name,
+            creds.application_id,
+            creds.location_id,
+        )
+
+    def _artist_display_name(self, team_member_id: str) -> str | None:
+        member = self._team_repo.get_team_member(team_member_id)
+        if member is None:
+            return None
+        family_initial = f" {member.family_name[0]}." if member.family_name else ""
+        return f"{member.given_name or 'Artist'}{family_initial}"
+
 class PmuAvailabilityService:
     """Single-segment, single-provider availability search — same simpler shape as
     AvailabilityService's own four-hand-request path (no tier/price comparison, which is a
@@ -136,6 +166,12 @@ class PmuAvailabilityService:
         if definition is None:
             raise PmuServiceNotFoundError(f"Unknown consultation '{consultation_slug}'")
         return self._search([definition.variation_id], definition.team_member_ids, days)
+
+    def search_variation(self, menu: PmuMenuResponse, variation_id: str, days: int) -> PmuAvailabilityResponse:
+        found = pmu_menu.find_option(menu, variation_id)
+        if found is None:
+            raise PmuServiceNotFoundError(f"Unknown service option '{variation_id}'")
+        return self._search([variation_id], found[1].team_member_ids, days)
 
     def _search(self, variation_ids: list[str], team_member_ids: list[str], days: int) -> PmuAvailabilityResponse:
         start_at, end_at = _search_window(days)
@@ -378,6 +414,78 @@ class PmuBookingService:
             payment_id=payment.id,
             square_customer_id=customer_id,
         )
+
+    def book_service(self, request: PmuServiceBookingRequest, menu: PmuMenuResponse, test: bool = False) -> PmuServiceBookingConfirmation:
+        """A procedure picked from the live menu (app.services.pmu_menu). With a deposit: same
+        reserve-then-charge order as book_with_deposit (a declined card cancels the reservation).
+        Without one: a plain booking. `test` (a 555-01xx test number) validates everything and
+        returns a TEST- confirmation without touching Square."""
+        found = pmu_menu.find_option(menu, request.variation_id)
+        if found is None:
+            raise PmuServiceNotFoundError(f"Unknown service option '{request.variation_id}'")
+        service, option = found
+        if request.team_member_id not in option.team_member_ids:
+            raise InvalidProviderError(f"'{request.team_member_id}' doesn't offer this service")
+        deposit = option.deposit_amount
+        if deposit > 0 and not request.source_id and not test:
+            raise PmuServiceNotFoundError("A card is required for this service's deposit")
+        artist = self._artist_display_name(request.team_member_id)
+        if test:
+            return PmuServiceBookingConfirmation(
+                booking_id=f"TEST-{uuid.uuid4().hex[:12]}", status="TEST", start_at=request.start_at,
+                duration_minutes=option.duration_minutes, service_name=service.name, full_price=option.price,
+                deposit_amount=deposit, remaining_balance=option.price - deposit, artist_name=artist,
+                payment_id=None, square_customer_id="")
+
+        customer_id = self._customer_gateway.find_or_create(
+            given_name=request.customer.given_name,
+            family_name=request.customer.family_name,
+            email_address=request.customer.email_address,
+            phone_number=request.customer.phone_number,
+        )
+        self._attach_customer_attributes(customer_id, request)
+        booking = self._booking_gateway.create_booking(
+            idempotency_key=str(uuid.uuid4()),
+            customer_id=customer_id,
+            start_at=request.start_at,
+            team_member_id=request.team_member_id,
+            segments=[BookingSegment(service_variation_id=option.variation_id,
+                                     service_variation_version=option.variation_version,
+                                     duration_minutes=option.duration_minutes)],
+            customer_note=request.note,
+        )
+        payment_id = None
+        if deposit > 0:
+            try:
+                payment = self._payment_gateway.charge(
+                    idempotency_key=str(uuid.uuid4()),
+                    source_id=request.source_id,
+                    amount_cents=int(round(deposit * 100)),
+                    customer_id=customer_id,
+                    note=f"Deposit for {service.name} (booking {booking.id})",
+                )
+                payment_id = payment.id
+            except SquareIntegrationError as exc:
+                self._booking_gateway.cancel_booking(booking.id)
+                error_codes = None
+                if isinstance(exc.detail, dict):
+                    error_codes = ", ".join(str(e.get("code")) for e in exc.detail.get("errors", []) if e.get("code"))
+                notify_payment_failed(
+                    business_id=self._business_id,
+                    customer_name=f"{request.customer.given_name} {request.customer.family_name}",
+                    phone_number=request.customer.phone_number,
+                    service_name=service.name,
+                    amount=deposit,
+                    error_message=exc.message,
+                    error_code=error_codes or None,
+                    client_error=isinstance(exc, PaymentDeclinedError),
+                )
+                raise
+        return PmuServiceBookingConfirmation(
+            booking_id=booking.id, status=booking.status, start_at=booking.start_at,
+            duration_minutes=option.duration_minutes, service_name=service.name, full_price=option.price,
+            deposit_amount=deposit, remaining_balance=option.price - deposit, artist_name=artist,
+            payment_id=payment_id, square_customer_id=customer_id)
 
     def _attach_customer_attributes(self, customer_id: str, request) -> None:
         self._customer_attributes_gateway.attach_tracking(customer_id, request.tracking)

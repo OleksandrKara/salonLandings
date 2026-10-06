@@ -405,3 +405,93 @@ class PmuDepositBookingConfirmation(BaseModel):
     artist_name: str | None
     payment_id: str
     square_customer_id: str = Field(exclude=True)
+
+
+# --- PMU procedure menu (owner request 2026-10-06): built live from Square's own categories, see
+# app.services.pmu_menu ---
+
+
+class PmuMenuOption(BaseModel):
+    """One bookable Square variation: usually one per artist (Anna's and Anastasiia's prices
+    differ), sometimes one shared by several artists."""
+    variation_id: str
+    variation_version: int
+    label: str | None
+    team_member_ids: list[str]
+    artist_names: list[str]
+    price: float
+    duration_minutes: int
+    deposit_amount: float
+
+
+class PmuMenuArtistChoice(BaseModel):
+    """What the popup shows after a service is picked: one row per artist, with that artist's own
+    price (the matching Square variation)."""
+    team_member_id: str
+    artist_name: str
+    variation_id: str
+    price: float
+    duration_minutes: int
+    deposit_amount: float
+
+
+class PmuMenuService(BaseModel):
+    id: str
+    name: str
+    description: str | None
+    options: list[PmuMenuOption]
+    artists: list[PmuMenuArtistChoice]
+    price_from: float
+
+
+class PmuMenuGroup(BaseModel):
+    key: str
+    title: str
+    services: list[PmuMenuService]
+
+
+class PmuMenuSection(BaseModel):
+    key: str
+    title: str
+    subtitle: str
+    groups: list[PmuMenuGroup]
+    # A section that isn't booked online (Nails lives on akluxnails.com, Makeup is "message us").
+    external_url: str | None = None
+    contact_only: bool = False
+
+
+class PmuMenuResponse(BaseModel):
+    sections: list[PmuMenuSection]
+    square_application_id: str
+    square_location_id: str
+
+
+class PmuServiceBookingRequest(BaseModel):
+    variation_id: str
+    team_member_id: str
+    start_at: str
+    customer: CustomerContact
+    # Square Web Payments card nonce, required only when the option carries a deposit.
+    source_id: str | None = Field(default=None, max_length=200)
+    note: str | None = Field(default=None, max_length=500)
+    tracking: TrackingSnapshot | None = None
+    promo: PromoAttempt | None = None
+    source_page_url: str | None = Field(default=None, max_length=500)
+    source_page_title: str | None = Field(default=None, max_length=300)
+    website: str | None = None
+    form_rendered_at: str | None = None
+    turnstile_token: str | None = None
+
+
+class PmuServiceBookingConfirmation(BaseModel):
+    booking_id: str
+    status: str
+    start_at: str
+    duration_minutes: int
+    service_name: str
+    full_price: float
+    deposit_amount: float
+    remaining_balance: float
+    artist_name: str | None
+    payment_id: str | None
+    square_customer_id: str = Field(exclude=True)
