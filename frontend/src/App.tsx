@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { apiGet } from "@/api/client";
+import { installGoogleTags } from "@/lib/googleTags";
+import { isEmbedMode } from "@/lib/embedMode";
 
 // Lazy, not a static import: this one bundle serves every business's landing page (see the host
 // resolution below), so a static import of both meant every visitor downloaded BOTH businesses'
@@ -54,6 +56,7 @@ function useClarityTracking() {
 function App() {
   useClarityTracking();
   const isPmu = window.location.hostname.includes("pmu-annakara");
+  if (isPmu && !isEmbedMode) installGoogleTags();
   return <Suspense fallback={null}>{isPmu ? <PmuLandingPage /> : <LandingPage />}</Suspense>;
 }
 

@@ -14,9 +14,15 @@ import { getTrackingSnapshot } from "@/lib/tracking";
 import { isEmbedMode } from "@/lib/embedMode";
 import type { PmuCatalogResponse, PmuConsultationConfirmation, PmuDepositBookingConfirmation, PmuSlotOption } from "@/types/pmu";
 import { PhoneInput } from "@/components/LazyPhoneInput";
+import { legacyAdsEvents, trackEvent, trackTestBooking } from "@/lib/googleTags";
 import { emptyPhone, type PhoneState } from "@/lib/phoneState";
 
 type Step = "slot" | "contact" | "card" | "done";
+
+/** "online" / "in_person" for analytics, from the consultation's catalog slug. */
+function consultationType(slug: string): string {
+  return slug.includes("online") ? "online" : "in_person";
+}
 
 export function PmuBookingModal() {
   const { mode, close, promoAttempt } = usePmuBookingModalContext();
@@ -60,6 +66,13 @@ export function PmuBookingModal() {
     setDepositConfirmation(null);
     setFormRenderedAt(new Date().toISOString());
     tokenizeRef.current = null;
+
+    if (mode?.kind === "consultation") {
+      trackEvent("consultation_start", { consultation_type: consultationType(mode.consultationSlug) });
+      legacyAdsEvents(["ads_conversion_Book_Now_1", "View_page_book_now"]);
+    } else if (mode?.kind === "deposit") {
+      trackEvent("deposit_booking_start", { technique: mode.techniqueSlug });
+    }
 
     getPmuCatalog()
       .then(setCatalog)
@@ -132,6 +145,13 @@ export function PmuBookingModal() {
       });
       setConsultationConfirmation(confirmation);
       setStep("done");
+      const consultation_type = consultationType(mode.consultationSlug);
+      if (confirmation.status === "TEST") {
+        trackTestBooking("consultation_booked", { consultation_type });
+      } else {
+        trackEvent("consultation_booked", { consultation_type });
+        legacyAdsEvents(["generate_lead", "free_consultation_form"]);
+      }
     } catch (err) {
       setSubmitError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
@@ -165,6 +185,11 @@ export function PmuBookingModal() {
       });
       setDepositConfirmation(confirmation);
       setStep("done");
+      trackEvent("deposit_booked", {
+        technique: mode.techniqueSlug,
+        value: catalog?.deposit_amount ?? 100,
+        currency: "USD",
+      });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
@@ -192,6 +217,7 @@ export function PmuBookingModal() {
             onSelect={(slot) => {
               setSelectedSlot(slot);
               setStep("contact");
+              trackEvent(mode.kind === "consultation" ? "consultation_slot_selected" : "deposit_slot_selected");
             }}
           />
         ) : step === "contact" ? (
