@@ -21,7 +21,7 @@ from app.services.availability_service import AvailabilityService
 from app.services.booking_service import BookingService
 from app.services.catalog_service import CatalogService
 from app.services.experiment_service import ExperimentService
-from app.services.pmu_service import PmuAvailabilityService, PmuBookingService, PmuCatalogService
+from app.services.pmu_service import PmuAvailabilityService, PmuBookingService, PmuCatalogService, PmuMenuReader
 from app.services.tracking_service import TrackingService
 
 # Every factory below used to be a single process-wide @lru_cache singleton, built once from the
@@ -196,6 +196,20 @@ def get_pmu_catalog_service(
     catalog_repository: SquareCatalogRepository = Depends(get_catalog_repository),
 ) -> PmuCatalogService:
     return _pmu_catalog_service_for(business.id, catalog_repository)
+
+
+@lru_cache
+def _pmu_menu_reader_for(business_id: int, catalog_repository: SquareCatalogRepository,
+                         team_repository: SquareTeamRepository) -> PmuMenuReader:
+    return PmuMenuReader(catalog_repository, team_repository, business_id)
+
+
+def get_pmu_menu_reader(
+    business: BusinessContext = Depends(get_current_business),
+    catalog_repository: SquareCatalogRepository = Depends(get_catalog_repository),
+    team_repository: SquareTeamRepository = Depends(get_team_repository),
+) -> PmuMenuReader:
+    return _pmu_menu_reader_for(business.id, catalog_repository, team_repository)
 
 
 @lru_cache

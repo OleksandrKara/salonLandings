@@ -16,6 +16,7 @@ class SquareCatalogRepository:
     def __init__(self, client: Square, cache_ttl_seconds: float):
         self._client = client
         self._cache: TTLCache[dict[str, CatalogObject]] = TTLCache(cache_ttl_seconds)
+        self._category_cache: TTLCache[dict[str, str]] = TTLCache(cache_ttl_seconds)
 
     def _fetch_items(self) -> dict[str, CatalogObject]:
         logger.info("Fetching Square catalog items")
@@ -36,3 +37,18 @@ class SquareCatalogRepository:
                 status_code=502,
             )
         return item
+
+    def list_items(self) -> list[CatalogObject]:
+        """Every catalog ITEM (same cache as get_item)."""
+        return list(self._cache.get_or_fetch(self._fetch_items).values())
+
+    def category_names(self) -> dict[str, str]:
+        """Category id -> name."""
+        def fetch() -> dict[str, str]:
+            try:
+                return {obj.id: (obj.category_data.name if obj.category_data else "") for obj in self._client.catalog.list(types="CATEGORY")}
+            except SQUARE_CALL_ERRORS as exc:
+                detail = square_error_detail(exc)
+                logger.error("Square category list failed: %s", detail if detail is not None else exc)
+                raise SquareIntegrationError("Unable to load service categories from Square", detail=detail) from exc
+        return self._category_cache.get_or_fetch(fetch)
