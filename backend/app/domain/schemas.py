@@ -476,11 +476,22 @@ class PmuServiceBookingRequest(BaseModel):
     note: str | None = Field(default=None, max_length=500)
     tracking: TrackingSnapshot | None = None
     promo: PromoAttempt | None = None
+    # Personal $75 OFF link token (app.services.consultation_offer), passed through from the URL.
+    offer_token: str | None = Field(default=None, max_length=200)
     source_page_url: str | None = Field(default=None, max_length=500)
     source_page_title: str | None = Field(default=None, max_length=300)
     website: str | None = None
     form_rendered_at: str | None = None
     turnstile_token: str | None = None
+
+
+class PmuOfferResponse(BaseModel):
+    """Whether a personal consultation-offer link is live (app.services.consultation_offer)."""
+    valid: bool
+    discount_amount: float = 0
+    min_spend: float = 0
+    expires_text: str | None = None
+    first_name: str | None = None
 
 
 class PmuServiceBookingConfirmation(BaseModel):
@@ -494,4 +505,6 @@ class PmuServiceBookingConfirmation(BaseModel):
     remaining_balance: float
     artist_name: str | None
     payment_id: str | None
+    # $75 OFF from a personal consultation-offer link, taken off at checkout (not off the deposit).
+    offer_discount: float = 0
     square_customer_id: str = Field(exclude=True)

@@ -21,6 +21,7 @@ from app.domain.schemas import (
     PmuDepositBookingConfirmation,
     PmuDepositBookingRequest,
     PmuMenuResponse,
+    PmuOfferResponse,
     PmuServiceBookingConfirmation,
     PmuServiceBookingRequest,
 )
@@ -37,6 +38,7 @@ from app.services.pmu_service import (
     PmuMenuReader,
     PmuServiceNotFoundError,
 )
+from app.services.consultation_offer import check_offer, claim_offer_safely
 from app.services.rebooking_promo import enroll_rebooking_promo_safely
 from app.services.request_context import derive_client_context
 from app.services.tracking_service import TrackingService
@@ -307,6 +309,14 @@ async def get_menu(menu_reader: PmuMenuReader = Depends(get_pmu_menu_reader)) ->
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get("/offer", response_model=PmuOfferResponse)
+async def get_offer(token: str, business: BusinessContext = Depends(get_current_business)) -> PmuOfferResponse:
+    """Is this personal $75 OFF link live? Never an error: anything else is just "no offer"."""
+    offer = await run_in_threadpool(check_offer, business.id, token[:200])
+    return PmuOfferResponse(valid=offer.valid, discount_amount=offer.discount_amount, min_spend=offer.min_spend,
+                            expires_text=offer.expires_text, first_name=offer.first_name)
+
+
 @router.get("/availability/service/{variation_id}", response_model=PmuAvailabilityResponse)
 async def get_service_availability(
     variation_id: str,
@@ -363,6 +373,19 @@ async def book_service(
     except SquareIntegrationError as exc:
         logger.error("PMU service booking failed: %s", exc.detail)
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    if request.offer_token:
+        offer = await run_in_threadpool(check_offer, business.id, request.offer_token)
+        if offer.applies_to(confirmation.full_price):
+            # A test booking only shows it; a real one keeps the discount on the booked profile.
+            applied = test or await run_in_threadpool(
+                claim_offer_safely,
+                business_id=business.id,
+                token=request.offer_token,
+                square_customer_id=confirmation.square_customer_id,
+                start_at=confirmation.start_at,
+            )
+            if applied:
+                confirmation.offer_discount = offer.discount_amount
     if test:
         return confirmation
 
