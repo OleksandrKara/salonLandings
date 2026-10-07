@@ -69,3 +69,12 @@ def test_deposit_policy_note_records_the_owner_wording():
     assert "$100 deposit goes toward the procedure" in note
     assert "24 hours' notice" in note
     assert "same-day cancellation or reschedule, or a no-show" in note
+
+
+def test_ttl_cache_refresh_swaps_in_a_new_value_without_a_gap():
+    from app.core.cache import TTLCache
+
+    cache = TTLCache(300)
+    assert cache.get_or_fetch(lambda: "old") == "old"
+    assert cache.refresh(lambda: "new") == "new"
+    assert cache.get_or_fetch(lambda: "never called") == "new"

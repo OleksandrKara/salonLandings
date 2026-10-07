@@ -26,3 +26,11 @@ class TTLCache(Generic[T]):
 
     def invalidate(self) -> None:
         self._value = None
+
+    def refresh(self, fetch: Callable[[], T]) -> T:
+        """Fetches a fresh value and swaps it in; the old one keeps being served until then, so a
+        background warmer never leaves a cold gap for real requests."""
+        value = fetch()
+        self._value = value
+        self._fetched_at = time.monotonic()
+        return value

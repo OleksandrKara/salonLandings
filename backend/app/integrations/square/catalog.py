@@ -42,8 +42,16 @@ class SquareCatalogRepository:
         """Every catalog ITEM (same cache as get_item)."""
         return list(self._cache.get_or_fetch(self._fetch_items).values())
 
+    def refresh(self) -> None:
+        """Re-reads items and categories in place (see app.services.cache_warmer)."""
+        self._cache.refresh(self._fetch_items)
+        self._category_cache.refresh(self._fetch_categories)
+
     def category_names(self) -> dict[str, str]:
         """Category id -> name."""
+        return self._category_cache.get_or_fetch(self._fetch_categories)
+
+    def _fetch_categories(self) -> dict[str, str]:
         def fetch() -> dict[str, str]:
             try:
                 return {obj.id: (obj.category_data.name if obj.category_data else "") for obj in self._client.catalog.list(types="CATEGORY")}
@@ -51,4 +59,4 @@ class SquareCatalogRepository:
                 detail = square_error_detail(exc)
                 logger.error("Square category list failed: %s", detail if detail is not None else exc)
                 raise SquareIntegrationError("Unable to load service categories from Square", detail=detail) from exc
-        return self._category_cache.get_or_fetch(fetch)
+        return fetch()

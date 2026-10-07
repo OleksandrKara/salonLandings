@@ -31,6 +31,10 @@ class SquareTeamRepository:
 
         return {member.id: member for member in (response.team_members or [])}
 
+    def refresh(self) -> None:
+        """Re-reads the team in place (see app.services.cache_warmer)."""
+        self._cache.refresh(self._fetch_team_members)
+
     def get_team_member(self, team_member_id: str) -> TeamMember | None:
         members = self._cache.get_or_fetch(self._fetch_team_members)
         return members.get(team_member_id)
