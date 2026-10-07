@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -12,6 +13,7 @@ from app.core.logging import configure_logging
 from app.integrations.marketing_db.migrations import run_migrations
 from app.integrations.marketing_db.pool import close_pool, init_pool
 from app.integrations.square.exceptions import SquareIntegrationError
+from app.services import cache_warmer
 
 configure_logging()
 logger = logging.getLogger(__name__)
@@ -42,7 +44,10 @@ async def lifespan(app: FastAPI):
             # Non-fatal: definitions self-heal on the next restart, and bookings still succeed
             # without them (attach_tracking just logs and skips if they aren't there yet).
             logger.exception("Failed to ensure Square customer custom attribute definitions (business %s)", business_id)
+    # Keeps the PMU popups' Square data warm so opening them never waits on Square (2026-10-07).
+    warmer = asyncio.create_task(cache_warmer.run_forever())
     yield
+    warmer.cancel()
     await close_pool()
 
 
