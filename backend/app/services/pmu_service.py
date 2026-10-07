@@ -466,7 +466,7 @@ class PmuBookingService:
                     source_id=request.source_id,
                     amount_cents=int(round(deposit * 100)),
                     customer_id=customer_id,
-                    note=f"Deposit for {service.name} (booking {booking.id}); no-show policy accepted online",
+                    note=f"Deposit for {service.name} (booking {booking.id}); cancellation policy accepted online",
                 )
                 payment_id = payment.id
             except SquareIntegrationError as exc:
@@ -514,8 +514,9 @@ class PmuBookingService:
 
 def deposit_policy_note(deposit: float) -> str:
     """Kept on the Square booking (seller note, staff-only) as the record of what the client agreed
-    to in the procedure popup (owner wording 2026-10-07)."""
+    to in the procedure popup: the studio's Square cancellation policy (owner decision 2026-10-07)."""
     when = dt.datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%b %d, %Y %I:%M %p PT")
     amount = f"${deposit:,.0f}"
     return (f"Deposit policy accepted online {when}: the {amount} deposit goes toward the procedure; "
-            f"refundable if the client cancels; the client authorized the studio to keep it on a no-show.")
+            f"24 hours' notice to cancel or reschedule; the client authorized the studio to keep the deposit "
+            f"as a cancellation fee for a same-day cancellation or reschedule, or a no-show.")
