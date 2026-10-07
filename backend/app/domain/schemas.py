@@ -478,6 +478,9 @@ class PmuServiceBookingRequest(BaseModel):
     promo: PromoAttempt | None = None
     # Personal $75 OFF link token (app.services.consultation_offer), passed through from the URL.
     offer_token: str | None = Field(default=None, max_length=200)
+    # The client ticked "I agree" to the deposit policy (DEPOSIT_POLICY_NOTE); required whenever the
+    # option carries a deposit.
+    deposit_policy_accepted: bool = False
     source_page_url: str | None = Field(default=None, max_length=500)
     source_page_title: str | None = Field(default=None, max_length=300)
     website: str | None = None

@@ -1,6 +1,7 @@
 import datetime as dt
 import logging
 import uuid
+from zoneinfo import ZoneInfo
 
 from app.domain.pmu_catalog import (
     PMU_CONSULTATIONS,
@@ -429,6 +430,8 @@ class PmuBookingService:
         deposit = option.deposit_amount
         if deposit > 0 and not request.source_id and not test:
             raise PmuServiceNotFoundError("A card is required for this service's deposit")
+        if deposit > 0 and not request.deposit_policy_accepted:
+            raise PmuServiceNotFoundError("Please agree to the deposit and cancellation policy to book")
         artist = self._artist_display_name(request.team_member_id)
         if test:
             return PmuServiceBookingConfirmation(
@@ -453,6 +456,7 @@ class PmuBookingService:
                                      service_variation_version=option.variation_version,
                                      duration_minutes=option.duration_minutes)],
             customer_note=request.note,
+            seller_note=deposit_policy_note(deposit) if deposit > 0 else None,
         )
         payment_id = None
         if deposit > 0:
@@ -462,7 +466,7 @@ class PmuBookingService:
                     source_id=request.source_id,
                     amount_cents=int(round(deposit * 100)),
                     customer_id=customer_id,
-                    note=f"Deposit for {service.name} (booking {booking.id})",
+                    note=f"Deposit for {service.name} (booking {booking.id}); no-show policy accepted online",
                 )
                 payment_id = payment.id
             except SquareIntegrationError as exc:
@@ -506,3 +510,12 @@ class PmuBookingService:
             return None
         family_initial = f" {member.family_name[0]}." if member.family_name else ""
         return f"{member.given_name or 'Artist'}{family_initial}"
+
+
+def deposit_policy_note(deposit: float) -> str:
+    """Kept on the Square booking (seller note, staff-only) as the record of what the client agreed
+    to in the procedure popup (owner wording 2026-10-07)."""
+    when = dt.datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%b %d, %Y %I:%M %p PT")
+    amount = f"${deposit:,.0f}"
+    return (f"Deposit policy accepted online {when}: the {amount} deposit goes toward the procedure; "
+            f"refundable if the client cancels; the client authorized the studio to keep it on a no-show.")

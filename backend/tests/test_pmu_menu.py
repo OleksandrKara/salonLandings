@@ -60,3 +60,12 @@ def test_same_name_items_merge_into_one_service():
     sv = all_services(m)["SMP"][2]
     assert {a.artist_name: a.price for a in sv.artists} == {"Anastasiia M.": 600, "Anna K.": 900}
     assert pmu_menu.find_option(m, "v2")[1].price == 900
+
+
+def test_deposit_policy_note_records_the_owner_wording():
+    from app.services.pmu_service import deposit_policy_note
+
+    note = deposit_policy_note(100)
+    assert "$100 deposit goes toward the procedure" in note
+    assert "refundable if the client cancels" in note
+    assert "keep it on a no-show" in note

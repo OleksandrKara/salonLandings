@@ -34,6 +34,7 @@ class SquareBookingGateway:
         team_member_id: str,
         segments: list[BookingSegment],
         customer_note: str | None = None,
+        seller_note: str | None = None,
     ) -> Booking:
         try:
             response = self._client.bookings.create(
@@ -43,6 +44,7 @@ class SquareBookingGateway:
                     "location_id": self._location_id,
                     "customer_id": customer_id,
                     "customer_note": customer_note,
+                    **({"seller_note": seller_note} if seller_note else {}),
                     "appointment_segments": [
                         {
                             "duration_minutes": segment.duration_minutes,
