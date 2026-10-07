@@ -67,5 +67,5 @@ def test_deposit_policy_note_records_the_owner_wording():
 
     note = deposit_policy_note(100)
     assert "$100 deposit goes toward the procedure" in note
-    assert "refundable if the client cancels" in note
-    assert "keep it on a no-show" in note
+    assert "24 hours' notice" in note
+    assert "same-day cancellation or reschedule, or a no-show" in note
