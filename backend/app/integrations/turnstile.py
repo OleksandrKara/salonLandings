@@ -22,6 +22,9 @@ async def verify_turnstile(token: str | None, remote_ip: str | None) -> bool:
         logger.warning("Turnstile not configured (TURNSTILE_SECRET_KEY unset) — skipping verification")
         return True
     if not token:
+        # 2026-10-09: logged separately so a missing token (client submitted before the invisible
+        # challenge finished, or the widget errored) can be told apart from a rejected one.
+        logger.warning("Turnstile: no token in the submission")
         return False
 
     try:
@@ -31,7 +34,10 @@ async def verify_turnstile(token: str | None, remote_ip: str | None) -> bool:
                 data={"secret": settings.turnstile_secret_key, "response": token, "remoteip": remote_ip or ""},
             )
             response.raise_for_status()
-            return bool(response.json().get("success"))
+            result = response.json()
+            if not result.get("success"):
+                logger.warning("Turnstile: siteverify rejected the token: %s hostname=%s", result.get("error-codes"), result.get("hostname"))
+            return bool(result.get("success"))
     except httpx.HTTPError:
         logger.exception("Turnstile siteverify request failed — failing open (other guards still apply)")
         return True
