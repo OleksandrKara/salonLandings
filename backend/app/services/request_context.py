@@ -9,8 +9,13 @@ from user_agents import parse as parse_user_agent
 # bots like FlowIQLabsBot below; it does NOT flag Wget, curl, or headless-Chrome scrapers, which
 # were empirically checked and confirmed to slip past it). Deliberately excludes real search
 # engine crawlers (Googlebot, Bingbot, etc.) — these landing pages want to stay indexable.
+# 2026-10-12: same self-declared scanners/fetchers added on akluxnails.com (see akluxnails-home
+# lib/requestContext.ts), keep the two in sync.
 _BOT_USER_AGENT_PATTERN = re.compile(
-    r"^Wget|^curl/|HeadlessChrome|python-requests|Go-http-client|FlowIQLabsBot", re.IGNORECASE
+    r"^Wget|^curl/|HeadlessChrome|python-requests|Go-http-client|FlowIQLabsBot"
+    r"|Software Security Research|ChatGPT-User|PaloAltoNetworks|Palo Alto Networks|CensysInspect|zgrab"
+    r"|facebookexternalhit|^Mozilla/5\.0( \(compatible\))?$",
+    re.IGNORECASE,
 )
 
 
