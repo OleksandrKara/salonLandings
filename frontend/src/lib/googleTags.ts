@@ -34,11 +34,31 @@ export function installGoogleTags(): void {
     // eslint-disable-next-line prefer-rest-params
     w.dataLayer!.push(arguments);
   };
+  // The address and referrer the visitor landed with, sent explicitly: gtag.js reads the page
+  // address only when it runs, and by then the page may have changed, which turned ad visitors
+  // into "Direct" and lost the Ads click (2026-10-19, same fix as pmu-annakara.com/akluxnails.com).
+  const landing = window.location.href;
+  const referrer = document.referrer;
+  keepGclid();
   w.gtag("js", new Date());
-  w.gtag("config", GA4_ID);
-  w.gtag("config", GOOGLE_ADS_ID);
+  w.gtag("config", GA4_ID, { send_page_view: false });
+  w.gtag("event", "page_view", { send_to: GA4_ID, page_location: landing, page_referrer: referrer });
+  w.gtag("config", GOOGLE_ADS_ID, { page_location: landing, page_referrer: referrer });
   addScript(`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`);
   addScript(`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`);
+}
+
+/** Google Ads click cookie written at once from ?gclid=, in case the address changes before
+ * gtag.js writes it itself (the same GCL.<seconds>.<gclid> value the Ads tag uses). */
+function keepGclid(): void {
+  try {
+    const gclid = new URLSearchParams(window.location.search).get("gclid");
+    if (!gclid || document.cookie.includes("_gcl_aw=")) return;
+    const domain = window.location.hostname.split(".").slice(-2).join(".");
+    document.cookie = `_gcl_aw=GCL.${Math.round(Date.now() / 1000)}.${gclid};max-age=7776000;path=/;domain=.${domain};SameSite=Lax`;
+  } catch {
+    // analytics only
+  }
 }
 
 function addScript(src: string): void {
