@@ -84,8 +84,11 @@
         rel="stylesheet"
       />
     </noscript>
-    <!-- Meta Pixel Code -->
+    <!-- Meta Pixel Code (AK.LUX.NAILS pixel: nails host only. The same page is served as
+         book.pmu-annakara.com, where it put PMU visitors into the nails audiences; PMU runs no
+         Meta ads, only Google, 2026-10-19) -->
     <script>
+      if (!/pmu-annakara/.test(location.hostname))
       !function(f,b,e,v,n,t,s)
       {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
       n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -94,8 +97,7 @@
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '1141345271408436');
-      fbq('track', 'PageView');
+      if (window.fbq) { fbq('init', '1141345271408436'); fbq('track', 'PageView'); }
     </script>
     <!-- End Meta Pixel Code -->
     <!-- Cloudflare Turnstile (invisible bot check on booking submission) — harmless no-op until
