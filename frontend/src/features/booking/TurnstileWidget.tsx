@@ -5,6 +5,7 @@ declare global {
     turnstile?: {
       render: (container: HTMLElement, options: Record<string, unknown>) => string;
       remove: (widgetId: string) => void;
+      reset: (widgetId: string) => void;
     };
   }
 }
@@ -17,7 +18,14 @@ const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
  * a Cloudflare account exists; the backend's fail-open behavior matches (skips verification
  * when its own secret key is unset).
  */
-export function TurnstileWidget({ onToken }: { onToken: (token: string | null) => void }) {
+export function TurnstileWidget({
+  onToken,
+  resetOn,
+}: {
+  onToken: (token: string | null) => void;
+  /** A token is single-use: when this becomes truthy (a rejected submission's error), a fresh one is fetched for the retry. */
+  resetOn?: unknown;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
 
@@ -56,6 +64,13 @@ export function TurnstileWidget({ onToken }: { onToken: (token: string | null) =
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!resetOn || !widgetIdRef.current || !window.turnstile) return;
+    onToken(null);
+    window.turnstile.reset(widgetIdRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetOn]);
 
   if (!SITE_KEY) return null;
   return <div ref={containerRef} />;

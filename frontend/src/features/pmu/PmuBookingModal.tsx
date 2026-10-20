@@ -268,7 +268,7 @@ export function PmuBookingModal() {
           />
         )}
 
-        <TurnstileWidget onToken={setTurnstileToken} />
+        <TurnstileWidget onToken={setTurnstileToken} resetOn={submitError} />
       </div>
     </div>
   );

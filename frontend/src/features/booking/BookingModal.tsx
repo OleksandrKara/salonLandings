@@ -186,7 +186,7 @@ export function BookingModal({
           />
         ) : (
           <>
-            <TurnstileWidget onToken={setTurnstileToken} />
+            <TurnstileWidget onToken={setTurnstileToken} resetOn={state.submitError} />
             <ConfirmStep
               state={state}
               cartMenu={cartMenu}
