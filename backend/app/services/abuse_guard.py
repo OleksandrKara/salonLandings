@@ -12,10 +12,6 @@ MAX_BOOKING_ATTEMPTS_PER_PHONE_PER_DAY = 3
 # Looser than the per-phone cap since a shared IP (a family, an office) isn't a 1:1 proxy for
 # one person — this is aimed at a burst from a single source, not normal shared-network use.
 MAX_BOOKING_ATTEMPTS_PER_IP_PER_HOUR = 5
-# No human reads the booking form, picks a slot, and hits submit in under this — a real
-# submission this fast is almost certainly a script replaying a captured request.
-MIN_HUMAN_FILL_SECONDS = 2
-
 _RATE_LIMITED_SUBMISSION_TYPES = ["booking", "four_hand_request"]
 
 # Test numbers (owner request 2026-10-05: the marketing team needs to test the booking flow
@@ -36,7 +32,6 @@ _USER_MESSAGES = {
         "Too many bookings from this network in the last hour. Please try again later, or call or "
         f"text us at {STUDIO_PHONE_DISPLAY}."
     ),
-    "too_fast": "That was a little too fast for us to verify. Please wait a few seconds and try again.",
     "turnstile_failed": (
         "We couldn't verify the security check. Please refresh the page and try again "
         f"(or call/text us at {STUDIO_PHONE_DISPLAY})."
@@ -82,16 +77,10 @@ class AbuseGuard:
         phone_number: str,
         ip_address: str | None,
         honeypot_value: str | None,
-        form_rendered_at: str | None,
-        form_filled_ms: int | None = None,
         turnstile_token: str | None,
     ) -> None:
         if honeypot_value:
             await self._reject(business_id, endpoint, "honeypot", phone_number, ip_address)
-
-        elapsed = self._fill_seconds(form_rendered_at, form_filled_ms)
-        if elapsed is not None and 0 <= elapsed < MIN_HUMAN_FILL_SECONDS:
-            await self._reject(business_id, endpoint, "too_fast", phone_number, ip_address)
 
         # Test numbers skip the daily/hourly limits (they never create a real booking, see
         # is_test_phone); the bot checks above and the security check below still apply.
@@ -117,25 +106,6 @@ class AbuseGuard:
         # catch naive bots without paying for it.
         if not await verify_turnstile(turnstile_token, ip_address):
             await self._reject(business_id, endpoint, "turnstile_failed", phone_number, ip_address)
-
-    @classmethod
-    def _fill_seconds(cls, form_rendered_at: str | None, form_filled_ms: int | None) -> float | None:
-        # The client-measured duration (performance.now) is immune to a wrong device clock. The
-        # timestamp fallback (old cached pages) can read as negative or tiny on a skewed clock, so a
-        # negative value is never blamed on the visitor.
-        if form_filled_ms is not None:
-            return form_filled_ms / 1000
-        if form_rendered_at:
-            return cls._seconds_since(form_rendered_at)
-        return None
-
-    @staticmethod
-    def _seconds_since(iso_timestamp: str) -> float | None:
-        try:
-            rendered_at = dt.datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-        except ValueError:
-            return None  # malformed timestamp isn't itself a reason to block — other checks still apply
-        return (dt.datetime.now(dt.timezone.utc) - rendered_at).total_seconds()
 
     async def _reject(
         self, business_id: int, endpoint: str, reason: str, phone_number: str | None, ip_address: str | None

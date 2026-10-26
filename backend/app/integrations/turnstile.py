@@ -13,7 +13,7 @@ async def verify_turnstile(token: str | None, remote_ip: str | None) -> bool:
     """True if Cloudflare confirms this is a real browser. Fails open (returns True) in two
     cases only: Turnstile isn't configured yet (no Cloudflare account set up), or the
     siteverify call itself couldn't be reached — a rare Cloudflare-side outage must not block
-    every real booking, and the rate-limit/honeypot/timing checks still apply regardless.
+    every real booking, and the rate-limit/honeypot checks still apply regardless.
     Returns False for an explicit failed verification (missing/invalid token) or a genuinely
     bad response — that's the one case that should actually block.
     """

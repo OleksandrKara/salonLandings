@@ -17,7 +17,6 @@ export interface BookingModalState {
   // Abuse guard — see TurnstileWidget.tsx / useBookingModal's open()/submit()
   website: string; // honeypot, real visitors never see or fill this
   formOpenedAt: string; // ISO timestamp, set when the modal opens
-  formOpenedPerf: number; // performance.now() at open: the skew-proof clock used for form_filled_ms
   turnstileToken: string | null;
 
   // Step 2 — services cart
@@ -49,7 +48,6 @@ export const initialBookingModalState: BookingModalState = {
   email: "",
   website: "",
   formOpenedAt: "",
-  formOpenedPerf: 0,
   turnstileToken: null,
   maniSelected: true,
   pedicureSelected: false,

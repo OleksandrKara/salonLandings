@@ -56,8 +56,6 @@ async def create_booking(
             phone_number=phone_number,
             ip_address=client_context["ip_address"],
             honeypot_value=request.website,
-            form_rendered_at=request.form_rendered_at,
-            form_filled_ms=request.form_filled_ms,
             turnstile_token=request.turnstile_token,
         )
     except AbuseGuardError as exc:
@@ -163,8 +161,6 @@ async def submit_four_hand_request(
             phone_number=phone_number,
             ip_address=client_context["ip_address"],
             honeypot_value=submission.website,
-            form_rendered_at=submission.form_rendered_at,
-            form_filled_ms=submission.form_filled_ms,
             turnstile_token=submission.turnstile_token,
         )
     except AbuseGuardError as exc:
