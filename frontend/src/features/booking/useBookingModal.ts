@@ -65,6 +65,7 @@ export function useBookingModal(
       pedicureSelected: defaultService === "pedicure",
       isOpen: true,
       formOpenedAt: new Date().toISOString(),
+      formOpenedPerf: performance.now(),
     });
   }, [defaultService]);
   const close = useCallback(() => {
@@ -220,6 +221,7 @@ export function useBookingModal(
           tracking,
           website: current.website,
           form_rendered_at: current.formOpenedAt,
+          form_filled_ms: Math.round(performance.now() - current.formOpenedPerf),
           turnstile_token: current.turnstileToken,
         });
         enterThankYouUrl();
@@ -249,6 +251,7 @@ export function useBookingModal(
         tracking,
         website: current.website,
         form_rendered_at: current.formOpenedAt,
+          form_filled_ms: Math.round(performance.now() - current.formOpenedPerf),
         turnstile_token: current.turnstileToken,
       });
       logExperimentEvent("booking_completed", tracking.landing_page_id ?? null, tracking.variant_id ?? null);

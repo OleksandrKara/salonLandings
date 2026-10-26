@@ -52,6 +52,7 @@ export interface PmuConsultationRequest {
   tracking?: TrackingSnapshot | null;
   website?: string | null;
   form_rendered_at?: string | null;
+  form_filled_ms?: number | null;
   turnstile_token?: string | null;
   /** Page the booking was made from, for the staff Telegram alert (see sourcePage() in
    * PmuBookingModal). The backend keeps only our own https domains. */
@@ -78,6 +79,7 @@ export interface PmuDepositBookingRequest {
   promo?: PromoAttempt | null;
   website?: string | null;
   form_rendered_at?: string | null;
+  form_filled_ms?: number | null;
   turnstile_token?: string | null;
 }
 

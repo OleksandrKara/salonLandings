@@ -229,6 +229,7 @@ class BookingRequest(BaseModel):
     # that specific check rather than failing the request.
     website: str | None = None  # honeypot — real users never see or fill this field
     form_rendered_at: str | None = None  # ISO timestamp, set client-side when the form appeared
+    form_filled_ms: int | None = None  # client-measured ms since the form appeared (monotonic, immune to clock skew)
     turnstile_token: str | None = None
 
 
@@ -270,6 +271,7 @@ class FourHandRequestSubmission(BaseModel):
     # Abuse-guard fields — see BookingRequest for why these are all optional.
     website: str | None = None
     form_rendered_at: str | None = None
+    form_filled_ms: int | None = None  # client-measured ms since the form appeared (monotonic, immune to clock skew)
     turnstile_token: str | None = None
 
 
@@ -365,6 +367,7 @@ class PmuConsultationRequest(BaseModel):
     source_page_title: str | None = Field(default=None, max_length=300)
     website: str | None = None
     form_rendered_at: str | None = None
+    form_filled_ms: int | None = None  # client-measured ms since the form appeared (monotonic, immune to clock skew)
     turnstile_token: str | None = None
 
 
@@ -390,6 +393,7 @@ class PmuDepositBookingRequest(BaseModel):
     promo: PromoAttempt | None = None
     website: str | None = None
     form_rendered_at: str | None = None
+    form_filled_ms: int | None = None  # client-measured ms since the form appeared (monotonic, immune to clock skew)
     turnstile_token: str | None = None
 
 
@@ -485,6 +489,7 @@ class PmuServiceBookingRequest(BaseModel):
     source_page_title: str | None = Field(default=None, max_length=300)
     website: str | None = None
     form_rendered_at: str | None = None
+    form_filled_ms: int | None = None  # client-measured ms since the form appeared (monotonic, immune to clock skew)
     turnstile_token: str | None = None
 
 
