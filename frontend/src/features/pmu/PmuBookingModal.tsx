@@ -44,8 +44,6 @@ export function PmuBookingModal() {
   const [smsOptIn, setSmsOptIn] = useState(false);
   const [website, setWebsite] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [formRenderedAt, setFormRenderedAt] = useState("");
-  const formOpenedPerf = useRef(0);
 
   const [cardError, setCardError] = useState<string | null>(null);
   const tokenizeRef = useRef<(() => Promise<string>) | null>(null);
@@ -65,8 +63,6 @@ export function PmuBookingModal() {
     setCardError(null);
     setConsultationConfirmation(null);
     setDepositConfirmation(null);
-    setFormRenderedAt(new Date().toISOString());
-    formOpenedPerf.current = performance.now();
     tokenizeRef.current = null;
 
     if (mode?.kind === "consultation") {
@@ -142,8 +138,6 @@ export function PmuBookingModal() {
         tracking: getTrackingSnapshot(),
         ...sourcePage(),
         website: website || null,
-        form_rendered_at: formRenderedAt,
-        form_filled_ms: Math.round(performance.now() - formOpenedPerf.current),
         turnstile_token: turnstileToken,
       });
       setConsultationConfirmation(confirmation);
@@ -183,8 +177,6 @@ export function PmuBookingModal() {
         tracking: getTrackingSnapshot(),
         promo: promoAttempt,
         website: website || null,
-        form_rendered_at: formRenderedAt,
-        form_filled_ms: Math.round(performance.now() - formOpenedPerf.current),
         turnstile_token: turnstileToken,
       });
       setDepositConfirmation(confirmation);

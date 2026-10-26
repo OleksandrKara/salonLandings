@@ -258,7 +258,7 @@ _DDL_SUBMISSIONS_TRAFFIC_SOURCE = """
 ALTER TABLE marketing.submissions ADD COLUMN IF NOT EXISTS traffic_source TEXT;
 """
 
-# Every request rejected by the booking abuse guard (rate limit, honeypot, timing, failed
+# Every request rejected by the booking abuse guard (rate limit, honeypot, failed
 # Turnstile check) — a dedicated table rather than reusing marketing.events, since this is
 # operational/security visibility for the owner, not funnel analytics, and has no
 # landing_page_id/variant_id to attach to. Read by the owner portal's "blocked attempts" panel.
