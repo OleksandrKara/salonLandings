@@ -51,3 +51,35 @@ def test_test_number_skips_the_limits_but_not_the_security_check():
         with pytest.raises(AbuseGuardError) as exc:
             asyncio.run(_check(_guard(0), "+16195550123"))
     assert exc.value.reason == "turnstile_failed"
+
+
+def _timing_check(rendered_at, filled_ms):
+    return _guard(0).check(
+        business_id=2, endpoint="pmu_consultation", phone_number="+18583372974", ip_address="1.2.3.4",
+        honeypot_value=None, form_rendered_at=rendered_at, form_filled_ms=filled_ms, turnstile_token="t",
+    )
+
+
+def _run_timing(rendered_at, filled_ms):
+    with patch("app.services.abuse_guard.verify_turnstile", AsyncMock(return_value=True)):
+        asyncio.run(_timing_check(rendered_at, filled_ms))
+
+
+def test_client_measured_duration_decides_and_ignores_a_skewed_clock():
+    import datetime as dt
+
+    ahead = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=45)).isoformat()
+    _run_timing(ahead, 9000)  # clock 45 s ahead, but the visitor really took 9 s: allowed
+    with pytest.raises(AbuseGuardError) as exc:
+        _run_timing(ahead, 300)  # genuinely instant: blocked whatever the clock says
+    assert exc.value.reason == "too_fast"
+
+
+def test_timestamp_fallback_never_blames_a_clock_that_is_ahead():
+    import datetime as dt
+
+    ahead = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=45)).isoformat()
+    _run_timing(ahead, None)  # old cached page on a skewed device: allowed
+    just_now = dt.datetime.now(dt.timezone.utc).isoformat()
+    with pytest.raises(AbuseGuardError):
+        _run_timing(just_now, None)  # instant submit by an old client: still blocked

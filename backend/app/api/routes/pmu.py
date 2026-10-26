@@ -105,6 +105,7 @@ async def book_consultation(
             ip_address=client_context["ip_address"],
             honeypot_value=request.website,
             form_rendered_at=request.form_rendered_at,
+            form_filled_ms=request.form_filled_ms,
             turnstile_token=request.turnstile_token,
         )
     except AbuseGuardError as exc:
@@ -211,6 +212,7 @@ async def book_with_deposit(
             ip_address=client_context["ip_address"],
             honeypot_value=request.website,
             form_rendered_at=request.form_rendered_at,
+            form_filled_ms=request.form_filled_ms,
             turnstile_token=request.turnstile_token,
         )
     except AbuseGuardError as exc:
@@ -357,6 +359,7 @@ async def book_service(
             ip_address=client_context["ip_address"],
             honeypot_value=request.website,
             form_rendered_at=request.form_rendered_at,
+            form_filled_ms=request.form_filled_ms,
             turnstile_token=request.turnstile_token,
         )
     except AbuseGuardError as exc:
