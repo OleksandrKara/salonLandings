@@ -369,6 +369,10 @@ class PmuConsultationRequest(BaseModel):
     form_rendered_at: str | None = None
     form_filled_ms: int | None = None  # no longer used; still accepted from cached pages
     turnstile_token: str | None = None
+    # Set server-side by the route from the HTTP request (never trusted from the body); only used
+    # for the staff Telegram alert's visitor location line.
+    client_ip: str | None = Field(default=None, max_length=64)
+    client_country_code: str | None = Field(default=None, max_length=8)
 
 
 class PmuConsultationConfirmation(BaseModel):

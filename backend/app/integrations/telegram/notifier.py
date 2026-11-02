@@ -62,6 +62,8 @@ def notify_consultation_request(
     source_page_title: str | None = None,
     ad_campaign: str | None = None,
     note: str | None = None,
+    client_ip: str | None = None,
+    client_country_code: str | None = None,
 ) -> bool:
     """Best-effort Telegram alert the moment a customer books a free PMU consultation (Business 2
     automation #1's Telegram leg, added 2026-09-25 owner request) — relayed through salaryReview
@@ -100,9 +102,11 @@ def notify_consultation_request(
         "sourcePageTitle": source_page_title,
         "adCampaign": ad_campaign,
         "note": note,
+        "clientIp": client_ip,
+        "clientCountryCode": client_country_code,
     }
     try:
-        with httpx.Client(timeout=5.0) as client:
+        with httpx.Client(timeout=8.0) as client:
             response = client.post(
                 f"{settings.internal_api_base_url}/api/internal/notifications/consultation-request",
                 json=payload,

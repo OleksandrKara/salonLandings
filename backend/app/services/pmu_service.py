@@ -320,6 +320,8 @@ class PmuBookingService:
             source_page_title=clean_one_line(request.source_page_title),
             ad_campaign=clean_ad_campaign(request.tracking.utm_campaign if request.tracking else None),
             note=clean_one_line(request.note, 500),
+            client_ip=request.client_ip,
+            client_country_code=request.client_country_code,
         )
 
         return PmuConsultationConfirmation(

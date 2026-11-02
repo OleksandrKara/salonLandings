@@ -118,6 +118,8 @@ async def book_consultation(
         except (PmuServiceNotFoundError, InvalidProviderError) as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
+    request.client_ip = client_context["ip_address"]
+    request.client_country_code = http_request.headers.get("cf-ipcountry")
     try:
         confirmation = await run_in_threadpool(booking_service.book_consultation, request)
     except PmuServiceNotFoundError as exc:
