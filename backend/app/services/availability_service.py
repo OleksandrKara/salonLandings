@@ -1,6 +1,7 @@
 import datetime as dt
 import itertools
 import logging
+from zoneinfo import ZoneInfo
 from dataclasses import dataclass
 
 from app.domain.schemas import ArtistTier, AvailabilityResponse, CartMenu, SegmentOption, SlotOption, TierPricing
@@ -13,6 +14,25 @@ logger = logging.getLogger(__name__)
 
 ANY_ARTIST = "any"
 FOUR_HAND_SLUG = FOUR_HAND_REQUEST.slug
+
+
+_SALON_TZ = ZoneInfo("America/Los_Angeles")
+_MANAGER_SHIFT_START_HOUR = 8
+_MANAGER_SHIFT_END_HOUR = 20
+_CONFIRMATION_GAP = dt.timedelta(hours=2)
+
+
+def earliest_bookable_start(now: dt.datetime) -> dt.datetime:
+    """Managers work 08:00-20:00 PT. A booking made outside that shift may not start until two
+    hours after the next shift opens (10:00), so someone can confirm it with the technician.
+    Bookings made during the shift are unrestricted here (Square's own minimum lead time applies)."""
+    local = now.astimezone(_SALON_TZ)
+    if _MANAGER_SHIFT_START_HOUR <= local.hour < _MANAGER_SHIFT_END_HOUR:
+        return now
+    opens = local.replace(hour=_MANAGER_SHIFT_START_HOUR, minute=0, second=0, microsecond=0)
+    if local.hour >= _MANAGER_SHIFT_END_HOUR:
+        opens += dt.timedelta(days=1)
+    return (opens + _CONFIRMATION_GAP).astimezone(dt.timezone.utc)
 
 
 class InvalidCartError(Exception):
@@ -307,6 +327,6 @@ class AvailabilityService:
     @staticmethod
     def _search_window(days: int) -> tuple[str, str]:
         now = dt.datetime.now(dt.timezone.utc)
-        start_at = now.isoformat().replace("+00:00", "Z")
+        start_at = earliest_bookable_start(now).isoformat().replace("+00:00", "Z")
         end_at = (now + dt.timedelta(days=days)).isoformat().replace("+00:00", "Z")
         return start_at, end_at
