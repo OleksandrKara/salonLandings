@@ -43,5 +43,5 @@ export function buildIcsUrl(params: {
     details: params.details,
     location: params.location,
   });
-  return `/api/calendar/event.ics?${search.toString()}`;
+  return `${import.meta.env.VITE_API_BASE_URL ?? ""}/api/calendar/event.ics?${search.toString()}`;
 }
