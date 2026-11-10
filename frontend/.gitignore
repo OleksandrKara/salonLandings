@@ -5,3 +5,4 @@ dist
 *.local
 npm-debug.log*
 *.tsbuildinfo
+dist-mani

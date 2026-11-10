@@ -74,40 +74,7 @@ jobs:
             git fetch origin main
             # Match main exactly; the gitignored .env (secrets) is untouched.
             git reset --hard origin/main
-            # 'ubuntu' needs sudo for docker on this host (passwordless sudo is enabled).
-
-            # Rolling deploy: build both shared images once, then recreate backend-blue/green and
-            # frontend-blue/green one at a time (backend fully rolled out before frontend, since
-            # frontend's internal nginx resolves both backend hostnames at its own startup),
-            # waiting for each to report healthy before touching the next. mani runs paid ads —
-            # nginx's upstream retry (see nginx/mani.akluxnails.com.conf and
-            # frontend/nginx.container.conf) means a visitor never sees a dropped request even
-            # while one replica is mid-restart, since its pair keeps serving throughout.
-            sudo docker compose build backend-blue frontend-blue
-
-            wait_healthy() {
-              for i in \$(seq 1 30); do
-                if [ "\$(sudo docker inspect -f '{{.State.Health.Status}}' "\$1" 2>/dev/null)" = "healthy" ]; then
-                  echo "\$1 healthy"; return 0
-                fi
-                sleep 3
-              done
-              echo "\$1 did not become healthy in time" >&2
-              return 1
-            }
-
-            sudo docker compose up -d --no-deps backend-blue
-            wait_healthy mani-backend-blue
-
-            sudo docker compose up -d --no-deps backend-green
-            wait_healthy mani-backend-green
-
-            sudo docker compose up -d --no-deps frontend-blue
-            wait_healthy mani-frontend-blue
-
-            sudo docker compose up -d --no-deps frontend-green
-            wait_healthy mani-frontend-green
-
-            sudo docker image prune -f
-            sudo docker compose ps
+            # Static deploy: the containers are retired (salonLandings decommission), host nginx
+            # serves the built SPA and /api goes to salaryReview. See scripts/deploy-static.sh.
+            ./scripts/deploy-static.sh
           EOF

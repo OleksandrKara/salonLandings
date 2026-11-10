@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { asset } from "@/lib/asset";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
 import { PMU_RATING } from "@/data/pmuCopy";
 import { usePmuBookingModalContext } from "@/features/pmu/PmuBookingModalContext";
@@ -12,7 +13,7 @@ import type { LandingVariantContent } from "@/types/api";
 // bundle, so the browser couldn't start fetching it until the bundle downloaded/parsed/executed
 // all the way to this component's render — worse here, since this file is 148KB, the largest
 // hero-class image across all three businesses this SPA serves.
-const DEFAULT_HERO_IMAGE = "/pmu-hero-default.jpg";
+const DEFAULT_HERO_IMAGE = asset("pmu-hero-default.jpg");
 
 export function PmuHero({ overrides }: { overrides?: LandingVariantContent }) {
   const { openConsultation } = usePmuBookingModalContext();
@@ -21,7 +22,7 @@ export function PmuHero({ overrides }: { overrides?: LandingVariantContent }) {
     <section style={styles.section}>
       <div style={styles.imageWrap}>
         <img
-          src={overrides?.heroImageUrl ?? DEFAULT_HERO_IMAGE}
+          src={asset(overrides?.heroImageUrl ?? DEFAULT_HERO_IMAGE)}
           alt="Close-up of hand-drawn hairstroke brow tattooing"
           style={styles.image}
           fetchPriority="high"

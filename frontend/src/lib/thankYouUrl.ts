@@ -1,4 +1,4 @@
-const THANK_YOU_PATH = "/thank-you";
+const THANK_YOU_PATH = `${import.meta.env.BASE_URL}thank-you`;
 
 let returnUrl: string | null = null;
 
@@ -15,7 +15,7 @@ export function enterThankYouUrl(): void {
 
 export function exitThankYouUrl(): void {
   if (window.location.pathname !== THANK_YOU_PATH) return;
-  window.history.replaceState({}, "", returnUrl ?? "/");
+  window.history.replaceState({}, "", returnUrl ?? import.meta.env.BASE_URL);
   returnUrl = null;
 }
 

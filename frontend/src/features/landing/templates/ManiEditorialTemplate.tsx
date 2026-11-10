@@ -1,3 +1,4 @@
+import { asset } from "@/lib/asset";
 import { useEffect, type CSSProperties } from "react";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
@@ -39,7 +40,7 @@ export function ManiEditorialTemplate({ overrides }: { overrides: LandingVariant
       </header>
 
       <section style={styles.hero}>
-        <img src={overrides.heroImageUrl ?? heroPhoto.src} alt={heroPhoto.caption} style={styles.heroImg} fetchPriority="high" />
+        <img src={asset(overrides.heroImageUrl ?? heroPhoto.src)} alt={heroPhoto.caption} style={styles.heroImg} fetchPriority="high" />
         <div style={styles.heroScrim} />
         <div style={styles.heroCopy}>
           <div style={styles.eyebrow}>San Diego · Russian Manicure</div>

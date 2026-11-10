@@ -10,9 +10,9 @@
       content="First-visit special: Russian Hard Gel Manicure in Downtown San Diego. No acrylics. Book your appointment online in under 60 seconds."
     />
     <!-- Same "AK" monogram used across the AK.LUX brand family (see pmu-annakara.com). -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%BASE_URL%favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="%BASE_URL%favicon-192.png" />
+    <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://mani.akluxnails.com/" />
     <meta property="og:site_name" content="AK.LUX.NAILS" />
@@ -53,7 +53,7 @@
         link.rel = "preload";
         link.as = "image";
         link.fetchPriority = "high";
-        link.href = isPmu ? "/pmu-hero-default.jpg" : "/hero-white-manicure.jpg";
+        link.href = isPmu ? "%BASE_URL%pmu-hero-default.jpg" : "%BASE_URL%hero-white-manicure.jpg";
         document.head.appendChild(link);
       })();
     </script>
