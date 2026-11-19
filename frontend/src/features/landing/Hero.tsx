@@ -78,7 +78,10 @@ export function Hero({ overrides }: { overrides?: LandingVariantContent }) {
               2-Week Satisfaction Guarantee
             </span>
             <span style={{ display: "block", fontSize: 12.5, color: "#4f6b5a" }}>
-              Workmanship or product issue? We fix it free within 14 days. Excludes natural wear and client-caused damage.
+              Love your nails or we fix them free within 14 days.
+            </span>
+            <span style={{ display: "block", fontSize: 10.5, marginTop: 2, color: "#4f6b5a", opacity: 0.75 }}>
+              Covers workmanship and product issues. Does not cover natural wear or client-caused damage.
             </span>
           </div>
         </div>

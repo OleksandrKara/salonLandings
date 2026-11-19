@@ -2,7 +2,7 @@ import { PhoneInput } from "@/components/LazyPhoneInput";
 import type { PhoneState } from "@/lib/phoneState";
 import type { CSSProperties } from "react";
 import { formatPrice } from "@/lib/formatting";
-import { CREDIBILITY_STATS, GOOGLE_REVIEW_RATING, GUARANTEE_POINT } from "@/data/designCopy";
+import { CREDIBILITY_STATS, GOOGLE_REVIEW_RATING, GUARANTEE_FINE_PRINT, GUARANTEE_POINT } from "@/data/designCopy";
 import { StepProgress } from "@/features/booking/StepProgress";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
 import type { ServiceOffer } from "@/types/api";
@@ -124,6 +124,7 @@ export function ContactStep({
       </button>
       <div style={styles.guarantee}>
         <span aria-hidden="true">🛡️</span> {GUARANTEE_POINT.title} — {GUARANTEE_POINT.desc}
+        <span style={{ display: "block", fontSize: 10.5, opacity: 0.75, marginTop: 2 }}>{GUARANTEE_FINE_PRINT}</span>
       </div>
       {onBack ? (
         <button onClick={onBack} style={styles.backButton}>

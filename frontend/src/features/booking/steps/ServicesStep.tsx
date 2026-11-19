@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { GUARANTEE_POINT, terminologize } from "@/data/designCopy";
+import { GUARANTEE_FINE_PRINT, GUARANTEE_POINT, terminologize } from "@/data/designCopy";
 import { estimatedTotal } from "@/features/booking/useBookingModal";
 import { BookingModalState } from "@/features/booking/types";
 import { StepProgress } from "@/features/booking/StepProgress";
@@ -163,6 +163,7 @@ export function ServicesStep({
       ) : null}
       <div style={styles.guarantee}>
         <span aria-hidden="true">🛡️</span> {GUARANTEE_POINT.title} — {GUARANTEE_POINT.desc}
+        <span style={{ display: "block", fontSize: 10.5, opacity: 0.75, marginTop: 2 }}>{GUARANTEE_FINE_PRINT}</span>
       </div>
 
       <button

@@ -44,13 +44,15 @@ export const CREDIBILITY_STATS = [
   { value: "100%", label: "acrylic-free" },
 ];
 
+export const GUARANTEE_FINE_PRINT = "Covers workmanship and product issues. Does not cover natural wear or client-caused damage.";
+
 export const TRUST_POINTS = [
   { no: "01", title: "No acrylics, ever", desc: "Hard gel & gel polish only — kinder to your natural nails." },
   { no: "02", title: "Russian cuticle work", desc: "Precise dry-cuticle technique for a clean, flawless finish." },
   {
     no: "03",
     title: "2-week guarantee",
-    desc: "Workmanship or product issue? We fix it free within 14 days. Excludes natural wear and client-caused damage.",
+    desc: "Not happy? We fix it free within 14 days — your satisfaction is covered.",
   },
   { no: "04", title: "Clean & hygienic", desc: "Sanitized tools and careful standards every single visit." },
 ];
