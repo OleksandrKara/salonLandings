@@ -50,7 +50,7 @@ export const TRUST_POINTS = [
   {
     no: "03",
     title: "2-week guarantee",
-    desc: "Not happy? We fix it free within 14 days — your satisfaction is covered.",
+    desc: "Workmanship or product issue? We fix it free within 14 days. Excludes natural wear and client-caused damage.",
   },
   { no: "04", title: "Clean & hygienic", desc: "Sanitized tools and careful standards every single visit." },
 ];
@@ -183,8 +183,9 @@ At AK.LUX.NAILS, we take great pride in the quality of our work and stand behind
 • We strongly encourage clients to communicate their preferences during the appointment to ensure the desired result.
 
 If you are not fully satisfied:
-• You must notify us within 48 hours of your appointment.
-• We offer a complimentary fix within 14 days.
+• You must notify us within 48 hours of noticing the issue, and always within 14 days of the appointment.
+• We offer a complimentary fix within 14 days for issues caused by our work, products or technique, such as lifting, peeling or early chipping at the edges.
+• The guarantee does not cover natural wear, or damage caused by the client, such as scratching, rubbing, catching or breaking a nail, or normal growth-out.
 
 Refunds will not be issued for dissatisfaction after the service has been completed.
 
