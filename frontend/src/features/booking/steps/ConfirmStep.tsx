@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from "react";
-import { GUARANTEE_FINE_PRINT, GUARANTEE_POINT, SMS_CONSENT_TEXT, terminologize } from "@/data/designCopy";
+import { GUARANTEE_TERMS_URL, GUARANTEE_POINT, SMS_CONSENT_TEXT, terminologize } from "@/data/designCopy";
 import { BookingModalState } from "@/features/booking/types";
 import { StepProgress } from "@/features/booking/StepProgress";
 import { formatPrice, formatSlotDay, formatSlotTime } from "@/lib/formatting";
@@ -182,7 +182,7 @@ export function ConfirmStep({
 
       <div style={styles.guarantee}>
         <span aria-hidden="true">🛡️</span> {GUARANTEE_POINT.title} — {GUARANTEE_POINT.desc}
-        <span style={{ display: "block", fontSize: 10.5, opacity: 0.75, marginTop: 2 }}>{GUARANTEE_FINE_PRINT}</span>
+        <a href={GUARANTEE_TERMS_URL} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 10.5, opacity: 0.75, marginTop: 2, color: "inherit", textDecoration: "underline", textUnderlineOffset: 2 }}>Guarantee terms</a>
       </div>
 
       <button

@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { asset } from "@/lib/asset";
-import { CREDIBILITY_STATS, GOOGLE_REVIEW_COUNT, GOOGLE_REVIEW_RATING, HEADLINE, SUBHEAD, terminologize } from "@/data/designCopy";
+import { CREDIBILITY_STATS, GOOGLE_REVIEW_COUNT, GOOGLE_REVIEW_RATING, GUARANTEE_TERMS_URL, HEADLINE, SUBHEAD, terminologize } from "@/data/designCopy";
 import { useBookingModalContext } from "@/features/booking/BookingModalContext";
 import { useCartMenu } from "@/features/landing/CartMenuContext";
 import { GoogleLogo } from "@/features/landing/GoogleLogo";
@@ -80,9 +80,9 @@ export function Hero({ overrides }: { overrides?: LandingVariantContent }) {
             <span style={{ display: "block", fontSize: 12.5, color: "#4f6b5a" }}>
               Love your nails or we fix them free within 14 days.
             </span>
-            <span style={{ display: "block", fontSize: 10.5, marginTop: 2, color: "#4f6b5a", opacity: 0.75 }}>
-              Covers workmanship and product issues. Does not cover natural wear or client-caused damage.
-            </span>
+            <a href={GUARANTEE_TERMS_URL} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 10.5, marginTop: 2, color: "#4f6b5a", opacity: 0.75, textDecoration: "underline", textUnderlineOffset: 2 }}>
+              Guarantee terms
+            </a>
           </div>
         </div>
       </div>

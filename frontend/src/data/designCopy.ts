@@ -44,7 +44,7 @@ export const CREDIBILITY_STATS = [
   { value: "100%", label: "acrylic-free" },
 ];
 
-export const GUARANTEE_FINE_PRINT = "Covers workmanship and product issues. Does not cover natural wear or client-caused damage.";
+export const GUARANTEE_TERMS_URL = "https://akluxnails.com/blog/2-week-guarantee-explained";
 
 export const TRUST_POINTS = [
   { no: "01", title: "No acrylics, ever", desc: "Hard gel & gel polish only — kinder to your natural nails." },
