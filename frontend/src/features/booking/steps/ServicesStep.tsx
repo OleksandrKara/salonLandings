@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { GUARANTEE_POINT, terminologize } from "@/data/designCopy";
+import { GUARANTEE_TERMS_URL, GUARANTEE_POINT, terminologize } from "@/data/designCopy";
 import { estimatedTotal } from "@/features/booking/useBookingModal";
 import { BookingModalState } from "@/features/booking/types";
 import { StepProgress } from "@/features/booking/StepProgress";
@@ -163,6 +163,7 @@ export function ServicesStep({
       ) : null}
       <div style={styles.guarantee}>
         <span aria-hidden="true">🛡️</span> {GUARANTEE_POINT.title} — {GUARANTEE_POINT.desc}
+        <a href={GUARANTEE_TERMS_URL} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 10.5, opacity: 0.75, marginTop: 2, color: "inherit", textDecoration: "underline", textUnderlineOffset: 2 }}>Guarantee terms</a>
       </div>
 
       <button

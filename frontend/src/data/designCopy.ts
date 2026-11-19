@@ -44,6 +44,8 @@ export const CREDIBILITY_STATS = [
   { value: "100%", label: "acrylic-free" },
 ];
 
+export const GUARANTEE_TERMS_URL = "https://akluxnails.com/blog/2-week-guarantee-explained";
+
 export const TRUST_POINTS = [
   { no: "01", title: "No acrylics, ever", desc: "Hard gel & gel polish only — kinder to your natural nails." },
   { no: "02", title: "Russian cuticle work", desc: "Precise dry-cuticle technique for a clean, flawless finish." },
@@ -183,8 +185,9 @@ At AK.LUX.NAILS, we take great pride in the quality of our work and stand behind
 • We strongly encourage clients to communicate their preferences during the appointment to ensure the desired result.
 
 If you are not fully satisfied:
-• You must notify us within 48 hours of your appointment.
-• We offer a complimentary fix within 14 days.
+• You must notify us within 48 hours of noticing the issue, and always within 14 days of the appointment.
+• We offer a complimentary fix within 14 days for issues caused by our work, products or technique, such as lifting, peeling or early chipping at the edges.
+• The guarantee does not cover natural wear, or damage caused by the client, such as scratching, rubbing, catching or breaking a nail, or normal growth-out.
 
 Refunds will not be issued for dissatisfaction after the service has been completed.
 
