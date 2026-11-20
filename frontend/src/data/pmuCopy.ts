@@ -17,10 +17,10 @@ export const PMU_LOCATION = {
 };
 
 // Same figures as the PMU site's own reviews block (pmu-annakara-home Testimonials.tsx, owner
-// SEO/GEO audit 2026-09-24): Google 4.9 / 144.
+// SEO/GEO audit 2026-09-24): Google 4.9 / 147.
 export const PMU_RATING = {
   score: 4.9,
-  count: 144,
+  count: 147,
 };
 
 export interface PmuReview {
